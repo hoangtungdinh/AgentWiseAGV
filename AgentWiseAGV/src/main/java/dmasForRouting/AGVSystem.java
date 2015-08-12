@@ -2,11 +2,14 @@ package dmasForRouting;
 
 import static com.google.common.collect.Lists.newArrayList;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.measure.unit.SI;
 
 import com.github.rinde.rinsim.core.Simulator;
+import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.geom.Graph;
 import com.github.rinde.rinsim.geom.Graphs;
@@ -63,7 +66,7 @@ public final class AGVSystem {
     } else {
       viewBuilder = viewBuilder.withTitleAppendix("Warehouse Example");
     }
-
+    
     final Simulator sim = Simulator.builder()
         .addModel(
             RoadModelBuilders.dynamicGraph(GraphCreator.createSimpleGraph())
@@ -71,10 +74,27 @@ public final class AGVSystem {
                 .withDistanceUnit(SI.METER)
                 .withVehicleLength(VEHICLE_LENGTH))
         .addModel(viewBuilder)
+        // add a random seed
+        .setRandomSeed(0)
         .build();
+    
+    RoadModel roadModel = sim.getModelProvider().tryGetModel(RoadModel.class);
+    
+    // check whether the road model is retrieved successfully
+    if (roadModel == null) {
+      throw new NullPointerException(
+          "Cannot get the road model from the simulator");
+    }
+     
+    // generate destinations for all AGVs
+    final DestinationGenerator destinationGenerator = new DestinationGenerator(
+        sim.getRandomGenerator(), (CollisionGraphRoadModel) roadModel, NUM_AGVS,
+        10);
+    
+    List<DestinationList> destinationLists = destinationGenerator.run();
 
     for (int i = 0; i < NUM_AGVS; i++) {
-      sim.register(new AGVAgent(sim.getRandomGenerator()));
+      sim.register(new VehicleAgent(sim.getRandomGenerator()));
     }
 
     sim.start();

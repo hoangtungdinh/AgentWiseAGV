@@ -13,13 +13,13 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
-class AGVAgent implements TickListener, MovingRoadUser {
+class VehicleAgent implements TickListener, MovingRoadUser {
   private final RandomGenerator rng;
   private Optional<CollisionGraphRoadModel> roadModel;
   private Optional<Point> destination;
   private Queue<Point> path;
 
-  AGVAgent(RandomGenerator r) {
+  VehicleAgent(RandomGenerator r) {
     rng = r;
     roadModel = Optional.absent();
     destination = Optional.absent();
