@@ -1,8 +1,8 @@
 package dmasForRouting;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
@@ -20,7 +20,7 @@ public class NodeAgent {
   private RangeSet<Long> reservationList;
 
   /** The reservation life time. */
-  private Map<Range<Long>, ReservationID> reservationInfo;
+  private Map<Range<Long>, Long> reservationLifeTime;
 
   /**
    * The shortest path length. It stores the shortest path length between the
@@ -33,62 +33,91 @@ public class NodeAgent {
    */
   public NodeAgent() {
     reservationList = TreeRangeSet.create();
-    reservationInfo = new HashMap<>();
+    reservationLifeTime = new HashMap<>();
     shortestPathLength = new HashMap<>();
   }
   
   /**
-   * Gets the free time windows.
+   * Gets the free time windows from the startTime.
    *
+   * @param startTime the start time
+   * @param oldReservation the old reservation of this AGV in this node
    * @return the free time windows
    */
-  public RangeSet<Long> getFreeTimeWindows() {
-    return reservationList.complement();
+  public RangeSet<Long> getFreeTimeWindows(long startTime, Range<Long> oldReservation) {
+    RangeSet<Long> freeTimeWindows;
+    
+    if (oldReservation == null) {
+      freeTimeWindows = reservationList.complement().subRangeSet(Range.atLeast(startTime));
+    } else {
+      reservationList.remove(oldReservation);
+      freeTimeWindows = reservationList.complement().subRangeSet(Range.atLeast(startTime));
+      reservationList.add(oldReservation);
+    }
+    
+    return freeTimeWindows;
   }
   
   /**
-   * Adds the requested time window.
+   * Adds the new reservation
    *
-   * @param requestedTimeWindow the requested time window
+   * @param newReservation the new reservation
    * @param lifeTime the life time
-   * @param id the id
+   * @param oldReservation the old reservation of this AGV in this node. If there is no old reservation, then it is null
    * @return true, if successfully added
    */
-  public boolean addRequestedTimeWindow(Range<Long> requestedTimeWindow, int lifeTime, int id) {
-    // get all overlapping range
-    RangeSet<Long> overlappingRanges = this.reservationList.subRangeSet(requestedTimeWindow);
+  public void addReservation(Range<Long> newReservation, long lifeTime, Range<Long> oldReservation) {
     
-    if (overlappingRanges.isEmpty()) {
-      // if there is no overlapping range
-      // add time window to the reservation list
-      this.reservationList.add(requestedTimeWindow);
-      // create reservation ID
-      this.reservationInfo.put(requestedTimeWindow, new ReservationID(id, lifeTime));
-      return true;
+    // if there exists old reservation from the previous plan of the AGV, then
+    // remove it.
+    if (oldReservation != null) {
+      reservationList.remove(oldReservation);
+      reservationLifeTime.remove(oldReservation);
+    }
+    
+    // get all overlapping range
+    RangeSet<Long> overlappingRanges = this.reservationList.subRangeSet(newReservation);
+    // check if there is any overlapping range
+    if (!overlappingRanges.isEmpty()) {
+      throw new Error("Overlapping reservation!");
+    }
+    
+    // add new reservation
+    reservationList.add(newReservation);
+    reservationLifeTime.put(newReservation, lifeTime);
+  }
+  
+  /**
+   * Refresh reservation.
+   *
+   * @param reservation the reservation
+   * @param lifeTime the life time
+   */
+  public void refreshReservation(Range<Long> reservation, long lifeTime) {
+    if (reservationLifeTime.containsKey(reservation)) {
+      // if there exists the reservation then update it
+      reservationLifeTime.put(reservation, lifeTime);
     } else {
-      // if there exists overlapping range(s)
-      Set<Range<Long>> setOfOverlappingRanges = overlappingRanges.asRanges();
-      for (Range<Long> range : setOfOverlappingRanges) {
-        // get a time point inside the overlapping range
-        final long arbitraryTimePoint = range.lowerEndpoint() + 1;
-        // get the existing range in the reservation list that that overlaps with the requested range
-        final Range<Long> existedTimeWindow = reservationList.rangeContaining(arbitraryTimePoint);
-        // TODO handle when existedTimeWindow is null
-        // get the info of the existing range
-        final ReservationID reservationID = reservationInfo.get(existedTimeWindow);
-        if (reservationID.getID() != id) {
-          // if the existing range was booked by another AGV, then not add the new reservation
-          return false;
-        } else {
-          // if the existing range was booked by the requesting AGV, then remove the old range and add the new range
-          reservationList.remove(existedTimeWindow);
-          reservationInfo.remove(existedTimeWindow);
-        }
+      // otherwise throw an error
+      throw new Error("No reservation for refreshing");
+    }
+  }
+  
+  /**
+   * Removes the out dated reservation.
+   *
+   * @param currentTime the current time
+   */
+  public void removeOutDatedReservation(long currentTime) {
+    for (Iterator<Map.Entry<Range<Long>, Long>> iter = reservationLifeTime.entrySet().iterator(); iter.hasNext(); ) {
+      Map.Entry<Range<Long>, Long> entry = iter.next();
+      if (entry.getValue() <= currentTime) {
+        // if life time has passed
+        // remove from the reservation list
+        reservationList.remove(entry.getKey());
+        // remove from the reservation life time list
+        iter.remove();
       }
-      // this line can only be reached if all overlapping time window were booked by the requesting AGV
-      reservationList.add(requestedTimeWindow);
-      reservationInfo.put(requestedTimeWindow, new ReservationID(id, lifeTime));
-      return true;
     }
   }
   

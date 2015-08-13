@@ -11,7 +11,7 @@ public class Test {
 
   public static void main(String[] args) {
     Range<Long> r1 = Range.open(30L, 100L);
-    Range<Long> r2 = Range.open(90L, 200L);
+    Range<Long> r2 = Range.open(150L, 200L);
     RangeSet<Long> rangeSet = TreeRangeSet.create();
     rangeSet.add(r1);
     rangeSet.add(r2);
@@ -28,5 +28,7 @@ public class Test {
     Range<Long> r4 = Range.open(0L, 330L);
     System.out.println(rangeSet.subRangeSet(r4));
     System.out.println(r1.lowerEndpoint());
+    
+    System.out.println(rangeSet.complement().subRangeSet(Range.atLeast(300L)));
   }
 }

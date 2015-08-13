@@ -79,7 +79,7 @@ public final class AGVSystem {
         .setRandomSeed(0)
         .build();
     
-    RoadModel roadModel = sim.getModelProvider().tryGetModel(RoadModel.class);
+    CollisionGraphRoadModel roadModel = (CollisionGraphRoadModel) sim.getModelProvider().tryGetModel(RoadModel.class);
     
     // check whether the road model is retrieved successfully
     if (roadModel == null) {
@@ -89,7 +89,7 @@ public final class AGVSystem {
      
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
-        sim.getRandomGenerator(), (CollisionGraphRoadModel) roadModel, NUM_AGVS,
+        sim.getRandomGenerator(), roadModel, NUM_AGVS,
         NUM_DESTS);
     
     List<DestinationList> destinationLists = destinationGenerator.run();
