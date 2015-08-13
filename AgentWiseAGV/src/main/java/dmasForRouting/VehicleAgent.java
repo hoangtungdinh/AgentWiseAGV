@@ -1,6 +1,7 @@
 package dmasForRouting;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import org.apache.commons.math3.random.RandomGenerator;
@@ -18,12 +19,14 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   private Optional<CollisionGraphRoadModel> roadModel;
   private Optional<Point> destination;
   private Queue<Point> path;
+  private LinkedList<Point> destinationList;
 
-  VehicleAgent(RandomGenerator r) {
+  VehicleAgent(RandomGenerator r, List<Point> destinationList) {
     rng = r;
     roadModel = Optional.absent();
     destination = Optional.absent();
     path = new LinkedList<>();
+    this.destinationList = new LinkedList<Point>(destinationList);
   }
 
   @Override
@@ -34,7 +37,6 @@ class VehicleAgent implements TickListener, MovingRoadUser {
       p = model.getRandomPosition(rng);
     } while (roadModel.get().isOccupied(p));
     roadModel.get().addObjectAt(this, p);
-
   }
 
   @Override
@@ -43,7 +45,11 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   }
 
   void nextDestination() {
-    destination = Optional.of(roadModel.get().getRandomPosition(rng));
+    if (destinationList.isEmpty()) {
+      throw new IllegalStateException("There is no destination left!");
+    }
+    destination = Optional.of(destinationList.getFirst());
+    destinationList.removeFirst();
     path = new LinkedList<>(roadModel.get().getShortestPathTo(this,
         destination.get()));
   }

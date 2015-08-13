@@ -61,12 +61,17 @@ public class DestinationGenerator {
         // generate a random destination
         Point destination = roadModel.getRandomPosition(randomGenerator);
         
-        // if it is the start point, check overlap
         if (d == 0) {
+          // if it is the start point, check overlap
           while (startPoints.contains(destination)) {
             destination = roadModel.getRandomPosition(randomGenerator);
           }
           startPoints.add(destination);
+        } else {
+          // the next destination has to be different from the current destination
+          while (destination == destinationList.get(d - 1)) {
+            destination = roadModel.getRandomPosition(randomGenerator);
+          }
         }
         
         // add the destination to the list
