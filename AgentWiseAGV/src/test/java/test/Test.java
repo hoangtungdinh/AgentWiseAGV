@@ -29,6 +29,6 @@ public class Test {
     System.out.println(rangeSet.subRangeSet(r4));
     System.out.println(r1.lowerEndpoint());
     
-    System.out.println(rangeSet.complement().subRangeSet(Range.atLeast(300L)));
+    System.out.println(rangeSet.span());
   }
 }

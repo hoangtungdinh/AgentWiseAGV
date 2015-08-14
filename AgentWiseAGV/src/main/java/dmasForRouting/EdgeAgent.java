@@ -1,7 +1,7 @@
 package dmasForRouting;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,7 +73,9 @@ public class EdgeAgent {
    * the AGVs must be started from the different startPoint. Otherwise, it is null.
    * @return the free time windows
    */
-  public List<FreeTimeWindow> getFreeTimeWindows(Point startPoint, Point endPoint, long startTime, Range<Long> oldReservation) {
+  public List<FreeTimeWindow> getFreeTimeWindows(Point startPoint,
+      Point endPoint, Range<Long> possibleEntryWindow,
+      Range<Long> oldReservation) {
     // set of ranges that do not conflict with AGVs from other direction
     RangeSet<Long> freeRanges;
     // get the reservation lists of AGVs starting from the other direction
@@ -82,59 +84,88 @@ public class EdgeAgent {
     // get all possible free ranges that do not conflict with AGVs from other direction
     if (oldReservation == null) {
       freeRanges = reservationsFromOtherDirection.complement()
-          .subRangeSet(Range.atLeast(startTime));
+          .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
     } else {
       reservationsFromOtherDirection.remove(oldReservation);
       freeRanges = reservationsFromOtherDirection.complement()
-          .subRangeSet(Range.atLeast(startTime));
+          .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
       reservationsFromOtherDirection.add(oldReservation);
     }
-
+    
+    // get all entryWindows based on the reservations of opposite direction AGVs
+    RangeSet<Long> entryWindows = freeRanges.subRangeSet(possibleEntryWindow);
+    
+    if (entryWindows.isEmpty()) {
+      // no possible time window
+      return null;
+    } else if (entryWindows.asRanges().size() > 1) {
+      throw new Error("More than one entry window for edge!");
+    }
+    
+    Range<Long> optimisticEntryWindow = entryWindows.span();
+    
     Map<Range<Long>, Long> lifeTimeOfReservationsWithSameDirection = reservationLifeTime.row(startPoint);
     // set of reservations of AGVs coming from the same direction
     Set<Range<Long>> reservationsWithSameDirection = lifeTimeOfReservationsWithSameDirection.keySet();
-    // construct set of reserved entry time windows of AGVs coming from the same direction
-    RangeSet<Long> reservedEntryTimes = TreeRangeSet.create();
-    final long entryInterval = (long) (AGVSystem.VEHICLE_LENGTH / AGVSystem.VEHICLE_SPEED);
-    for (Range<Long> range : reservationsWithSameDirection) {
-      reservedEntryTimes.add(Range.open(range.lowerEndpoint(), range.lowerEndpoint() + entryInterval));
-    }
-    
-    // set of possible entry times
-    RangeSet<Long> possibleEntryTimes = TreeRangeSet.create();
-    // set of free time windows according to the entry time of AGVs coming from the same direction
-    RangeSet<Long> optimisticTimeWindows = reservedEntryTimes.complement();
-    for (Range<Long> range : freeRanges.asRanges()) {
-      // set of actual free time window for the "range"
-      final RangeSet<Long> times = optimisticTimeWindows.subRangeSet(range);
-      possibleEntryTimes.addAll(times);
-    }
     
     // minimum travel time
     long minTravelTime = (long) ((this.length + AGVSystem.VEHICLE_LENGTH) / AGVSystem.VEHICLE_SPEED);
     
-    // consider each possible entry interval
-    for (Range<Long> range : possibleEntryTimes.asRanges()) {
-      // here we get the exit intervals corresponding to the entry interval
-      // "range". If the entry interval is between two other entry intervals,
-      // start time of the exit interval must be greater than the end time of
-      // the exit interval of the previous entry interval and less than the exit
-      // time of the after entry interval.
-      
-      // check whether the exit time of the current AGV is larger than the exit time of all previous AGV
-      long startExitTime = range.lowerEndpoint() + minTravelTime;
-      long endExitTime;
-      // find the minimum time to exit (all previous AGVs have to exit first)
-      for (Range<Long> currentReservation : reservationsWithSameDirection) {
-        if (currentReservation.contains(range.lowerEndpoint())) {
-          if (currentReservation.upperEndpoint() > startExitTime) {
-            startExitTime = currentReservation.upperEndpoint();
-          }
-        }
+    long lowerEndExitWindow = -1;
+    long upperEndExitWindow = Long.MAX_VALUE;
+    
+    // compute the exit window
+    final long optimisticStartTime = optimisticEntryWindow.lowerEndpoint();
+    for (Range<Long> range : reservationsWithSameDirection) {
+      final long reservedEntryTime = range.lowerEndpoint();
+      final long reservedExitTime = range.upperEndpoint();
+      if (reservedEntryTime < optimisticStartTime && reservedExitTime > lowerEndExitWindow) {
+        // if there is  an AGV that enters the edge before but exit the edge after the current AGV, then update the lower bound exit time
+        lowerEndExitWindow = reservedExitTime;
+      } else if (reservedEntryTime > optimisticStartTime && reservedExitTime < upperEndExitWindow) {
+        // if there is an AGV that enters the edge after but exit the edge before the current AGV, then update the upper bound of exit time
+        upperEndExitWindow = reservedExitTime;
       }
-      // TODO compare the entry + exit with available time windows freeRanges
     }
     
+    // if no valid exit window at this time then it is an error
+    if (lowerEndExitWindow > upperEndExitWindow) {
+      throw new Error("Invalid exit window");
+    }
+    
+    long lowerEndEntryWindow = optimisticEntryWindow.lowerEndpoint();
+    long upperEndEntryWindow = optimisticEntryWindow.upperEndpoint();
+    
+    Range<Long> optimisticTimeWindow = Range.open(lowerEndEntryWindow, upperEndExitWindow);
+    RangeSet<Long> allNonConflictTimeWindow = freeRanges.subRangeSet(optimisticTimeWindow);
+    Range<Long> feasibleTimeWindow = allNonConflictTimeWindow.rangeContaining(lowerEndEntryWindow + 1);
+    
+    if (feasibleTimeWindow == null) {
+      throw new Error("Time window cannot be null");
+    }
+    
+    upperEndExitWindow = feasibleTimeWindow.upperEndpoint();
+    
+    if (lowerEndExitWindow < lowerEndEntryWindow + minTravelTime) {
+      lowerEndExitWindow = lowerEndEntryWindow + minTravelTime;
+    }
+    
+    if (upperEndExitWindow < lowerEndExitWindow) {
+      return null;
+    }
+    
+    if (upperEndEntryWindow + minTravelTime > upperEndExitWindow) {
+      upperEndEntryWindow = upperEndExitWindow - minTravelTime;
+    }
+    
+    Range<Long> entryWindow = Range.open(lowerEndEntryWindow, upperEndEntryWindow);
+    Range<Long> exitWindow = Range.open(lowerEndExitWindow, upperEndExitWindow);
+    Range<Long> timeWindow = Range.open(lowerEndEntryWindow, upperEndExitWindow);
+    
+    List<FreeTimeWindow> freeTimeWindows = new ArrayList<>();
+    freeTimeWindows.add(new FreeTimeWindow(timeWindow, entryWindow, exitWindow));
+    
+    return freeTimeWindows;
   }
   
   public void addReservation(Range<Long> newReservation, Point startPoint, Point endPoint, long lifeTime, Range<Long> oldReservation) {
