@@ -86,7 +86,10 @@ public class EdgeAgent {
   }
   
   public void addReservation(Range<Long> newReservation, Point startPoint, Point endPoint, long lifeTime, Range<Long> oldReservation) {
-    // TODO control the difference between two direction
+    // TODO control the difference between two direction if remove old reservation
+    if (oldReservation != null) {
+      
+    }
   }
   
   // TODO control the difference between two direction when remove outdated reservations

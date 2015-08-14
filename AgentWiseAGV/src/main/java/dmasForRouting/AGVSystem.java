@@ -26,11 +26,12 @@ import com.google.common.collect.Table;
 
 public final class AGVSystem {
 
-  private static final double VEHICLE_LENGTH = 2d;
-  private static final int NUM_AGVS = 2;
-  private static final long TEST_END_TIME = 10 * 60 * 1000L;
-  private static final int TEST_SPEED_UP = 16;
-  private static final int NUM_DESTS = 10;
+  public static final double VEHICLE_LENGTH = 2d;
+  public static final double VEHICLE_SPEED = 1d;
+  public static final int NUM_AGVS = 2;
+  public static final long TEST_END_TIME = 10 * 60 * 1000L;
+  public static final int TEST_SPEED_UP = 16;
+  public static final int NUM_DESTS = 10;
 
   private AGVSystem() {}
 

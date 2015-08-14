@@ -41,7 +41,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
 
   @Override
   public double getSpeed() {
-    return 1;
+    return AGVSystem.VEHICLE_SPEED;
   }
 
   void nextDestination() {

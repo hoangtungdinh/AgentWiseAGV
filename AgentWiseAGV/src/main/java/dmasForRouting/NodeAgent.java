@@ -1,8 +1,11 @@
 package dmasForRouting;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
@@ -44,15 +47,45 @@ public class NodeAgent {
    * @param oldReservation the old reservation of this AGV in this node
    * @return the free time windows
    */
-  public RangeSet<Long> getFreeTimeWindows(long startTime, Range<Long> oldReservation) {
-    RangeSet<Long> freeTimeWindows;
+  public List<FreeTimeWindow> getFreeTimeWindows(long startTime, Range<Long> oldReservation) {
+    RangeSet<Long> freeRanges;
     
     if (oldReservation == null) {
-      freeTimeWindows = reservationList.complement().subRangeSet(Range.atLeast(startTime));
+      freeRanges = reservationList.complement().subRangeSet(Range.atLeast(startTime));
     } else {
       reservationList.remove(oldReservation);
-      freeTimeWindows = reservationList.complement().subRangeSet(Range.atLeast(startTime));
+      freeRanges = reservationList.complement().subRangeSet(Range.atLeast(startTime));
       reservationList.add(oldReservation);
+    }
+    
+    Set<Range<Long>> freeRangeSet = freeRanges.asRanges();
+    
+    // mininum travel time required for AGVs to traverse a node
+    final long minTravelTime = (long) (AGVSystem.VEHICLE_LENGTH * 2 / AGVSystem.VEHICLE_SPEED);
+    
+    // list of free time windows
+    List<FreeTimeWindow> freeTimeWindows = new ArrayList<>();
+    
+    // to be a free time window, a range must be equal or longer than the minimum travel time
+    for (Range<Long> range : freeRangeSet) {
+      if (!range.hasUpperBound()) {
+        // if there is no upper bound
+        final Range<Long> timeWindow = range;
+        final Range<Long> entryWindow = range;
+        final Range<Long> exitWindow = Range
+            .atLeast(range.lowerEndpoint() + minTravelTime);
+        freeTimeWindows
+            .add(new FreeTimeWindow(timeWindow, entryWindow, exitWindow));
+      } else if (range.upperEndpoint() - range.lowerEndpoint() >= minTravelTime) {
+        // if there is upper bound but the range is still longer than the minimum travel time
+        final Range<Long> timeWindow = range;
+        final Range<Long> entryWindow = Range.open(range.lowerEndpoint(),
+            range.upperEndpoint() - minTravelTime);
+        final Range<Long> exitWindow = Range
+            .open(range.lowerEndpoint() + minTravelTime, range.upperEndpoint());
+        freeTimeWindows
+            .add(new FreeTimeWindow(timeWindow, entryWindow, exitWindow));
+      }
     }
     
     return freeTimeWindows;
