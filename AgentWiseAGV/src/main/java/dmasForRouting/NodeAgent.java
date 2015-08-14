@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
@@ -70,21 +69,38 @@ public class NodeAgent {
     
     // to be a free time window, a range must be equal or longer than the minimum travel time
     for (Range<Long> range : freeRanges.asRanges()) {
+      // if the free range is not connected to the possible entry window
+      if (!range.isConnected(possibleEntryWindow)) {
+        continue;
+      }
+      
       if (!range.hasUpperBound()) {
         // if there is no upper bound
         final Range<Long> entryWindow = range.intersection(possibleEntryWindow);
         final Range<Long> exitWindow = Range
             .atLeast(entryWindow.lowerEndpoint() + minTravelTime);
-        final Range<Long> timeWindow = Range.atLeast(entryWindow.lowerEndpoint());
+        final Range<Long> timeWindow = Range
+            .atLeast(entryWindow.lowerEndpoint());
         freeTimeWindows
             .add(new FreeTimeWindow(timeWindow, entryWindow, exitWindow));
-      } else if (range.upperEndpoint() - range.lowerEndpoint() >= minTravelTime) {
-        // if there is upper bound but the range is still longer than the minimum travel time
-        final Range<Long> entryWindow = Range.open(range.lowerEndpoint(),
-            range.upperEndpoint() - minTravelTime).intersection(possibleEntryWindow);
-        final Range<Long> exitWindow = Range
-            .open(entryWindow.lowerEndpoint() + minTravelTime, entryWindow.upperEndpoint() + minTravelTime);
-        final Range<Long> timeWindow = Range.open(entryWindow.lowerEndpoint(), exitWindow.upperEndpoint());
+      } else
+        if (range.upperEndpoint() - range.lowerEndpoint() >= minTravelTime) {
+        // if there is upper bound but the range is still longer than the
+        // minimum travel time
+        final Range<Long> optimisticEntryWindow = Range
+            .open(range.lowerEndpoint(), range.upperEndpoint() - minTravelTime);
+
+        if (!optimisticEntryWindow.isConnected(possibleEntryWindow)) {
+          continue;
+        }
+
+        final Range<Long> entryWindow = optimisticEntryWindow
+            .intersection(possibleEntryWindow);
+        final Range<Long> exitWindow = Range.open(
+            entryWindow.lowerEndpoint() + minTravelTime,
+            entryWindow.upperEndpoint() + minTravelTime);
+        final Range<Long> timeWindow = Range.open(entryWindow.lowerEndpoint(),
+            exitWindow.upperEndpoint());
         freeTimeWindows
             .add(new FreeTimeWindow(timeWindow, entryWindow, exitWindow));
       }
