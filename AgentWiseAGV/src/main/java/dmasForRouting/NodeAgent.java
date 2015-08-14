@@ -50,6 +50,7 @@ public class NodeAgent {
   public List<FreeTimeWindow> getFreeTimeWindows(long startTime, Range<Long> oldReservation) {
     RangeSet<Long> freeRanges;
     
+    // get all possible free ranges
     if (oldReservation == null) {
       freeRanges = reservationList.complement().subRangeSet(Range.atLeast(startTime));
     } else {
