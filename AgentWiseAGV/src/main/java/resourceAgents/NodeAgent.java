@@ -1,4 +1,4 @@
-package dmasForRouting;
+package resourceAgents;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +10,8 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
+
+import dmasForRouting.AGVSystem;
 
 /**
  * The Class ResourceAgent.
