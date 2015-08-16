@@ -1,7 +1,5 @@
 package dmasForRouting;
 
-import static com.google.common.collect.Lists.newArrayList;
-
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +19,10 @@ import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
+
+import destinationGenerator.DestinationGenerator;
+import destinationGenerator.DestinationList;
 
 public final class AGVSystem {
 
@@ -82,6 +82,12 @@ public final class AGVSystem {
     
     CollisionGraphRoadModel roadModel = (CollisionGraphRoadModel) sim.getModelProvider().tryGetModel(RoadModel.class);
     
+    // TODO Test path sampling
+//    PathSampling pathSampling = new PathSampling(roadModel, sim.getRandomGenerator());
+//    for (int i = 0; i < 1; i++) {
+//      System.out.println(pathSampling.getRandomPath(new Point(0d, 0d), new Point(24d, 24d)));
+//    }
+    
     // check whether the road model is retrieved successfully
     if (roadModel == null) {
       throw new NullPointerException(
@@ -133,20 +139,28 @@ public final class AGVSystem {
       final Table<Integer, Integer, Point> matrix = createMatrix(4, 4,
           new Point(0, 0));
 
-      for (int i = 0; i < matrix.columnMap().size(); i++) {
-
-        Iterable<Point> path;
-        if (i % 2 == 0) {
-          path = Lists.reverse(newArrayList(matrix.column(i).values()));
-        } else {
-          path = matrix.column(i).values();
-        }
-        Graphs.addBiPath(g, path);
+//      for (int i = 0; i < matrix.columnMap().size(); i++) {
+//
+//        Iterable<Point> path;
+//        if (i % 2 == 0) {
+//          path = Lists.reverse(newArrayList(matrix.column(i).values()));
+//        } else {
+//          path = matrix.column(i).values();
+//        }
+//        Graphs.addBiPath(g, path);
+//      }
+//
+//      Graphs.addBiPath(g, matrix.row(0).values());
+//      Graphs.addBiPath(g, Lists.reverse(newArrayList(matrix.row(
+//          matrix.rowKeySet().size() - 1).values())));
+      
+      for (final Map<Integer, Point> column : matrix.columnMap().values()) {
+        Graphs.addBiPath(g, column.values());
       }
-
-      Graphs.addBiPath(g, matrix.row(0).values());
-      Graphs.addBiPath(g, Lists.reverse(newArrayList(matrix.row(
-          matrix.rowKeySet().size() - 1).values())));
+      
+      for (final Map<Integer, Point> row : matrix.rowMap().values()) {
+        Graphs.addBiPath(g, row.values());
+      }
 
       return new ListenableGraph<>(g);
     }

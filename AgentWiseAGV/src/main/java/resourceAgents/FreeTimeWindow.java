@@ -10,7 +10,7 @@ import com.google.common.collect.Range;
 public class FreeTimeWindow {
   
   /** The free time window. */
-  private Range<Long> freeTimeWindow;
+  private Range<Long> interval;
   
   /** The entry window. */
   private Range<Long> entryWindow;
@@ -21,24 +21,24 @@ public class FreeTimeWindow {
   /**
    * Instantiates a new free time window.
    *
-   * @param freeTimeWindow the free time window
+   * @param interval the interval
    * @param entryWindow the entry window
    * @param exitWindow the exit window
    */
-  public FreeTimeWindow(Range<Long> freeTimeWindow, Range<Long> entryWindow,
+  public FreeTimeWindow(Range<Long> interval, Range<Long> entryWindow,
       Range<Long> exitWindow) {
-    this.freeTimeWindow = freeTimeWindow;
+    this.interval = interval;
     this.entryWindow = entryWindow;
     this.exitWindow = exitWindow;
   }
 
   /**
-   * Gets the free time window.
+   * Gets the interval.
    *
-   * @return the free time window
+   * @return the interval
    */
-  public Range<Long> getFreeTimeWindow() {
-    return freeTimeWindow;
+  public Range<Long> getInterval() {
+    return interval;
   }
 
   /**

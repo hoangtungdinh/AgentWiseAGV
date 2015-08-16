@@ -1,4 +1,4 @@
-package dmasForRouting;
+package destinationGenerator;
 
 import java.util.List;
 

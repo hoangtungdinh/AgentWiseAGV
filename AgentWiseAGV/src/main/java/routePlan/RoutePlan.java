@@ -1,4 +1,4 @@
-package route;
+package routePlan;
 
 import java.util.LinkedList;
 
@@ -52,5 +52,14 @@ public class RoutePlan {
    */
   public PlanStep consumeNextStep() {
     return plan.removeFirst();
+  }
+  
+  /**
+   * Gets the destination arrival time.
+   *
+   * @return the destination arrival time
+   */
+  public long getDestinationArrivalTime() {
+    return plan.getLast().getInterval().lowerEndpoint();
   }
 }
