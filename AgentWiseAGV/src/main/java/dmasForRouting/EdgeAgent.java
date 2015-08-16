@@ -2,14 +2,13 @@ package dmasForRouting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
-import com.google.common.collect.Table;
 import com.google.common.collect.TreeRangeSet;
 
 /**
@@ -20,23 +19,18 @@ import com.google.common.collect.TreeRangeSet;
 public class EdgeAgent {
   
   /**
-   * The reservation amp. There are always two reservation lists in the map,
+   * The reservation map. There are always two reservation lists in the map,
    * corresponding to two entrances.
    */
-  private Map<Point, RangeSet<Long>> reservationMap;
-  
-  /**
-   * The reservation info, which is a table with row is the entrance point,
-   * column is the reserved range.
-   */
-  private Table<Point, Range<Long>, Long> reservationLifeTime;
+  private Map<Point, List<Reservation>> reservationMap;
   
   /** The length of the associated edge. */
   private double length;
   
   /**
    * Instantiates a new edge agent.
-   *
+   * The point p1 and p2 can be at any order
+   * 
    * @param p1 the first point of the edge
    * @param p2 the second point of the edge
    * @param length the length of the edge
@@ -47,11 +41,11 @@ public class EdgeAgent {
     reservationMap = new HashMap<>();
     
     // reservation list of AGVs coming from point 1
-    RangeSet<Long> rangeSetForP1 = TreeRangeSet.create();
-    reservationMap.put(p1, rangeSetForP1);
+    List<Reservation> reservationFromP1 = new ArrayList<>();
+    reservationMap.put(p1, reservationFromP1);
     // reservation list of AGVs coming from point 2
-    RangeSet<Long> rangeSetForP2 = TreeRangeSet.create();
-    reservationMap.put(p2, rangeSetForP2);
+    List<Reservation> reservationFromP2 = new ArrayList<>();
+    reservationMap.put(p2, reservationFromP2);
   }
   
   /**
@@ -68,30 +62,26 @@ public class EdgeAgent {
    *
    * @param startPoint the start point
    * @param endPoint the end point of the edge
-   * @param startTime the start time
-   * @param oldReservation the old reservation of this AGV in this node. Note that the oldReservation of
-   * the AGVs must be started from the different startPoint. Otherwise, it is null.
+   * @param possibleEntryWindow the possible entry window
+   * @param agvID the agv id
    * @return the free time windows
    */
   public List<FreeTimeWindow> getFreeTimeWindows(Point startPoint,
-      Point endPoint, Range<Long> possibleEntryWindow,
-      Range<Long> oldReservation) {
-    // set of ranges that do not conflict with AGVs from other direction
-    RangeSet<Long> freeRanges;
-    // get the reservation lists of AGVs starting from the other direction
-    RangeSet<Long> reservationsFromOtherDirection = reservationMap.get(endPoint);
+      Point endPoint, Range<Long> possibleEntryWindow, int agvID) {
     
-    // get all possible free ranges that do not conflict with AGVs from other direction
-    if (oldReservation == null) {
-      freeRanges = reservationsFromOtherDirection.complement()
-          .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
-    } else {
-      reservationsFromOtherDirection.remove(oldReservation);
-      freeRanges = reservationsFromOtherDirection.complement()
-          .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
-      reservationsFromOtherDirection.add(oldReservation);
+    // get all reservations from other direction
+    RangeSet<Long> reservationsFromOtherDirection = TreeRangeSet.create();
+    List<Reservation> resvList = reservationMap.get(endPoint);
+    for (Reservation reservation : resvList) {
+      if (reservation.getAgvID() != agvID) {
+        reservationsFromOtherDirection.add(reservation.getInterval());
+      }
     }
     
+    // get all possible free ranges that do not conflict with AGVs from other direction
+    RangeSet<Long> freeRanges = reservationsFromOtherDirection.complement()
+        .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
+ 
     // get all entryWindows based on the reservations of opposite direction AGVs
     RangeSet<Long> entryWindows = freeRanges.subRangeSet(possibleEntryWindow);
     
@@ -104,11 +94,11 @@ public class EdgeAgent {
     
     Range<Long> optimisticEntryWindow = entryWindows.span();
     
-    Map<Range<Long>, Long> lifeTimeOfReservationsWithSameDirection = reservationLifeTime.row(startPoint);
-    // set of reservations of AGVs coming from the same direction
-    Set<Range<Long>> reservationsWithSameDirection = lifeTimeOfReservationsWithSameDirection.keySet();
+    // list of reservations from the same direction
+    List<Reservation> reservationsWithSameDirection = reservationMap.get(startPoint);
     
     // minimum travel time
+    // TODO is this calculation correct?
     long minTravelTime = (long) ((this.length + AGVSystem.VEHICLE_LENGTH) / AGVSystem.VEHICLE_SPEED);
     
     long lowerEndExitWindow = -1;
@@ -116,9 +106,9 @@ public class EdgeAgent {
     
     // compute the exit window
     final long optimisticStartTime = optimisticEntryWindow.lowerEndpoint();
-    for (Range<Long> range : reservationsWithSameDirection) {
-      final long reservedEntryTime = range.lowerEndpoint();
-      final long reservedExitTime = range.upperEndpoint();
+    for (Reservation reservation : reservationsWithSameDirection) {
+      final long reservedEntryTime = reservation.getInterval().lowerEndpoint();
+      final long reservedExitTime = reservation.getInterval().upperEndpoint();
       if (reservedEntryTime < optimisticStartTime && reservedExitTime > lowerEndExitWindow) {
         // if there is  an AGV that enters the edge before but exit the edge after the current AGV, then update the lower bound exit time
         lowerEndExitWindow = reservedExitTime;
@@ -168,12 +158,49 @@ public class EdgeAgent {
     return freeTimeWindows;
   }
   
-  public void addReservation(Range<Long> newReservation, Point startPoint, Point endPoint, long lifeTime, Range<Long> oldReservation) {
-    // TODO control the difference between two direction if remove old reservation
-    if (oldReservation != null) {
-      
-    }
+  /**
+   * Adds the reservation.
+   *
+   * @param startPoint the start point
+   * @param interval the interval
+   * @param lifeTime the life time
+   * @param agvID the agv id
+   */
+  public void addReservation(Point startPoint, Range<Long> interval,
+      long lifeTime, int agvID) {
+    reservationMap.get(startPoint)
+        .add(new Reservation(agvID, lifeTime, interval));
   }
   
-  // TODO control the difference between two direction when remove outdated reservations
+  /**
+   * Refresh reservation.
+   * Basically it just adds new reservation
+   *
+   * @param startPoint the start point
+   * @param interval the interval
+   * @param lifeTime the life time
+   * @param agvID the agv id
+   */
+  public void refreshReservation(Point startPoint, Range<Long> interval,
+      long lifeTime, int agvID) {
+    addReservation(startPoint, interval, lifeTime, agvID);
+  }
+  
+  /**
+   * Removes the out-dated reservations.
+   *
+   * @param currentTime the current time
+   */
+  public void removeOutdatedReservations(long currentTime) {
+    for (Map.Entry<Point, List<Reservation>> entry : reservationMap.entrySet()) {
+      List<Reservation> reservationList = entry.getValue();
+      Iterator<Reservation> iter = reservationList.iterator();
+      while (iter.hasNext()) {
+        Reservation reservation = iter.next();
+        if (reservation.getLifeTime() < currentTime) {
+          iter.remove();
+        }
+      }
+    }
+  }
 }

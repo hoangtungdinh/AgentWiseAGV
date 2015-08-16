@@ -18,11 +18,8 @@ import com.google.common.collect.TreeRangeSet;
  */
 public class NodeAgent {
   
-  /** The reservation list. */
-  private RangeSet<Long> reservationList;
-
-  /** The reservation life time. */
-  private Map<Range<Long>, Long> reservationLifeTime;
+ /** The reservations. */
+ private List<Reservation> reservations;
 
   /**
    * The shortest path length. It stores the shortest path length between the
@@ -34,32 +31,31 @@ public class NodeAgent {
    * Instantiates a new node agent.
    */
   public NodeAgent() {
-    reservationList = TreeRangeSet.create();
-    reservationLifeTime = new HashMap<>();
+    reservations = new ArrayList<>();
     shortestPathLength = new HashMap<>();
   }
   
   /**
-   * Gets the free time windows from the startTime.
+   * Gets the free time windows.
    *
    * @param possibleEntryWindow the possible entry window
-   * @param oldReservation the old reservation of this AGV in this node
+   * @param agvID the agv id
    * @return the free time windows
    */
-  public List<FreeTimeWindow> getFreeTimeWindows(Range<Long> possibleEntryWindow, Range<Long> oldReservation) {
-    RangeSet<Long> freeRanges;
+  public List<FreeTimeWindow> getFreeTimeWindows(Range<Long> possibleEntryWindow, int agvID) {
     
-    // get all possible free ranges
-    if (oldReservation == null) {
-      freeRanges = reservationList.complement()
-          .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
-    } else {
-      reservationList.remove(oldReservation);
-      freeRanges = reservationList.complement()
-          .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
-      reservationList.add(oldReservation);
+    // create the timeline of existing reservations
+    RangeSet<Long> existingReservations = TreeRangeSet.create();
+    for (Reservation reservation : reservations) {
+      if (reservation.getAgvID() != agvID) {
+        existingReservations.add(reservation.getInterval());
+      }
     }
     
+    // all possible free range
+    RangeSet<Long> freeRanges = existingReservations.complement()
+        .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
+  
     // mininum travel time required for AGVs to traverse a node
     // TODO is this calculation correct?
     final long minTravelTime = (long) (AGVSystem.VEHICLE_LENGTH * 2 / AGVSystem.VEHICLE_SPEED);
@@ -98,7 +94,7 @@ public class NodeAgent {
             .intersection(possibleEntryWindow);
         final Range<Long> exitWindow = Range.open(
             entryWindow.lowerEndpoint() + minTravelTime,
-            entryWindow.upperEndpoint() + minTravelTime);
+            range.upperEndpoint());
         final Range<Long> timeWindow = Range.open(entryWindow.lowerEndpoint(),
             exitWindow.upperEndpoint());
         freeTimeWindows
@@ -110,48 +106,26 @@ public class NodeAgent {
   }
   
   /**
-   * Adds the new reservation
+   * Adds the reservation.
    *
-   * @param newReservation the new reservation
+   * @param agvID the agv id
    * @param lifeTime the life time
-   * @param oldReservation the old reservation of this AGV in this node. If there is no old reservation, then it is null
-   * @return true, if successfully added
+   * @param interval the interval
    */
-  public void addReservation(Range<Long> newReservation, long lifeTime, Range<Long> oldReservation) {
-    
-    // if there exists old reservation from the previous plan of the AGV, then
-    // remove it.
-    if (oldReservation != null) {
-      reservationList.remove(oldReservation);
-      reservationLifeTime.remove(oldReservation);
-    }
-    
-    // get all overlapping range
-    RangeSet<Long> overlappingRanges = this.reservationList.subRangeSet(newReservation);
-    // check if there is any overlapping range
-    if (!overlappingRanges.isEmpty()) {
-      throw new Error("Overlapping reservation!");
-    }
-    
-    // add new reservation
-    reservationList.add(newReservation);
-    reservationLifeTime.put(newReservation, lifeTime);
+  public void addReservation(int agvID, long lifeTime, Range<Long> interval) {
+    reservations.add(new Reservation(agvID, lifeTime, interval));
   }
   
   /**
    * Refresh reservation.
+   * Basically, it just adds new reservation
    *
-   * @param reservation the reservation
+   * @param agvID the agv id
    * @param lifeTime the life time
+   * @param interval the interval
    */
-  public void refreshReservation(Range<Long> reservation, long lifeTime) {
-    if (reservationLifeTime.containsKey(reservation)) {
-      // if there exists the reservation then update it
-      reservationLifeTime.put(reservation, lifeTime);
-    } else {
-      // otherwise throw an error
-      throw new Error("No reservation for refreshing");
-    }
+  public void refreshReservation(int agvID, long lifeTime, Range<Long> interval) {
+    addReservation(agvID, lifeTime, interval);;
   }
   
   /**
@@ -160,13 +134,10 @@ public class NodeAgent {
    * @param currentTime the current time
    */
   public void removeOutDatedReservation(long currentTime) {
-    for (Iterator<Map.Entry<Range<Long>, Long>> iter = reservationLifeTime.entrySet().iterator(); iter.hasNext(); ) {
-      Map.Entry<Range<Long>, Long> entry = iter.next();
-      if (entry.getValue() <= currentTime) {
-        // if life time has passed
-        // remove from the reservation list
-        reservationList.remove(entry.getKey());
-        // remove from the reservation life time list
+    Iterator<Reservation> iter = reservations.iterator();
+    while (iter.hasNext()) {
+      Reservation reservation = iter.next();
+      if (reservation.getLifeTime() < currentTime) {
         iter.remove();
       }
     }
