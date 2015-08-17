@@ -109,7 +109,7 @@ public final class AGVSystem {
     sim.start();
   }
   
-  static class GraphCreator {
+  public static class GraphCreator {
     static final int LEFT_CENTER_U_ROW = 4;
     static final int LEFT_CENTER_L_ROW = 5;
     static final int LEFT_COL = 4;
@@ -133,10 +133,10 @@ public final class AGVSystem {
       return builder.build();
     }
 
-    static ListenableGraph<LengthData> createSimpleGraph() {
+    public static ListenableGraph<LengthData> createSimpleGraph() {
       final Graph<LengthData> g = new TableGraph<>();
 
-      final Table<Integer, Integer, Point> matrix = createMatrix(4, 4,
+      final Table<Integer, Integer, Point> matrix = createMatrix(100, 100,
           new Point(0, 0));
 
 //      for (int i = 0; i < matrix.columnMap().size(); i++) {
