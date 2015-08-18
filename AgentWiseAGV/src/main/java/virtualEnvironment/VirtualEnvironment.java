@@ -1,9 +1,8 @@
 package virtualEnvironment;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Stack;
 
 import org.apache.commons.math3.random.RandomGenerator;
 
@@ -14,6 +13,9 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
 import dmasForRouting.AGVSystem;
+import pathSampling.Path;
+import pathSampling.PathSampling;
+import resourceAgents.EdgeAgent;
 import resourceAgents.EdgeAgentList;
 import resourceAgents.FreeTimeWindow;
 import resourceAgents.NodeAgentList;
@@ -35,9 +37,6 @@ public class VirtualEnvironment implements TickListener {
   /** The edge agent list. */
   private EdgeAgentList edgeAgentList;
   
-  /** The random generator. */
-  private RandomGenerator randomGenerator;
-  
   /**
    * Instantiates a new virtual environment.
    *
@@ -49,39 +48,61 @@ public class VirtualEnvironment implements TickListener {
     this.roadModel = roadModel;
     nodeAgentList = new NodeAgentList(roadModel);
     edgeAgentList = new EdgeAgentList(roadModel);
-    this.randomGenerator = randomGenerator;
   }
   
-//  public RoutePlan exploreRoute(int agvID, long startTime, Point startNode,
-//      Point destination) {
-//    // get all free time windows of the start node
-//    List<FreeTimeWindow> freeTimeWindowsOnCurrentNode = nodeAgentList
-//        .getNodeAgent(startNode)
-//        .getFreeTimeWindows(Range.atLeast(startTime), agvID);
-//
-//    // minimum travel time for the first node
-//    // TODO is that calculation correct?
-//    final long minTravelTime = (long) (AGVSystem.VEHICLE_LENGTH
-//        / AGVSystem.VEHICLE_SPEED);
-//
-//    // list of free time windows that contain start time
-//    List<FreeTimeWindow> availableFreeTimeWindows = new ArrayList<>();
-//    for (FreeTimeWindow ftw : freeTimeWindowsOnCurrentNode) {
-//      if (ftw.getInterval().contains(startTime + 1)) {
-//        if (!ftw.getExitWindow().hasUpperBound() || ftw.getEntryWindow()
-//            .upperEndpoint() >= startTime + minTravelTime) {
-//          availableFreeTimeWindows.add(ftw);
-//        }
-//      }
-//    }
-//
-//    // get all directly connected nodes
-//    Collection<Point> connectedNodes = roadModel.getGraph()
-//        .getOutgoingConnections(startNode);
-//    
-//    
-//
-//  }
+  public RoutePlan exploreRoute(int agvID, long startTime, Point origin,
+      Point destination, int numOfPaths) {
+    
+    final List<Path> feasiblePaths = PathSampling.getFeasiblePaths(origin, destination, numOfPaths);
+    
+    for (Path path : feasiblePaths) {
+      final List<Point> candPath = path.getPath();
+      final Stack<RoutePlan> planStack = new Stack<>();
+      
+      // minimum travel time for a node
+      final long minNodeTravelTime = (long) (2 * AGVSystem.VEHICLE_LENGTH / AGVSystem.VEHICLE_SPEED);
+      
+      // free time window of the start node
+      final List<FreeTimeWindow> firstFreeTimeWindows = nodeAgentList
+          .getNodeAgent(candPath.get(0))
+          .getFreeTimeWindows(Range.atLeast(startTime), agvID);
+      
+      FreeTimeWindow startFTW = null;
+      
+      for (FreeTimeWindow ftw : firstFreeTimeWindows) {
+        if (ftw.getEntryWindow().contains(startTime)) {
+          startFTW = ftw;
+          break;
+        }
+      }
+      
+      if (startFTW == null) {
+        continue;
+      }
+      
+      planStack.push(new RoutePlan(candPath, startFTW.getExitWindow()));
+
+      while (!planStack.isEmpty()) {
+        RoutePlan routePlan = planStack.pop();
+
+        final int index = routePlan.getCurrentIndex();
+        final Range<Long> exitWindow = routePlan.getCurrentExitWindow();
+        final Point currentNode = candPath.get(index);
+        final Point nextNode = candPath.get(index + 1);
+
+        // select edge schedule
+        // select edge agent
+        final EdgeAgent edgeAgent = edgeAgentList
+            .getEdgeAgent(currentNode, nextNode);
+        
+        // list of free time window corresponding to the edge
+        final List<FreeTimeWindow> edgeFTWs = edgeAgent
+            .getFreeTimeWindows(currentNode, nextNode, exitWindow, agvID);
+        
+        
+      }
+    }
+  }
 
   @Override
   public void tick(TimeLapse timeLapse) {

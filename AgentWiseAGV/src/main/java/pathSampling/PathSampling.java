@@ -13,10 +13,10 @@ import dmasForRouting.AGVSystem.GraphCreator;
 
 public class PathSampling {
   
-  public PathSampling() {}
+  private PathSampling() {}
   
   @SuppressWarnings("unchecked")
-  public static List<Path> getPaths(Point origin, Point destination, int numOfPaths) {
+  public static List<Path> getFeasiblePaths(Point origin, Point destination, int numOfPaths) {
     // a clone graph
     ListenableGraph<?> graph = GraphCreator.createSimpleGraph();
     

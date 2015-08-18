@@ -1,6 +1,7 @@
 package routePlan;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
@@ -13,16 +14,49 @@ import com.google.common.collect.Range;
  */
 public class RoutePlan {
 
-  /** The path. */
+  /** The plan. */
   private LinkedList<PlanStep> plan;
+  
+  /** The path. */
+  private List<Point> path;
+  
+  /** The current index. */
+  private int currentIndex;
+  
+  /** The current exit window. */
+  private Range<Long> currentExitWindow;
   
   /**
    * Instantiates a new route plan.
+   *
+   * @param path the path
+   * @param exitWindow the exit window
    */
-  public RoutePlan() {
-    plan = new LinkedList<>();
+  public RoutePlan(List<Point> path, Range<Long> exitWindow) {
+    this.path = path;
+    this.currentExitWindow = exitWindow;
+    this.currentIndex = 0;
+    this.plan = new LinkedList<>();
   }
   
+  /**
+   * Instantiates a new route plan based on an existing route plan.
+   *
+   * @param currentPlan the current plan
+   * @param currentPath the current path
+   * @param nextIndex the next index
+   * @param nextExitWindow the next exit window
+   * @param nextPlanStep the next plan step
+   */
+  public RoutePlan(LinkedList<PlanStep> currentPlan, List<Point> currentPath, int nextIndex,
+      Range<Long> nextExitWindow, PlanStep nextPlanStep) {
+    this.plan = new LinkedList<>(plan);
+    this.path = currentPath;
+    this.currentIndex = nextIndex;
+    this.currentExitWindow = nextExitWindow;
+    this.plan.add(nextPlanStep);
+  }
+
   /**
    * Adds the next plan step.
    *
@@ -62,4 +96,42 @@ public class RoutePlan {
   public long getDestinationArrivalTime() {
     return plan.getLast().getInterval().lowerEndpoint();
   }
+
+  /**
+   * Gets the plan.
+   *
+   * @return the plan
+   */
+  public LinkedList<PlanStep> getPlan() {
+    return plan;
+  }
+
+  /**
+   * Gets the path.
+   *
+   * @return the path
+   */
+  public List<Point> getPath() {
+    return path;
+  }
+
+  /**
+   * Gets the current index.
+   *
+   * @return the current index
+   */
+  public int getCurrentIndex() {
+    return currentIndex;
+  }
+
+  /**
+   * Gets the current exit window.
+   *
+   * @return the current exit window
+   */
+  public Range<Long> getCurrentExitWindow() {
+    return currentExitWindow;
+  }
+  
+  
 }
