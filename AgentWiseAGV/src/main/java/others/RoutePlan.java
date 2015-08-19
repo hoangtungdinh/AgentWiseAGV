@@ -1,4 +1,4 @@
-package routePlan;
+package others;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,6 +26,15 @@ public class RoutePlan {
   /** The current exit window. */
   private Range<Long> currentExitWindow;
   
+  private ResourceElement lastPlannedResourceType;
+  
+  /**
+   * The Enum ResourceElement.
+   *
+   * @author Tung
+   */
+  public enum ResourceElement {NODE, EDGE};
+  
   /**
    * Instantiates a new route plan.
    *
@@ -37,6 +46,7 @@ public class RoutePlan {
     this.currentExitWindow = exitWindow;
     this.currentIndex = 0;
     this.plan = new LinkedList<>();
+    this.lastPlannedResourceType = ResourceElement.NODE;
   }
   
   /**
@@ -47,14 +57,17 @@ public class RoutePlan {
    * @param nextIndex the next index
    * @param nextExitWindow the next exit window
    * @param nextPlanStep the next plan step
+   * @param lastPlannedResourceType the last planned resource type
    */
-  public RoutePlan(LinkedList<PlanStep> currentPlan, List<Point> currentPath, int nextIndex,
-      Range<Long> nextExitWindow, PlanStep nextPlanStep) {
-    this.plan = new LinkedList<>(plan);
+  public RoutePlan(LinkedList<PlanStep> currentPlan, List<Point> currentPath,
+      int nextIndex, Range<Long> nextExitWindow, PlanStep nextPlanStep,
+      ResourceElement lastPlannedResourceType) {
+    this.plan = new LinkedList<>(currentPlan);
     this.path = currentPath;
     this.currentIndex = nextIndex;
     this.currentExitWindow = nextExitWindow;
     this.plan.add(nextPlanStep);
+    this.lastPlannedResourceType = lastPlannedResourceType;
   }
 
   /**
@@ -131,6 +144,15 @@ public class RoutePlan {
    */
   public Range<Long> getCurrentExitWindow() {
     return currentExitWindow;
+  }
+
+  /**
+   * Gets the last planned resource type.
+   *
+   * @return the last planned resource type
+   */
+  public ResourceElement getLastPlannedResourceType() {
+    return lastPlannedResourceType;
   }
   
   
