@@ -71,6 +71,18 @@ public class EdgeAgent {
   public List<FreeTimeWindow> getFreeTimeWindows(Point startPoint,
       Point endPoint, Range<Long> possibleEntryWindow, int agvID) {
     
+    // actual entry window (take into account the length of vehicles)
+    Range<Long> realPossibleEntryWindow;
+    final long lowerEndPoint = possibleEntryWindow.lowerEndpoint()
+        - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
+    if (possibleEntryWindow.hasUpperBound()) {
+      final long upperEndPoint = possibleEntryWindow.upperEndpoint()
+          - ((long) (AGVSystem.VEHICLE_LENGTH / AGVSystem.VEHICLE_SPEED));
+      realPossibleEntryWindow = Range.open(lowerEndPoint, upperEndPoint);
+    } else {
+      realPossibleEntryWindow = Range.greaterThan(lowerEndPoint);
+    }
+    
     // get all reservations from other direction
     RangeSet<Long> reservationsFromOtherDirection = TreeRangeSet.create();
     List<Reservation> resvList = reservationMap.get(endPoint);
@@ -82,10 +94,10 @@ public class EdgeAgent {
     
     // get all possible free ranges that do not conflict with AGVs from other direction
     RangeSet<Long> freeRanges = reservationsFromOtherDirection.complement()
-        .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
+        .subRangeSet(Range.atLeast(realPossibleEntryWindow.lowerEndpoint()));
  
     // get all entryWindows based on the reservations of opposite direction AGVs
-    RangeSet<Long> entryWindows = freeRanges.subRangeSet(possibleEntryWindow);
+    RangeSet<Long> entryWindows = freeRanges.subRangeSet(realPossibleEntryWindow);
     
     if (entryWindows.isEmpty()) {
       // no possible time window

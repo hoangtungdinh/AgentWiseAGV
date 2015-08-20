@@ -46,6 +46,18 @@ public class NodeAgent {
    */
   public List<FreeTimeWindow> getFreeTimeWindows(Range<Long> possibleEntryWindow, int agvID) {
     
+    // actual entry window (take into account the length of vehicles)
+    Range<Long> realPossibleEntryWindow;
+    final long lowerEndPoint = possibleEntryWindow.lowerEndpoint()
+        - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
+    if (possibleEntryWindow.hasUpperBound()) {
+      final long upperEndPoint = possibleEntryWindow.upperEndpoint()
+          - ((long) (AGVSystem.VEHICLE_LENGTH / AGVSystem.VEHICLE_SPEED));
+      realPossibleEntryWindow = Range.open(lowerEndPoint, upperEndPoint);
+    } else {
+      realPossibleEntryWindow = Range.greaterThan(lowerEndPoint);
+    }
+    
     // create the timeline of existing reservations
     RangeSet<Long> existingReservations = TreeRangeSet.create();
     for (Reservation reservation : reservations) {
@@ -56,7 +68,7 @@ public class NodeAgent {
     
     // all possible free range
     RangeSet<Long> freeRanges = existingReservations.complement()
-        .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
+        .subRangeSet(Range.atLeast(realPossibleEntryWindow.lowerEndpoint()));
   
     // mininum travel time required for AGVs to traverse a node
     final long minTravelTime = (long) ((AGVSystem.VEHICLE_LENGTH*2*1000) / AGVSystem.VEHICLE_SPEED);
@@ -67,13 +79,13 @@ public class NodeAgent {
     // to be a free time window, a range must be equal or longer than the minimum travel time
     for (Range<Long> range : freeRanges.asRanges()) {
       // if the free range is not connected to the possible entry window
-      if (!range.isConnected(possibleEntryWindow)) {
+      if (!range.isConnected(realPossibleEntryWindow)) {
         continue;
       }
       
       if (!range.hasUpperBound()) {
         // if there is no upper bound
-        final Range<Long> entryWindow = range.intersection(possibleEntryWindow);
+        final Range<Long> entryWindow = range.intersection(realPossibleEntryWindow);
         final Range<Long> exitWindow = Range
             .atLeast(entryWindow.lowerEndpoint() + minTravelTime);
         final Range<Long> timeWindow = Range
@@ -87,12 +99,12 @@ public class NodeAgent {
         final Range<Long> optimisticEntryWindow = Range
             .open(range.lowerEndpoint(), range.upperEndpoint() - minTravelTime);
 
-        if (!optimisticEntryWindow.isConnected(possibleEntryWindow)) {
+        if (!optimisticEntryWindow.isConnected(realPossibleEntryWindow)) {
           continue;
         }
 
         final Range<Long> entryWindow = optimisticEntryWindow
-            .intersection(possibleEntryWindow);
+            .intersection(realPossibleEntryWindow);
         final Range<Long> exitWindow = Range.open(
             entryWindow.lowerEndpoint() + minTravelTime,
             range.upperEndpoint());

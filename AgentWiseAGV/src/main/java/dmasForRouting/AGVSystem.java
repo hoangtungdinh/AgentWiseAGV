@@ -98,10 +98,10 @@ public final class AGVSystem {
     
     VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel, sim.getRandomGenerator());
     
-    Plan plan = virtualEnvironment.exploreRoute(1, 0, new Point(0d, 0d), new Point(0d, 24d), 3);
+    Plan plan = virtualEnvironment.exploreRoute(1, 2000, new Point(0d, 0d), new Point(0d, 24d), 3);
     virtualEnvironment.makeReservation(1, plan, 10);
     
-    Plan plan2 = virtualEnvironment.exploreRoute(2, 0, new Point(0d, 24d), new Point(0d, 0d), 5);
+    Plan plan2 = virtualEnvironment.exploreRoute(2, 2000, new Point(0d, 24d), new Point(0d, 0d), 5);
     virtualEnvironment.makeReservation(2, plan2, 10);
     
     try {

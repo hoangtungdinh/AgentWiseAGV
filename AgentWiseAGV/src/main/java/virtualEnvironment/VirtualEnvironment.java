@@ -13,6 +13,7 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
+import dmasForRouting.AGVSystem;
 import pathSampling.Path;
 import pathSampling.PathSampling;
 import resourceAgents.EdgeAgent;
@@ -154,7 +155,9 @@ public class VirtualEnvironment implements TickListener {
     for (int i = freeTimeWindows.size() - 2; i >= 0; i--) {
       intervals.addFirst(
           Range.closed(freeTimeWindows.get(i).getEntryWindow().lowerEndpoint(),
-              intervals.getFirst().lowerEndpoint()));
+              intervals.getFirst().lowerEndpoint()
+                  + ((long) (AGVSystem.VEHICLE_LENGTH * 1000
+                      / AGVSystem.VEHICLE_SPEED))));
     }
     
     Plan plan = new Plan(bestPlan.getPath(), intervals);
