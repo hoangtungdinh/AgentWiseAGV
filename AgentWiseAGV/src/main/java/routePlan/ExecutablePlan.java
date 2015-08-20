@@ -40,9 +40,11 @@ public class ExecutablePlan {
    * Calculate check points.
    */
   private void calculateCheckPoints() {
-    final long timeLeftToLeave = (long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED);
+    final double safeDistance = AGVSystem.VEHICLE_LENGTH + 0.1;
+    final long timeLeftToLeaveNode = (long) (AGVSystem.VEHICLE_LENGTH *1000 / AGVSystem.VEHICLE_SPEED);
+    final long timeLeftToLeaveEdge = (long) (safeDistance*1000 / AGVSystem.VEHICLE_SPEED);
     
-    checkPoints.add(new CheckPoint(path.get(0), intervals.get(0).upperEndpoint() - timeLeftToLeave));
+    checkPoints.add(new CheckPoint(path.get(0), intervals.get(0).upperEndpoint() - timeLeftToLeaveNode));
     
     CheckPoint newCheckPoint;
     
@@ -67,11 +69,11 @@ public class ExecutablePlan {
         }
         
         if (moveLeft) {
-          final Point p = new Point(path.get(i + 1).x + AGVSystem.VEHICLE_LENGTH, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeave);
+          final Point p = new Point(path.get(i + 1).x + safeDistance, path.get(i).y);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
         } else {
-          final Point p = new Point(path.get(i + 1).x - AGVSystem.VEHICLE_LENGTH, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeave);
+          final Point p = new Point(path.get(i + 1).x - safeDistance, path.get(i).y);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
         }
       } else {
         // if move vertically check if move up or move down
@@ -83,11 +85,11 @@ public class ExecutablePlan {
         }
         
         if (moveUp) {
-          final Point p = new Point(path.get(i).x, path.get(i + 1).y + AGVSystem.VEHICLE_LENGTH);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeave);
+          final Point p = new Point(path.get(i).x, path.get(i + 1).y + safeDistance);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
         } else {
-          final Point p = new Point(path.get(i).x, path.get(i + 1).y - AGVSystem.VEHICLE_LENGTH);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeave);
+          final Point p = new Point(path.get(i).x, path.get(i + 1).y - safeDistance);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
         }
       }
       
@@ -96,7 +98,7 @@ public class ExecutablePlan {
       
       // add the check point of the node, which is the node itself
       if (intervals.get(i*2 + 2).hasUpperBound() || i != path.size() - 2) {
-        checkPoints.add(new CheckPoint(path.get(i + 1), intervals.get(i*2 + 2).upperEndpoint() - timeLeftToLeave));
+        checkPoints.add(new CheckPoint(path.get(i + 1), intervals.get(i*2 + 2).upperEndpoint() - timeLeftToLeaveNode));
       }
     }
   }

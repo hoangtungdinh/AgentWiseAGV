@@ -71,9 +71,9 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
     
-//    for (CheckPoint checkPoint : checkPoints) {
-//      System.out.println(checkPoint.getPoint());
-//    }
+    for (CheckPoint checkPoint : checkPoints) {
+      System.out.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
+    }
     
 //    path = new LinkedList<>(roadModel.get().getShortestPathTo(this,
 //        destination.get()));

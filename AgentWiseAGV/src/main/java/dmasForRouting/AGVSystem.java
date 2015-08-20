@@ -77,7 +77,7 @@ public final class AGVSystem {
                 .withDistanceUnit(SI.METER)
                 .withVehicleLength(VEHICLE_LENGTH)
                 .withSpeedUnit(SI.METERS_PER_SECOND)
-                .withMinDistance(0))
+                .withMinDistance(0d))
         .setTimeUnit(SI.MILLI(SI.SECOND))
         .setTickLength(100)
         .addModel(viewBuilder)

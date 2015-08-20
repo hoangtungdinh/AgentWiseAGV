@@ -38,7 +38,7 @@ public class EdgeAgent {
    * @param length the length of the edge
    */
   public EdgeAgent(Point p1, Point p2, double length) {
-    this.length = length;
+    this.length = length - AGVSystem.VEHICLE_LENGTH;
     
     reservationMap = new HashMap<>();
     
