@@ -1,7 +1,5 @@
 package dmasForRouting;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -21,14 +19,10 @@ import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
-import com.google.common.collect.Range;
 import com.google.common.collect.Table;
 
 import destinationGenerator.DestinationGenerator;
 import destinationGenerator.DestinationList;
-import routePlan.CheckPoint;
-import routePlan.ExecutablePlan;
-import routePlan.Plan;
 import virtualEnvironment.VirtualEnvironment;
 
 public final class AGVSystem {
@@ -38,7 +32,7 @@ public final class AGVSystem {
   public static final int NUM_AGVS = 1;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
-  public static final int NUM_DESTS = 10;
+  public static final int NUM_DESTS = 1;
 
   private AGVSystem() {}
 
@@ -82,7 +76,8 @@ public final class AGVSystem {
                 .withCollisionAvoidance()
                 .withDistanceUnit(SI.METER)
                 .withVehicleLength(VEHICLE_LENGTH)
-                .withSpeedUnit(SI.METERS_PER_SECOND))
+                .withSpeedUnit(SI.METERS_PER_SECOND)
+                .withMinDistance(0))
         .setTimeUnit(SI.MILLI(SI.SECOND))
         .setTickLength(100)
         .addModel(viewBuilder)
@@ -100,30 +95,29 @@ public final class AGVSystem {
     
     VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel, sim.getRandomGenerator());
     
-    Plan plan = virtualEnvironment.exploreRoute(1, 2000, new Point(0d, 0d), new Point(0d, 24d), 3);
-    virtualEnvironment.makeReservation(1, plan, 10);
-    ExecutablePlan executablePlan = new ExecutablePlan(plan);
-    
-    try {
-      PrintWriter printWriter = new PrintWriter("testResult.txt");
-      
-      printWriter.println(plan.getPath());
-      
-      for (Range<Long> range : plan.getIntervals()) {
-        printWriter.println(range);
-      }
-      
-      printWriter.println();
-      
-      for (CheckPoint checkPoint : executablePlan.getCheckPoints()) {
-        printWriter.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
-      }
-
-      printWriter.close();
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }
-    
+//    Plan plan = virtualEnvironment.exploreRoute(1, 2000, new Point(0d, 0d), new Point(0d, 24d), 3);
+//    virtualEnvironment.makeReservation(1, plan, 10);
+//    ExecutablePlan executablePlan = new ExecutablePlan(plan);
+//    
+//    try {
+//      PrintWriter printWriter = new PrintWriter("testResult.txt");
+//      
+//      printWriter.println(plan.getPath());
+//      
+//      for (Range<Long> range : plan.getIntervals()) {
+//        printWriter.println(range);
+//      }
+//      
+//      printWriter.println();
+//      
+//      for (CheckPoint checkPoint : executablePlan.getCheckPoints()) {
+//        printWriter.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
+//      }
+//
+//      printWriter.close();
+//    } catch (FileNotFoundException e) {
+//      e.printStackTrace();
+//    }
      
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
@@ -135,7 +129,7 @@ public final class AGVSystem {
     for (int i = 0; i < NUM_AGVS; i++) {
       sim.register(new VehicleAgent(sim.getRandomGenerator(),
           destinationLists.get(i).getDestinationList(), virtualEnvironment,
-          i + 1));
+          i + 1, sim));
     }
 
     sim.start();

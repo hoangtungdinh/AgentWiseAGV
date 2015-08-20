@@ -18,5 +18,6 @@ public class Test {
     
     System.out.println(testList);
     System.out.println(newList);
+    System.out.println(Math.round(12.70000000001 * 10) / 10d);
   }
 }

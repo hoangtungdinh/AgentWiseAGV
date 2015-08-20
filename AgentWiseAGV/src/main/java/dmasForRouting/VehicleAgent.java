@@ -6,6 +6,7 @@ import java.util.Queue;
 
 import org.apache.commons.math3.random.RandomGenerator;
 
+import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.MovingRoadUser;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
@@ -14,6 +15,9 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
+import routePlan.CheckPoint;
+import routePlan.ExecutablePlan;
+import routePlan.Plan;
 import virtualEnvironment.VirtualEnvironment;
 
 class VehicleAgent implements TickListener, MovingRoadUser {
@@ -24,9 +28,12 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   private LinkedList<Point> destinationList;
   private VirtualEnvironment virtualEnvironment;
   private int agvID;
+  private ExecutablePlan executablePlan;
+  private LinkedList<CheckPoint> checkPoints;
+  private Simulator sim;
 
   VehicleAgent(RandomGenerator r, List<Point> destinationList,
-      VirtualEnvironment virtualEnvironment, int agvID) {
+      VirtualEnvironment virtualEnvironment, int agvID, Simulator sim) {
     rng = r;
     roadModel = Optional.absent();
     destination = Optional.absent();
@@ -34,6 +41,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     this.destinationList = new LinkedList<Point>(destinationList);
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
+    this.sim = sim;
   }
 
   @Override
@@ -57,8 +65,18 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     }
     destination = Optional.of(destinationList.getFirst());
     destinationList.removeFirst();
-    path = new LinkedList<>(roadModel.get().getShortestPathTo(this,
-        destination.get()));
+    
+    Plan plan = virtualEnvironment.exploreRoute(agvID, 0, roadModel.get().getPosition(this), destination.get(), 3);
+    executablePlan = new ExecutablePlan(plan);
+    path = new LinkedList<>(executablePlan.getPath());
+    checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
+    
+//    for (CheckPoint checkPoint : checkPoints) {
+//      System.out.println(checkPoint.getPoint());
+//    }
+    
+//    path = new LinkedList<>(roadModel.get().getShortestPathTo(this,
+//        destination.get()));
   }
 
   @Override
@@ -68,7 +86,13 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     // IDEA: check the position. If right before it leaves an edge or a node, it still have to wait, then consume time
-    System.out.println(roadModel.get().getPosition(this));
+    Point currentPos = roadModel.get().getPosition(this);
+    Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
+    if (roundedPos.equals(checkPoints.getFirst().getPoint())) {
+      System.out.println(roadModel.get().getPosition(this));
+      sim.stop();
+      checkPoints.removeFirst();
+    }
     
     
     roadModel.get().followPath(this, path, timeLapse);
@@ -76,6 +100,10 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     if (roadModel.get().getPosition(this).equals(destination.get())) {
       nextDestination();
     }
+  }
+  
+  public double round(double input) {
+    return (Math.round(input * 10) / 10d);
   }
 
   @Override
