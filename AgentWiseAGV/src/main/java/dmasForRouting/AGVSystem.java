@@ -26,6 +26,8 @@ import com.google.common.collect.Table;
 
 import destinationGenerator.DestinationGenerator;
 import destinationGenerator.DestinationList;
+import routePlan.CheckPoint;
+import routePlan.ExecutablePlan;
 import routePlan.Plan;
 import virtualEnvironment.VirtualEnvironment;
 
@@ -33,7 +35,7 @@ public final class AGVSystem {
 
   public static final double VEHICLE_LENGTH = 2d;
   public static final double VEHICLE_SPEED = 1d;
-  public static final int NUM_AGVS = 2;
+  public static final int NUM_AGVS = 1;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
   public static final int NUM_DESTS = 10;
@@ -100,27 +102,23 @@ public final class AGVSystem {
     
     Plan plan = virtualEnvironment.exploreRoute(1, 2000, new Point(0d, 0d), new Point(0d, 24d), 3);
     virtualEnvironment.makeReservation(1, plan, 10);
-    
-    Plan plan2 = virtualEnvironment.exploreRoute(2, 2000, new Point(0d, 24d), new Point(0d, 0d), 5);
-    virtualEnvironment.makeReservation(2, plan2, 10);
+    ExecutablePlan executablePlan = new ExecutablePlan(plan);
     
     try {
       PrintWriter printWriter = new PrintWriter("testResult.txt");
       
       printWriter.println(plan.getPath());
-      List<Range<Long>> intervals = plan.getIntervals();
-      for (Range<Long> interval : intervals) {
-        printWriter.println(interval);
+      
+      for (Range<Long> range : plan.getIntervals()) {
+        printWriter.println(range);
       }
       
       printWriter.println();
       
-      printWriter.println(plan2.getPath());
-      List<Range<Long>> intervals2 = plan2.getIntervals();
-      for (Range<Long> interval : intervals2) {
-        printWriter.println(interval);
+      for (CheckPoint checkPoint : executablePlan.getCheckPoints()) {
+        printWriter.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
       }
-      
+
       printWriter.close();
     } catch (FileNotFoundException e) {
       e.printStackTrace();
@@ -136,7 +134,8 @@ public final class AGVSystem {
 
     for (int i = 0; i < NUM_AGVS; i++) {
       sim.register(new VehicleAgent(sim.getRandomGenerator(),
-          destinationLists.get(i).getDestinationList()));
+          destinationLists.get(i).getDestinationList(), virtualEnvironment,
+          i + 1));
     }
 
     sim.start();

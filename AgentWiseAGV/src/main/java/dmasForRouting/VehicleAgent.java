@@ -14,19 +14,26 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
+import virtualEnvironment.VirtualEnvironment;
+
 class VehicleAgent implements TickListener, MovingRoadUser {
   private final RandomGenerator rng;
   private Optional<CollisionGraphRoadModel> roadModel;
   private Optional<Point> destination;
   private Queue<Point> path;
   private LinkedList<Point> destinationList;
+  private VirtualEnvironment virtualEnvironment;
+  private int agvID;
 
-  VehicleAgent(RandomGenerator r, List<Point> destinationList) {
+  VehicleAgent(RandomGenerator r, List<Point> destinationList,
+      VirtualEnvironment virtualEnvironment, int agvID) {
     rng = r;
     roadModel = Optional.absent();
     destination = Optional.absent();
     path = new LinkedList<>();
     this.destinationList = new LinkedList<Point>(destinationList);
+    this.virtualEnvironment = virtualEnvironment;
+    this.agvID = agvID;
   }
 
   @Override
@@ -59,7 +66,11 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     if (!destination.isPresent()) {
       nextDestination();
     }
-
+    
+    // IDEA: check the position. If right before it leaves an edge or a node, it still have to wait, then consume time
+    System.out.println(roadModel.get().getPosition(this));
+    
+    
     roadModel.get().followPath(this, path, timeLapse);
 
     if (roadModel.get().getPosition(this).equals(destination.get())) {

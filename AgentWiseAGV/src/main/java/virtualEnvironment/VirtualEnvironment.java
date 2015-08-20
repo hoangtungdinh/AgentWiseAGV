@@ -52,8 +52,6 @@ public class VirtualEnvironment implements TickListener {
   public Plan exploreRoute(int agvID, long startTime, Point origin,
       Point destination, int numOfPaths) {
     
-    System.out.println(agvID);
-    
     // sampling the environment to get several feasible paths
     final List<Path> feasiblePaths = PathSampling.getFeasiblePaths(origin, destination, numOfPaths);
     final List<PlanFTW> feasiblePlans = new ArrayList<>();
