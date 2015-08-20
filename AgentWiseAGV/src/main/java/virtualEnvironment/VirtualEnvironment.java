@@ -149,7 +149,7 @@ public class VirtualEnvironment implements TickListener {
       intervals.addFirst(Range.closed(lastInterval.lowerEndpoint(),
           lastInterval.upperEndpoint()));
     } else {
-      intervals.addFirst(Range.greaterThan(lastInterval.lowerEndpoint()));
+      intervals.addFirst(Range.atLeast(lastInterval.lowerEndpoint()));
     }
     for (int i = freeTimeWindows.size() - 2; i >= 0; i--) {
       intervals.addFirst(

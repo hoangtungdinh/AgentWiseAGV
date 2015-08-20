@@ -24,12 +24,9 @@ import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Range;
 import com.google.common.collect.Table;
 
-import ch.qos.logback.core.joran.action.NewRuleAction;
 import destinationGenerator.DestinationGenerator;
 import destinationGenerator.DestinationList;
-import resourceAgents.FreeTimeWindow;
 import routePlan.Plan;
-import routePlan.PlanFTW;
 import virtualEnvironment.VirtualEnvironment;
 
 public final class AGVSystem {
@@ -82,7 +79,10 @@ public final class AGVSystem {
             RoadModelBuilders.dynamicGraph(GraphCreator.createSimpleGraph())
                 .withCollisionAvoidance()
                 .withDistanceUnit(SI.METER)
-                .withVehicleLength(VEHICLE_LENGTH))
+                .withVehicleLength(VEHICLE_LENGTH)
+                .withSpeedUnit(SI.METERS_PER_SECOND))
+        .setTimeUnit(SI.MILLI(SI.SECOND))
+        .setTickLength(100)
         .addModel(viewBuilder)
         // add a random seed
         .setRandomSeed(0)
@@ -98,10 +98,10 @@ public final class AGVSystem {
     
     VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel, sim.getRandomGenerator());
     
-    Plan plan = virtualEnvironment.exploreRoute(1, 0, new Point(0d, 0d), new Point(0d, 8d), 3);
+    Plan plan = virtualEnvironment.exploreRoute(1, 0, new Point(0d, 0d), new Point(0d, 24d), 3);
     virtualEnvironment.makeReservation(1, plan, 10);
     
-    Plan plan2 = virtualEnvironment.exploreRoute(2, 0, new Point(0d, 8d), new Point(0d, 0d), 5);
+    Plan plan2 = virtualEnvironment.exploreRoute(2, 0, new Point(0d, 24d), new Point(0d, 0d), 5);
     virtualEnvironment.makeReservation(2, plan2, 10);
     
     try {

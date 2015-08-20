@@ -11,6 +11,8 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
+import dmasForRouting.AGVSystem;
+
 /**
  * The Class EdgeAgent.
  *
@@ -98,8 +100,7 @@ public class EdgeAgent {
     List<Reservation> reservationsWithSameDirection = reservationMap.get(startPoint);
     
     // minimum travel time
-    // TODO is this calculation correct?
-    long minTravelTime = 4;
+    long minTravelTime = (long) (((length + AGVSystem.VEHICLE_LENGTH) * 1000) / AGVSystem.VEHICLE_SPEED);
     
     long lowerEndExitWindow = -1;
     long upperEndExitWindow = Long.MAX_VALUE;

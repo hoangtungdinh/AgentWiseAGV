@@ -11,6 +11,8 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
+import dmasForRouting.AGVSystem;
+
 /**
  * The Class ResourceAgent.
  *
@@ -57,8 +59,7 @@ public class NodeAgent {
         .subRangeSet(Range.atLeast(possibleEntryWindow.lowerEndpoint()));
   
     // mininum travel time required for AGVs to traverse a node
-    // TODO is this calculation correct?
-    final long minTravelTime = 4;
+    final long minTravelTime = (long) ((AGVSystem.VEHICLE_LENGTH*2*1000) / AGVSystem.VEHICLE_SPEED);
     
     // list of free time windows
     List<FreeTimeWindow> freeTimeWindows = new ArrayList<>();
