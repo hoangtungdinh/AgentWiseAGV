@@ -1,5 +1,7 @@
 package dmasForRouting;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -19,10 +21,16 @@ import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Range;
 import com.google.common.collect.Table;
 
+import ch.qos.logback.core.joran.action.NewRuleAction;
 import destinationGenerator.DestinationGenerator;
 import destinationGenerator.DestinationList;
+import resourceAgents.FreeTimeWindow;
+import routePlan.Plan;
+import routePlan.PlanFTW;
+import virtualEnvironment.VirtualEnvironment;
 
 public final class AGVSystem {
 
@@ -82,17 +90,42 @@ public final class AGVSystem {
     
     CollisionGraphRoadModel roadModel = (CollisionGraphRoadModel) sim.getModelProvider().tryGetModel(RoadModel.class);
     
-    // TODO Test path sampling
-//    PathSampling pathSampling = new PathSampling(roadModel, sim.getRandomGenerator());
-//    for (int i = 0; i < 1; i++) {
-//      System.out.println(pathSampling.getRandomPath(new Point(0d, 0d), new Point(24d, 24d)));
-//    }
-    
     // check whether the road model is retrieved successfully
     if (roadModel == null) {
       throw new NullPointerException(
           "Cannot get the road model from the simulator");
     }
+    
+    VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel, sim.getRandomGenerator());
+    
+    Plan plan = virtualEnvironment.exploreRoute(1, 0, new Point(0d, 0d), new Point(0d, 8d), 3);
+    virtualEnvironment.makeReservation(1, plan, 10);
+    
+    Plan plan2 = virtualEnvironment.exploreRoute(2, 0, new Point(0d, 8d), new Point(0d, 0d), 5);
+    virtualEnvironment.makeReservation(2, plan2, 10);
+    
+    try {
+      PrintWriter printWriter = new PrintWriter("testResult.txt");
+      
+      printWriter.println(plan.getPath());
+      List<Range<Long>> intervals = plan.getIntervals();
+      for (Range<Long> interval : intervals) {
+        printWriter.println(interval);
+      }
+      
+      printWriter.println();
+      
+      printWriter.println(plan2.getPath());
+      List<Range<Long>> intervals2 = plan2.getIntervals();
+      for (Range<Long> interval : intervals2) {
+        printWriter.println(interval);
+      }
+      
+      printWriter.close();
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    
      
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
@@ -136,7 +169,7 @@ public final class AGVSystem {
     public static ListenableGraph<LengthData> createSimpleGraph() {
       final Graph<LengthData> g = new TableGraph<>();
 
-      final Table<Integer, Integer, Point> matrix = createMatrix(100, 100,
+      final Table<Integer, Integer, Point> matrix = createMatrix(4, 4,
           new Point(0, 0));
 
 //      for (int i = 0; i < matrix.columnMap().size(); i++) {

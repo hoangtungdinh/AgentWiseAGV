@@ -6,10 +6,6 @@ import java.util.List;
 import java.util.Stack;
 
 import org.apache.commons.math3.random.RandomGenerator;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.internal.cocoa.id;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Link;
 
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.time.TickListener;
@@ -17,10 +13,6 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
-import dmasForRouting.AGVSystem;
-import others.PlanStep;
-import others.RoutePlan;
-import others.RoutePlan.ResourceElement;
 import pathSampling.Path;
 import pathSampling.PathSampling;
 import resourceAgents.EdgeAgent;
@@ -28,6 +20,7 @@ import resourceAgents.EdgeAgentList;
 import resourceAgents.FreeTimeWindow;
 import resourceAgents.NodeAgent;
 import resourceAgents.NodeAgentList;
+import routePlan.Plan;
 import routePlan.PlanFTW;
 
 /**
@@ -36,9 +29,6 @@ import routePlan.PlanFTW;
  * @author Tung
  */
 public class VirtualEnvironment implements TickListener {
-  
-  /** The road model. */
-  private CollisionGraphRoadModel roadModel;
   
   /** The node agent list. */
   private NodeAgentList nodeAgentList;
@@ -54,13 +44,14 @@ public class VirtualEnvironment implements TickListener {
    */
   public VirtualEnvironment(CollisionGraphRoadModel roadModel,
       RandomGenerator randomGenerator) {
-    this.roadModel = roadModel;
     nodeAgentList = new NodeAgentList(roadModel);
     edgeAgentList = new EdgeAgentList(roadModel);
   }
   
-  public RoutePlan exploreRoute(int agvID, long startTime, Point origin,
+  public Plan exploreRoute(int agvID, long startTime, Point origin,
       Point destination, int numOfPaths) {
+    
+    System.out.println(agvID);
     
     // sampling the environment to get several feasible paths
     final List<Path> feasiblePaths = PathSampling.getFeasiblePaths(origin, destination, numOfPaths);
@@ -78,7 +69,8 @@ public class VirtualEnvironment implements TickListener {
       
       // there should be only one free time window that contains the startTime
       for (FreeTimeWindow ftw : firstFreeTimeWindows) {
-        if (ftw.getEntryWindow().contains(startTime)) {
+        if (ftw.getEntryWindow().contains(startTime)
+            || ftw.getEntryWindow().lowerEndpoint() == startTime) {
           startFTW = ftw;
           break;
         }
@@ -125,6 +117,10 @@ public class VirtualEnvironment implements TickListener {
           nextFTWs = nodeAgent
               .getFreeTimeWindows(currentFTWs.getLast().getExitWindow(), agvID);
         }
+        
+        if (nextFTWs == null) {
+          continue;
+        }
 
         for (FreeTimeWindow ftw : nextFTWs) {
           final LinkedList<FreeTimeWindow> newFtwList = new LinkedList<>(
@@ -143,20 +139,61 @@ public class VirtualEnvironment implements TickListener {
         bestPlan = planFTW;
       }
     }
-
-    // TODO create route plan
-      
+    
+    // generate actual plan from the time window plan
+    final LinkedList<Range<Long>> intervals = new LinkedList<>();
+    final List<FreeTimeWindow> freeTimeWindows = bestPlan.getFreeTimeWindows();
+    final Range<Long> lastInterval = freeTimeWindows
+        .get(freeTimeWindows.size() - 1).getInterval();
+    if (lastInterval.hasUpperBound()) {
+      intervals.addFirst(Range.closed(lastInterval.lowerEndpoint(),
+          lastInterval.upperEndpoint()));
+    } else {
+      intervals.addFirst(Range.greaterThan(lastInterval.lowerEndpoint()));
+    }
+    for (int i = freeTimeWindows.size() - 2; i >= 0; i--) {
+      intervals.addFirst(
+          Range.closed(freeTimeWindows.get(i).getEntryWindow().lowerEndpoint(),
+              intervals.getFirst().lowerEndpoint()));
+    }
+    
+    Plan plan = new Plan(bestPlan.getPath(), intervals);
+    
+    return plan;
   }
-
+  
+  
+  /**
+   * Make reservation.
+   *
+   * @param agvID the agv id
+   * @param plan the plan
+   * @param lifeTime the life time
+   */
+  public void makeReservation(int agvID, Plan plan, long lifeTime) {
+    List<Point> path = plan.getPath();
+    List<Range<Long>> intervals = plan.getIntervals();
+    for (int i = 0; i < path.size() - 1; i++) {
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i));
+      nodeAgent.addReservation(agvID, lifeTime, intervals.get(i * 2));
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(path.get(i),
+          path.get(i + 1));
+      edgeAgent.addReservation(path.get(i), intervals.get(i * 2 + 1), lifeTime,
+          agvID);
+    }
+    final NodeAgent lastNodeAgent = nodeAgentList
+        .getNodeAgent(path.get(path.size() - 1));
+    lastNodeAgent.addReservation(agvID, lifeTime,
+        intervals.get(intervals.size() - 1));
+  }
+  
   @Override
   public void tick(TimeLapse timeLapse) {
-    // TODO Auto-generated method stub
     
   }
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
-    // TODO Auto-generated method stub
     
   }
 }

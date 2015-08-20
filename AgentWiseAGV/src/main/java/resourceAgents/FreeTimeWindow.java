@@ -59,5 +59,12 @@ public class FreeTimeWindow {
     return exitWindow;
   }
  
-  
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return ("\nInterval: " + interval + "\nEntry window: " + entryWindow
+        + "\nExit window: " + exitWindow + "\n");
+  }
 }

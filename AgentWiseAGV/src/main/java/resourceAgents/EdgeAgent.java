@@ -11,8 +11,6 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
-import dmasForRouting.AGVSystem;
-
 /**
  * The Class EdgeAgent.
  *
@@ -101,7 +99,7 @@ public class EdgeAgent {
     
     // minimum travel time
     // TODO is this calculation correct?
-    long minTravelTime = (long) ((this.length + AGVSystem.VEHICLE_LENGTH) / AGVSystem.VEHICLE_SPEED);
+    long minTravelTime = 4;
     
     long lowerEndExitWindow = -1;
     long upperEndExitWindow = Long.MAX_VALUE;
@@ -126,7 +124,12 @@ public class EdgeAgent {
     }
     
     long lowerEndEntryWindow = optimisticEntryWindow.lowerEndpoint();
-    long upperEndEntryWindow = optimisticEntryWindow.upperEndpoint();
+    long upperEndEntryWindow;
+    if (optimisticEntryWindow.hasUpperBound()) {
+      upperEndEntryWindow = optimisticEntryWindow.upperEndpoint();
+    } else {
+      upperEndEntryWindow = Long.MAX_VALUE;
+    }
     
     Range<Long> optimisticTimeWindow = Range.open(lowerEndEntryWindow, upperEndExitWindow);
     RangeSet<Long> allNonConflictTimeWindow = freeRanges.subRangeSet(optimisticTimeWindow);
