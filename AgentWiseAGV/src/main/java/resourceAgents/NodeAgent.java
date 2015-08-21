@@ -22,6 +22,9 @@ public class NodeAgent {
   
  /** The reservations. */
  private List<Reservation> reservations;
+ 
+ /** The node that the agent associated. */
+ private Point node;
 
   /**
    * The shortest path length. It stores the shortest path length between the
@@ -32,9 +35,10 @@ public class NodeAgent {
   /**
    * Instantiates a new node agent.
    */
-  public NodeAgent() {
+  public NodeAgent(Point node) {
     reservations = new ArrayList<>();
     shortestPathLength = new HashMap<>();
+    this.node = node;
   }
   
   /**
@@ -53,9 +57,9 @@ public class NodeAgent {
     if (possibleEntryWindow.hasUpperBound()) {
       final long upperEndPoint = possibleEntryWindow.upperEndpoint()
           - ((long) (AGVSystem.VEHICLE_LENGTH / AGVSystem.VEHICLE_SPEED));
-      realPossibleEntryWindow = Range.open(lowerEndPoint, upperEndPoint);
+      realPossibleEntryWindow = Range.closed(lowerEndPoint, upperEndPoint);
     } else {
-      realPossibleEntryWindow = Range.greaterThan(lowerEndPoint);
+      realPossibleEntryWindow = Range.atLeast(lowerEndPoint);
     }
     
     // create the timeline of existing reservations
@@ -97,7 +101,7 @@ public class NodeAgent {
         // if there is upper bound but the range is still longer than the
         // minimum travel time
         final Range<Long> optimisticEntryWindow = Range
-            .open(range.lowerEndpoint(), range.upperEndpoint() - minTravelTime);
+            .closed(range.lowerEndpoint(), range.upperEndpoint() - minTravelTime);
 
         if (!optimisticEntryWindow.isConnected(realPossibleEntryWindow)) {
           continue;
@@ -105,10 +109,10 @@ public class NodeAgent {
 
         final Range<Long> entryWindow = optimisticEntryWindow
             .intersection(realPossibleEntryWindow);
-        final Range<Long> exitWindow = Range.open(
+        final Range<Long> exitWindow = Range.closed(
             entryWindow.lowerEndpoint() + minTravelTime,
             range.upperEndpoint());
-        final Range<Long> timeWindow = Range.open(entryWindow.lowerEndpoint(),
+        final Range<Long> timeWindow = Range.closed(entryWindow.lowerEndpoint(),
             exitWindow.upperEndpoint());
         freeTimeWindows
             .add(new FreeTimeWindow(timeWindow, entryWindow, exitWindow));
@@ -126,7 +130,9 @@ public class NodeAgent {
    * @param interval the interval
    */
   public void addReservation(int agvID, long lifeTime, Range<Long> interval) {
-    reservations.add(new Reservation(agvID, lifeTime, interval));
+    final long lowerEndPoint = interval.lowerEndpoint();
+    final long upperEndPoint = interval.upperEndpoint();
+    reservations.add(new Reservation(agvID, lifeTime, Range.open(lowerEndPoint, upperEndPoint)));
   }
   
   /**
@@ -175,4 +181,10 @@ public class NodeAgent {
   public double getPathLength(Point point) {
     return shortestPathLength.get(point);
   }
+
+  public Point getNode() {
+    return node;
+  }
+  
+  
 }

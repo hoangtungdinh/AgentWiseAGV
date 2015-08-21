@@ -33,7 +33,7 @@ public class NodeAgentList {
     
     Set<Point> allNodes = roadModel.getGraph().getNodes();
     for (Point node : allNodes) {
-      NodeAgent nodeAgent = new NodeAgent();
+      NodeAgent nodeAgent = new NodeAgent(node);
       nodeAgentMap.put(node, nodeAgent);
       nodeAgentList.add(nodeAgent);
     }

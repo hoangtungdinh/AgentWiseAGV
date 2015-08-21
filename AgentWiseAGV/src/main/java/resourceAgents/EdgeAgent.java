@@ -26,6 +26,10 @@ public class EdgeAgent {
    */
   private Map<Point, List<Reservation>> reservationMap;
   
+  /** Two nodes of the edge that the agent associated. */
+  private Point node1;
+  private Point node2;
+  
   /** The length of the associated edge. */
   private double length;
   
@@ -39,6 +43,8 @@ public class EdgeAgent {
    */
   public EdgeAgent(Point p1, Point p2, double length) {
     this.length = length - AGVSystem.VEHICLE_LENGTH;
+    node1 = p1;
+    node2 = p2;
     
     reservationMap = new HashMap<>();
     
@@ -77,10 +83,10 @@ public class EdgeAgent {
         - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
     if (possibleEntryWindow.hasUpperBound()) {
       final long upperEndPoint = possibleEntryWindow.upperEndpoint()
-          - ((long) (AGVSystem.VEHICLE_LENGTH / AGVSystem.VEHICLE_SPEED));
-      realPossibleEntryWindow = Range.open(lowerEndPoint, upperEndPoint);
+          - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
+      realPossibleEntryWindow = Range.closed(lowerEndPoint, upperEndPoint);
     } else {
-      realPossibleEntryWindow = Range.greaterThan(lowerEndPoint);
+      realPossibleEntryWindow = Range.atLeast(lowerEndPoint);
     }
     
     // get all reservations from other direction
@@ -144,7 +150,7 @@ public class EdgeAgent {
       upperEndEntryWindow = Long.MAX_VALUE;
     }
     
-    Range<Long> optimisticTimeWindow = Range.open(lowerEndEntryWindow, upperEndExitWindow);
+    Range<Long> optimisticTimeWindow = Range.closed(lowerEndEntryWindow, upperEndExitWindow);
     RangeSet<Long> allNonConflictTimeWindow = freeRanges.subRangeSet(optimisticTimeWindow);
     Range<Long> feasibleTimeWindow = allNonConflictTimeWindow.rangeContaining(lowerEndEntryWindow + 1);
     
@@ -158,7 +164,7 @@ public class EdgeAgent {
       lowerEndExitWindow = lowerEndEntryWindow + minTravelTime;
     }
     
-    if (upperEndExitWindow < lowerEndExitWindow) {
+    if (upperEndExitWindow <= lowerEndExitWindow) {
       return null;
     }
     
@@ -166,9 +172,9 @@ public class EdgeAgent {
       upperEndEntryWindow = upperEndExitWindow - minTravelTime;
     }
     
-    Range<Long> entryWindow = Range.open(lowerEndEntryWindow, upperEndEntryWindow);
-    Range<Long> exitWindow = Range.open(lowerEndExitWindow, upperEndExitWindow);
-    Range<Long> timeWindow = Range.open(lowerEndEntryWindow, upperEndExitWindow);
+    Range<Long> entryWindow = Range.closed(lowerEndEntryWindow, upperEndEntryWindow);
+    Range<Long> exitWindow = Range.closed(lowerEndExitWindow, upperEndExitWindow);
+    Range<Long> timeWindow = Range.closed(lowerEndEntryWindow, upperEndExitWindow);
     
     List<FreeTimeWindow> freeTimeWindows = new ArrayList<>();
     freeTimeWindows.add(new FreeTimeWindow(timeWindow, entryWindow, exitWindow));
@@ -186,8 +192,10 @@ public class EdgeAgent {
    */
   public void addReservation(Point startPoint, Range<Long> interval,
       long lifeTime, int agvID) {
+    final long lowerEndPoint = interval.lowerEndpoint();
+    final long upperEndPoint = interval.upperEndpoint();
     reservationMap.get(startPoint)
-        .add(new Reservation(agvID, lifeTime, interval));
+        .add(new Reservation(agvID, lifeTime, Range.open(lowerEndPoint, upperEndPoint)));
   }
   
   /**
@@ -221,4 +229,14 @@ public class EdgeAgent {
       }
     }
   }
+
+  public Point getNode1() {
+    return node1;
+  }
+
+  public Point getNode2() {
+    return node2;
+  }
+  
+  
 }

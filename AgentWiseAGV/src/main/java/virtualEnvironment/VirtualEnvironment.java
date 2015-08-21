@@ -67,9 +67,10 @@ public class VirtualEnvironment implements TickListener {
       FreeTimeWindow startFTW = null;
       
       // there should be only one free time window that contains the startTime
+      final long realStartTime = startTime - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
       for (FreeTimeWindow ftw : firstFreeTimeWindows) {
-        if (ftw.getEntryWindow().contains(startTime)
-            || ftw.getEntryWindow().lowerEndpoint() == startTime) {
+        if (ftw.getEntryWindow().contains(realStartTime)
+            || ftw.getEntryWindow().lowerEndpoint() == realStartTime) {
           startFTW = ftw;
           break;
         }
@@ -90,6 +91,8 @@ public class VirtualEnvironment implements TickListener {
         final PlanFTW plan = planStack.pop();
         final LinkedList<FreeTimeWindow> currentFTWs = plan.getFreeTimeWindows();
         final int planLength = currentFTWs.size();
+        
+//        System.out.println(agvID + "    " + plan.getPath());
         
         // if all the resources have been planned
         if (planLength == (2*candPath.size() - 1)) {
@@ -142,14 +145,19 @@ public class VirtualEnvironment implements TickListener {
     // generate actual plan from the time window plan
     final LinkedList<Range<Long>> intervals = new LinkedList<>();
     final List<FreeTimeWindow> freeTimeWindows = bestPlan.getFreeTimeWindows();
-    final Range<Long> lastInterval = freeTimeWindows
-        .get(freeTimeWindows.size() - 1).getInterval();
-    if (lastInterval.hasUpperBound()) {
-      intervals.addFirst(Range.closed(lastInterval.lowerEndpoint(),
-          lastInterval.upperEndpoint()));
-    } else {
-      intervals.addFirst(Range.atLeast(lastInterval.lowerEndpoint()));
-    }
+    final FreeTimeWindow lastFreeTimeWindow = freeTimeWindows
+        .get(freeTimeWindows.size() - 1);
+    
+    intervals.addFirst(
+        Range.closed(lastFreeTimeWindow.getEntryWindow().lowerEndpoint(),
+            lastFreeTimeWindow.getExitWindow().lowerEndpoint()));
+ 
+//    if (lastInterval.hasUpperBound()) {
+//      intervals.addFirst(Range.closed(lastInterval.lowerEndpoint(),
+//          lastInterval.upperEndpoint()));
+//    } else {
+//      intervals.addFirst(Range.atLeast(lastInterval.lowerEndpoint()));
+//    }
     for (int i = freeTimeWindows.size() - 2; i >= 0; i--) {
       intervals.addFirst(
           Range.closed(freeTimeWindows.get(i).getEntryWindow().lowerEndpoint(),

@@ -31,6 +31,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   private ExecutablePlan executablePlan;
   private LinkedList<CheckPoint> checkPoints;
   private Simulator sim;
+  private int reachedDestinations = 0;
 
   VehicleAgent(RandomGenerator r, List<Point> destinationList,
       VirtualEnvironment virtualEnvironment, int agvID, Simulator sim) {
@@ -59,21 +60,24 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     return AGVSystem.VEHICLE_SPEED;
   }
 
-  void nextDestination() {
+  void nextDestination(long startTime) {
     if (destinationList.isEmpty()) {
       throw new IllegalStateException("There is no destination left!");
     }
     destination = Optional.of(destinationList.getFirst());
     destinationList.removeFirst();
+//    System.out.println(agvID + ": Destination: " + destination.get());
     
-    Plan plan = virtualEnvironment.exploreRoute(agvID, 0, roadModel.get().getPosition(this), destination.get(), 3);
+    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, roadModel.get().getPosition(this), destination.get(), 5);
     executablePlan = new ExecutablePlan(plan);
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
+    virtualEnvironment.makeReservation(agvID, plan, Long.MAX_VALUE);
+//    System.out.println(plan.getPath());
     
-    for (CheckPoint checkPoint : checkPoints) {
-      System.out.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
-    }
+//    for (CheckPoint checkPoint : checkPoints) {
+//      System.out.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
+//    }
     
 //    path = new LinkedList<>(roadModel.get().getShortestPathTo(this,
 //        destination.get()));
@@ -82,23 +86,38 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   @Override
   public void tick(TimeLapse timeLapse) {
     if (!destination.isPresent()) {
-      nextDestination();
+      nextDestination(timeLapse.getStartTime());
     }
     
     // IDEA: check the position. If right before it leaves an edge or a node, it still have to wait, then consume time
     Point currentPos = roadModel.get().getPosition(this);
     Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
-    if (roundedPos.equals(checkPoints.getFirst().getPoint())) {
-      System.out.println(roadModel.get().getPosition(this));
-      sim.stop();
-      checkPoints.removeFirst();
+    if (!checkPoints.isEmpty()
+        && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+//      System.out.println(roadModel.get().getPosition(this));
+//      sim.stop();
+      if (timeLapse.getStartTime() < checkPoints.getFirst().getExpectedTime()) {
+        final long timeDifference = checkPoints.getFirst().getExpectedTime() - timeLapse.getStartTime();
+        if (timeDifference <= timeLapse.getTimeLeft()) {
+          timeLapse.consume(timeDifference);
+          checkPoints.removeFirst();
+        } else {
+          // time difference is larger than time left
+          timeLapse.consumeAll();
+        }
+      } else {
+        checkPoints.removeFirst();
+      }
     }
     
     
-    roadModel.get().followPath(this, path, timeLapse);
+    if (timeLapse.hasTimeLeft()) {
+      roadModel.get().followPath(this, path, timeLapse);
+    }
 
     if (roadModel.get().getPosition(this).equals(destination.get())) {
-      nextDestination();
+      nextDestination(timeLapse.getEndTime());
+      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
     }
   }
   

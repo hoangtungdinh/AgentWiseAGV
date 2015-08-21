@@ -29,10 +29,10 @@ public final class AGVSystem {
 
   public static final double VEHICLE_LENGTH = 2d;
   public static final double VEHICLE_SPEED = 1d;
-  public static final int NUM_AGVS = 1;
+  public static final int NUM_AGVS = 2;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
-  public static final int NUM_DESTS = 1;
+  public static final int NUM_DESTS = 100;
 
   private AGVSystem() {}
 
@@ -129,7 +129,7 @@ public final class AGVSystem {
     for (int i = 0; i < NUM_AGVS; i++) {
       sim.register(new VehicleAgent(sim.getRandomGenerator(),
           destinationLists.get(i).getDestinationList(), virtualEnvironment,
-          i + 1, sim));
+          i, sim));
     }
 
     sim.start();
