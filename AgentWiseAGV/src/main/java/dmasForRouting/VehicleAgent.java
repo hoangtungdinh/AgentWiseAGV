@@ -66,9 +66,9 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     }
     destination = Optional.of(destinationList.getFirst());
     destinationList.removeFirst();
-//    System.out.println(agvID + ": Destination: " + destination.get());
+    System.out.println(agvID + ": Destination: " + destination.get());
     
-    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, roadModel.get().getPosition(this), destination.get(), 5);
+    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, roadModel.get().getPosition(this), destination.get(), 30);
     executablePlan = new ExecutablePlan(plan);
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
@@ -117,7 +117,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
 
     if (roadModel.get().getPosition(this).equals(destination.get())) {
       nextDestination(timeLapse.getEndTime());
-      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
+//      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
     }
   }
   
