@@ -152,7 +152,7 @@ public class EdgeAgent {
     
     Range<Long> optimisticTimeWindow = Range.closed(lowerEndEntryWindow, upperEndExitWindow);
     RangeSet<Long> allNonConflictTimeWindow = freeRanges.subRangeSet(optimisticTimeWindow);
-    Range<Long> feasibleTimeWindow = allNonConflictTimeWindow.rangeContaining(lowerEndEntryWindow + 1);
+    Range<Long> feasibleTimeWindow = allNonConflictTimeWindow.rangeContaining(lowerEndEntryWindow);
     
     if (feasibleTimeWindow == null) {
       throw new Error("Time window cannot be null");
