@@ -179,10 +179,14 @@ public class VirtualEnvironment implements TickListener {
    * @param plan the plan
    * @param lifeTime the life time
    */
-  public void makeReservation(int agvID, Plan plan, long lifeTime) {
+  public void makeReservation(int agvID, Plan plan, long currentTime, long lifeTime) {
     List<Point> path = plan.getPath();
     List<Range<Long>> intervals = plan.getIntervals();
     for (int i = 0; i < path.size() - 1; i++) {
+      if (intervals.get(i * 2 + 1).upperEndpoint() < currentTime) {
+        continue;
+      }
+      
       final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i));
       nodeAgent.addReservation(agvID, lifeTime, intervals.get(i * 2));
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(path.get(i),
@@ -190,6 +194,7 @@ public class VirtualEnvironment implements TickListener {
       edgeAgent.addReservation(path.get(i), intervals.get(i * 2 + 1), lifeTime,
           agvID);
     }
+    
     final NodeAgent lastNodeAgent = nodeAgentList
         .getNodeAgent(path.get(path.size() - 1));
     lastNodeAgent.addReservation(agvID, lifeTime,
@@ -203,6 +208,7 @@ public class VirtualEnvironment implements TickListener {
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
-    
+    nodeAgentList.removeOutDatedReservation(timeLapse.getEndTime());
+    edgeAgentList.removeOutdatedReservations(timeLapse.getEndTime());
   }
 }

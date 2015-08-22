@@ -47,5 +47,12 @@ public class Plan {
     return intervals;
   }
   
-  
+  /**
+   * Gets the arrival time.
+   *
+   * @return the arrival time
+   */
+  public long getArrivalTime() {
+    return intervals.get(intervals.size() - 1).lowerEndpoint();
+  }
 }
