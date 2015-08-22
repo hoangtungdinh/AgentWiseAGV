@@ -109,6 +109,11 @@ public class EdgeAgent {
       // no possible time window
       return null;
     } else if (entryWindows.asRanges().size() > 1) {
+      // The case that there are more than one entry window only happens if
+      // another AGV come from the opposite direction on the edge, then it
+      // leaves the edge and enter the node that the current AGV is staying. It
+      // is impossible since if the current AGV can stay at the current node, no
+      // other AGV can enter this node during that time.
       throw new Error("More than one entry window for edge!");
     }
     
@@ -125,15 +130,23 @@ public class EdgeAgent {
     
     // compute the exit window
     final long optimisticStartTime = optimisticEntryWindow.lowerEndpoint();
+    final long minDifferentTime = (long) (AGVSystem.VEHICLE_LENGTH * 1000
+        / AGVSystem.VEHICLE_SPEED);
+    // here we make another assumption. Since the capacity of a node is 1, the
+    // entry time window of the current AGV is continuous. There cannot be the
+    // case that during the entry time window of this AGV, another AGV enters
+    // the edge from the same direction. That's why we don't have to care the
+    // overlapping of entry time windows of AGVs from the same direction on an
+    // edge.
     for (Reservation reservation : reservationsWithSameDirection) {
       final long reservedEntryTime = reservation.getInterval().lowerEndpoint();
       final long reservedExitTime = reservation.getInterval().upperEndpoint();
-      if (reservedEntryTime < optimisticStartTime && reservedExitTime > lowerEndExitWindow) {
+      if (reservedEntryTime < optimisticStartTime && reservedExitTime + minDifferentTime > lowerEndExitWindow) {
         // if there is  an AGV that enters the edge before but exit the edge after the current AGV, then update the lower bound exit time
-        lowerEndExitWindow = reservedExitTime;
-      } else if (reservedEntryTime > optimisticStartTime && reservedExitTime < upperEndExitWindow) {
+        lowerEndExitWindow = reservedExitTime + minDifferentTime;
+      } else if (reservedEntryTime > optimisticStartTime && reservedExitTime - minDifferentTime < upperEndExitWindow) {
         // if there is an AGV that enters the edge after but exit the edge before the current AGV, then update the upper bound of exit time
-        upperEndExitWindow = reservedExitTime;
+        upperEndExitWindow = reservedExitTime - minDifferentTime;
       }
     }
     

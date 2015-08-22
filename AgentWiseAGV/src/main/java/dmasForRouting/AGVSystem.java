@@ -29,7 +29,7 @@ public final class AGVSystem {
 
   public static final double VEHICLE_LENGTH = 2d;
   public static final double VEHICLE_SPEED = 1d;
-  public static final int NUM_AGVS = 3;
+  public static final int NUM_AGVS = 2;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
   public static final int NUM_DESTS = 1000;
