@@ -72,7 +72,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     }
     destination = Optional.of(destinationList.getFirst());
     destinationList.removeFirst();
-    System.out.println(agvID + ": Destination: " + destination.get());
+//    System.out.println(agvID + ": Destination: " + destination.get());
     
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime,
         roadModel.get().getPosition(this), destination.get(),
@@ -119,7 +119,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
         // if the next check point is a node, then just explore
         explore(nextCheckPoint.getExpectedTime(), startPoint, AGVSystem.NUM_OF_ROUTES);
       } else {
-        if (!startPoint.equals(checkPoints.get(1))) {
+        if (!startPoint.equals(checkPoints.get(1).getPoint())) {
           // this one cannot happen
           throw new Error("Some problems here!");
         }
@@ -164,7 +164,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
 
     if (roadModel.get().getPosition(this).equals(destination.get())) {
       nextDestination(timeLapse.getEndTime());
-//      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
+      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
     }
   }
   

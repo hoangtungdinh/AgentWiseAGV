@@ -92,7 +92,7 @@ public class VirtualEnvironment implements TickListener {
         final LinkedList<FreeTimeWindow> currentFTWs = plan.getFreeTimeWindows();
         final int planLength = currentFTWs.size();
         
-        System.out.println(agvID + "    " + plan.getPath());
+//        System.out.println(agvID + "    " + plan.getPath());
         
         // if all the resources have been planned
         if (planLength == (2*candPath.size() - 1)) {
