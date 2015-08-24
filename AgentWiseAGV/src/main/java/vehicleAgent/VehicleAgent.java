@@ -70,7 +70,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The station exit. */
   private Point stationExit;
   
-  private int reachedDestinations = 0;
+//  private int reachedDestinations = 0;
 
   public VehicleAgent(Destinations destinations, VirtualEnvironment virtualEnvironment,
       int agvID, Simulator sim, Point initialPos, List<Point> centralStation) {
@@ -121,7 +121,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     if (state == State.ACTIVE
         && roadModel.get().getPosition(this).equals(destination.get())) {
       state = State.GOING_HOME;
-      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
+//      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
     } else if (state == State.GOING_HOME
         && roadModel.get().getPosition(this).equals(stationEntrance)) {
       // if the agv reaches the entrance of the station, then it becomes idle
