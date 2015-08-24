@@ -1,6 +1,5 @@
 package dmasForRouting;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.measure.unit.SI;
@@ -22,17 +21,17 @@ import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 
 import destinationGenerator.DestinationGenerator;
-import destinationGenerator.DestinationList;
+import destinationGenerator.Destinations;
 import virtualEnvironment.VirtualEnvironment;
 
 public final class AGVSystem {
 
   public static final double VEHICLE_LENGTH = 2d;
   public static final double VEHICLE_SPEED = 1d;
-  public static final int NUM_AGVS = 2;
+  public static final int NUM_AGVS = 5;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
-  public static final int NUM_DESTS = 1000;
+  public static final int NUM_DESTS = 100;
   public static final long EVAPORATION_DURATION = 10000;
   public static final long REFRESH_DURATION = 8000;
   public static final long EXPLORATION_DURATION = 5000;
@@ -100,41 +99,16 @@ public final class AGVSystem {
     
     VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel, sim.getRandomGenerator());
     
-//    Plan plan = virtualEnvironment.exploreRoute(1, 2000, new Point(0d, 0d), new Point(0d, 24d), 3);
-//    virtualEnvironment.makeReservation(1, plan, 10);
-//    ExecutablePlan executablePlan = new ExecutablePlan(plan);
-//    
-//    try {
-//      PrintWriter printWriter = new PrintWriter("testResult.txt");
-//      
-//      printWriter.println(plan.getPath());
-//      
-//      for (Range<Long> range : plan.getIntervals()) {
-//        printWriter.println(range);
-//      }
-//      
-//      printWriter.println();
-//      
-//      for (CheckPoint checkPoint : executablePlan.getCheckPoints()) {
-//        printWriter.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
-//      }
-//
-//      printWriter.close();
-//    } catch (FileNotFoundException e) {
-//      e.printStackTrace();
-//    }
-     
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
         sim.getRandomGenerator(), roadModel, NUM_AGVS,
         NUM_DESTS);
     
-    List<DestinationList> destinationLists = destinationGenerator.run();
+    Destinations destinations = destinationGenerator.run();
 
     for (int i = 0; i < NUM_AGVS; i++) {
-      sim.register(new VehicleAgent(sim.getRandomGenerator(),
-          destinationLists.get(i).getDestinationList(), virtualEnvironment,
-          i, sim));
+      sim.register(new VehicleAgent(sim.getRandomGenerator(), destinations,
+          virtualEnvironment, i, sim));
     }
 
     sim.start();

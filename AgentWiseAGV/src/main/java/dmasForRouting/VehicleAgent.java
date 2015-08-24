@@ -1,10 +1,7 @@
 package dmasForRouting;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
-
-import javax.security.auth.Refreshable;
 
 import org.apache.commons.math3.random.RandomGenerator;
 
@@ -17,6 +14,7 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
+import destinationGenerator.Destinations;
 import routePlan.CheckPoint;
 import routePlan.ExecutablePlan;
 import routePlan.Plan;
@@ -27,7 +25,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   private Optional<CollisionGraphRoadModel> roadModel;
   private Optional<Point> destination;
   private Queue<Point> path;
-  private LinkedList<Point> destinationList;
+  private Destinations destinationList;
   private VirtualEnvironment virtualEnvironment;
   private int agvID;
   private Plan currentPlan;
@@ -39,13 +37,13 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   private long nextRefreshTime;
   private long nextExplorationTime;
 
-  VehicleAgent(RandomGenerator r, List<Point> destinationList,
+  VehicleAgent(RandomGenerator r, Destinations destinations,
       VirtualEnvironment virtualEnvironment, int agvID, Simulator sim) {
     rng = r;
     roadModel = Optional.absent();
     destination = Optional.absent();
     path = new LinkedList<>();
-    this.destinationList = new LinkedList<Point>(destinationList);
+    this.destinationList = destinations;
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
     this.sim = sim;
@@ -67,12 +65,7 @@ class VehicleAgent implements TickListener, MovingRoadUser {
   }
 
   void nextDestination(long startTime) {
-    if (destinationList.isEmpty()) {
-      throw new IllegalStateException("There is no destination left!");
-    }
-    destination = Optional.of(destinationList.getFirst());
-    destinationList.removeFirst();
-//    System.out.println(agvID + ": Destination: " + destination.get());
+    destination = Optional.of(destinationList.getDestination());
     
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime,
         roadModel.get().getPosition(this), destination.get(),
@@ -85,15 +78,6 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     expectedArrivalTime = plan.getArrivalTime();
     nextExplorationTime = startTime + AGVSystem.EXPLORATION_DURATION;
     nextRefreshTime = startTime + AGVSystem.REFRESH_DURATION;
-    
-//    System.out.println(plan.getPath());
-    
-//    for (CheckPoint checkPoint : checkPoints) {
-//      System.out.println(checkPoint.getPoint() + " " + checkPoint.getExpectedTime());
-//    }
-    
-//    path = new LinkedList<>(roadModel.get().getShortestPathTo(this,
-//        destination.get()));
   }
 
   @Override
@@ -102,13 +86,6 @@ class VehicleAgent implements TickListener, MovingRoadUser {
       nextDestination(timeLapse.getStartTime());
     }
     
-//    if (agvID == 0) {
-//      System.out.println(path);
-//      System.out.println(roadModel.get().getPosition(this));
-//      System.out.println(checkPoints.getFirst().getPoint());
-//    }
-    
-    // TODO test this code
     // if explore
     if (timeLapse.getStartTime() == nextExplorationTime) {
       // get the next check point
@@ -163,8 +140,8 @@ class VehicleAgent implements TickListener, MovingRoadUser {
     }
 
     if (roadModel.get().getPosition(this).equals(destination.get())) {
+//      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
       nextDestination(timeLapse.getEndTime());
-      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
     }
   }
   
