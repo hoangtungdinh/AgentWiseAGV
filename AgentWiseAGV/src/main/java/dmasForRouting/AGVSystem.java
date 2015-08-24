@@ -1,5 +1,7 @@
 package dmasForRouting;
 
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.measure.unit.SI;
@@ -22,13 +24,14 @@ import com.google.common.collect.Table;
 
 import destinationGenerator.DestinationGenerator;
 import destinationGenerator.Destinations;
+import vehicleAgent.VehicleAgent;
 import virtualEnvironment.VirtualEnvironment;
 
 public final class AGVSystem {
 
   public static final double VEHICLE_LENGTH = 2d;
   public static final double VEHICLE_SPEED = 1d;
-  public static final int NUM_AGVS = 5;
+  public static final int NUM_AGVS = 12;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
   public static final int NUM_DESTS = 100;
@@ -37,6 +40,8 @@ public final class AGVSystem {
   public static final long EXPLORATION_DURATION = 5000;
   public static final long SWITCHING_THRESHOLD = 6000;
   public static final int NUM_OF_ROUTES = 30;
+  
+  private static LinkedList<Point> centralStation;
 
   private AGVSystem() {}
 
@@ -97,18 +102,18 @@ public final class AGVSystem {
           "Cannot get the road model from the simulator");
     }
     
-    VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel, sim.getRandomGenerator());
+    VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel, sim.getRandomGenerator(), centralStation);
     
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
         sim.getRandomGenerator(), roadModel, NUM_AGVS,
-        NUM_DESTS);
+        NUM_DESTS, centralStation);
     
     Destinations destinations = destinationGenerator.run();
 
     for (int i = 0; i < NUM_AGVS; i++) {
-      sim.register(new VehicleAgent(sim.getRandomGenerator(), destinations,
-          virtualEnvironment, i, sim));
+      sim.register(new VehicleAgent(destinations, virtualEnvironment, i, sim,
+          centralStation.get(i), centralStation));
     }
 
     sim.start();
@@ -142,60 +147,31 @@ public final class AGVSystem {
       final Graph<LengthData> g = new TableGraph<>();
 
       final Table<Integer, Integer, Point> matrix = createMatrix(4, 4,
-          new Point(0, 0));
-
-//      for (int i = 0; i < matrix.columnMap().size(); i++) {
-//
-//        Iterable<Point> path;
-//        if (i % 2 == 0) {
-//          path = Lists.reverse(newArrayList(matrix.column(i).values()));
-//        } else {
-//          path = matrix.column(i).values();
-//        }
-//        Graphs.addBiPath(g, path);
-//      }
-//
-//      Graphs.addBiPath(g, matrix.row(0).values());
-//      Graphs.addBiPath(g, Lists.reverse(newArrayList(matrix.row(
-//          matrix.rowKeySet().size() - 1).values())));
+          new Point(8, 0));
+      
+      centralStation = new LinkedList<>();
+      final Point stationEntrace = new Point(0, 0);
+      final Point stationExit = new Point(0, 24);
+      centralStation.addLast(stationEntrace);
+      for (int i = 0; i < NUM_AGVS - 1; i++) {
+        centralStation.addLast(new Point(0, (i + 1) * VEHICLE_LENGTH));
+      }
+      centralStation.addLast(stationExit);
+      Collections.reverse(centralStation);
       
       for (final Map<Integer, Point> column : matrix.columnMap().values()) {
         Graphs.addBiPath(g, column.values());
       }
-      
+
       for (final Map<Integer, Point> row : matrix.rowMap().values()) {
         Graphs.addBiPath(g, row.values());
       }
-
-      return new ListenableGraph<>(g);
-    }
-
-    static ListenableGraph<LengthData> createGraph() {
-      final Graph<LengthData> g = new TableGraph<>();
-
-      final Table<Integer, Integer, Point> leftMatrix = createMatrix(5, 10,
-          new Point(0, 0));
-      for (final Map<Integer, Point> column : leftMatrix.columnMap().values()) {
-        Graphs.addBiPath(g, column.values());
-      }
-      Graphs.addBiPath(g, leftMatrix.row(LEFT_CENTER_U_ROW).values());
-      Graphs.addBiPath(g, leftMatrix.row(LEFT_CENTER_L_ROW).values());
-
-      final Table<Integer, Integer, Point> rightMatrix = createMatrix(10, 7,
-          new Point(30, 6));
-      for (final Map<Integer, Point> row : rightMatrix.rowMap().values()) {
-        Graphs.addBiPath(g, row.values());
-      }
-      Graphs.addBiPath(g, rightMatrix.column(0).values());
-      Graphs.addBiPath(g, rightMatrix.column(rightMatrix.columnKeySet().size()
-          - 1).values());
-
-      Graphs.addPath(g,
-          rightMatrix.get(RIGHT_CENTER_U_ROW, RIGHT_COL),
-          leftMatrix.get(LEFT_CENTER_U_ROW, LEFT_COL));
-      Graphs.addPath(g,
-          leftMatrix.get(LEFT_CENTER_L_ROW, LEFT_COL),
-          rightMatrix.get(RIGHT_CENTER_L_ROW, RIGHT_COL));
+      
+      Graphs.addPath(g, centralStation);
+      Graphs.addBiPath(g, stationEntrace, new Point(8, 0));
+      Graphs.addBiPath(g, stationExit, new Point(8, 24));
+      
+      Collections.reverse(centralStation);
 
       return new ListenableGraph<>(g);
     }

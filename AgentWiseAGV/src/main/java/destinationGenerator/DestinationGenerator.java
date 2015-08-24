@@ -26,14 +26,27 @@ public class DestinationGenerator {
   
   /** The road model. */
   private CollisionGraphRoadModel roadModel;
+  
+  /** The list of points that are in the central station. */
+  private List<Point> centralStation;
 
+  /**
+   * Instantiates a new destination generator.
+   *
+   * @param randomGenerator the random generator
+   * @param roadModel the road model
+   * @param numberOfAGVs the number of agvs
+   * @param numOfDesForEachAGV the number of destinations for each agv
+   * @param centralStation the central station
+   */
   public DestinationGenerator(RandomGenerator randomGenerator,
       CollisionGraphRoadModel roadModel, int numberOfAGVs,
-      int numOfDesForEachAGV) {
+      int numOfDesForEachAGV, List<Point> centralStation) {
     this.randomGenerator = randomGenerator;
     this.roadModel = roadModel;
     this.numberOfAGVs = numberOfAGVs;
     this.numOfDesForEachAGV = numOfDesForEachAGV;
+    this.centralStation = centralStation;
   }
   
   /**
@@ -56,7 +69,8 @@ public class DestinationGenerator {
       } else {
         Point nextDes = roadModel.getRandomPosition(randomGenerator);
         // make sure that two consecutive destinations have to be different
-        while (nextDes == destinations.get(i - 1)) {
+        // and the destination is not in the central station
+        while (nextDes == destinations.get(i - 1) || centralStation.contains(nextDes)) {
           nextDes = roadModel.getRandomPosition(randomGenerator);
         }
         destinations.add(nextDes);

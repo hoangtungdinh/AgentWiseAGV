@@ -10,21 +10,36 @@ import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 
 import dmasForRouting.AGVSystem.GraphCreator;
+import vehicleAgent.State;
 
 public class PathSampling {
   
   private PathSampling() {}
   
   @SuppressWarnings("unchecked")
-  public static List<Path> getFeasiblePaths(Point origin, Point destination, int numOfPaths) {
+  public static List<Path> getFeasiblePaths(Point origin, Point destination,
+      int numOfPaths, List<Point> centralStation, State state) {
     // a clone graph
     ListenableGraph<?> graph = GraphCreator.createSimpleGraph();
+    
+    for (int i = 1; i < centralStation.size() - 1; i++) {
+      graph.removeNode(centralStation.get(i));
+    }
+    final Point stationExit = centralStation.get(centralStation.size() - 1);
     
     List<Path> paths = new ArrayList<>();
     double w = -1;
     
     for (int i = 0; i < numOfPaths; i++) {
-      final List<Point> candidatePath = Graphs.shortestPathEuclideanDistance(graph, origin, destination);
+      List<Point> candidatePath;
+      if (state == State.ACTIVE) {
+        candidatePath = Graphs.shortestPathEuclideanDistance(graph, origin, destination);;
+        final List<Point> pathToStation = Graphs.shortestPathEuclideanDistance(graph, destination, stationExit);
+        pathToStation.remove(0);
+        candidatePath.addAll(pathToStation);
+      } else {
+        candidatePath = Graphs.shortestPathEuclideanDistance(graph, origin, stationExit);
+      }
       
       paths.add(new Path(candidatePath));
       

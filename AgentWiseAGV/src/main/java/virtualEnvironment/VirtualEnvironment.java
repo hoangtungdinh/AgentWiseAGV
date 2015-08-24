@@ -23,6 +23,7 @@ import resourceAgents.NodeAgent;
 import resourceAgents.NodeAgentList;
 import routePlan.Plan;
 import routePlan.PlanFTW;
+import vehicleAgent.State;
 
 /**
  * The Class VirtualEnvironment.
@@ -37,23 +38,40 @@ public class VirtualEnvironment implements TickListener {
   /** The edge agent list. */
   private EdgeAgentList edgeAgentList;
   
+  /** The list of points in the central station. */
+  private List<Point> centralStation;
+  
   /**
    * Instantiates a new virtual environment.
    *
    * @param roadModel the road model
    * @param randomGenerator the random generator
+   * @param centralStation the central station
    */
   public VirtualEnvironment(CollisionGraphRoadModel roadModel,
-      RandomGenerator randomGenerator) {
+      RandomGenerator randomGenerator, List<Point> centralStation) {
     nodeAgentList = new NodeAgentList(roadModel);
     edgeAgentList = new EdgeAgentList(roadModel);
+    this.centralStation = centralStation;
   }
   
+  /**
+   * Explore route.
+   *
+   * @param agvID the agv id
+   * @param startTime the start time
+   * @param origin the origin
+   * @param destination the destination
+   * @param numOfPaths the num of paths
+   * @param state the state
+   * @return the plan
+   */
   public Plan exploreRoute(int agvID, long startTime, Point origin,
-      Point destination, int numOfPaths) {
+      Point destination, int numOfPaths, State state) {
     
     // sampling the environment to get several feasible paths
-    final List<Path> feasiblePaths = PathSampling.getFeasiblePaths(origin, destination, numOfPaths);
+    final List<Path> feasiblePaths = PathSampling.getFeasiblePaths(origin,
+        destination, numOfPaths, centralStation, state);
     final List<PlanFTW> feasiblePlans = new ArrayList<>();
     
     for (Path path : feasiblePaths) {
