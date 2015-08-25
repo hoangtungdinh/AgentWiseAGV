@@ -94,6 +94,11 @@ public class VirtualEnvironment implements TickListener {
         }
       }
       
+//      System.out.println(agvID + " " + realStartTime);
+//      for (FreeTimeWindow ftwTest : firstFreeTimeWindows) {
+//        System.out.println(ftwTest.getInterval());
+//      }
+      
       // if no possible free time window then next candidate path
       if (startFTW == null) {
         continue;
@@ -109,8 +114,13 @@ public class VirtualEnvironment implements TickListener {
         final PlanFTW plan = planStack.pop();
         final LinkedList<FreeTimeWindow> currentFTWs = plan.getFreeTimeWindows();
         final int planLength = currentFTWs.size();
+//        System.out.println(planLength + " " + candPath);
         
-//        System.out.println(agvID + "    " + plan.getPath());
+//        System.out.println(agvID + " exploring plan: " + plan.getPath());
+//        for (FreeTimeWindow ftwTest : currentFTWs) {
+//          System.out.print(ftwTest.getInterval() + " ");
+//        }
+//        System.out.println();
         
         // if all the resources have been planned
         if (planLength == (2*candPath.size() - 1)) {
@@ -121,6 +131,7 @@ public class VirtualEnvironment implements TickListener {
         // list of next feasible free time windows
         List<FreeTimeWindow> nextFTWs;
         // check whether the last plan step is for a node or for an edge
+//        System.out.println(agvID);
         if (planLength % 2 == 1) {
           // the last plan step is for a node. Now we plan for the next edge
           final int index = planLength / 2;
@@ -129,6 +140,7 @@ public class VirtualEnvironment implements TickListener {
           nextFTWs = edgeAgent.getFreeTimeWindows(candPath.get(index),
               candPath.get(index + 1), currentFTWs.getLast().getExitWindow(),
               agvID);
+//          System.out.println("edge" + candPath.get(index) + " " + candPath.get(index + 1) + " " + currentFTWs.getLast().getExitWindow());
         } else {
           // the last plan step is for an edge. Now we plan for the next node
           final int index = planLength / 2;
@@ -136,6 +148,7 @@ public class VirtualEnvironment implements TickListener {
               .getNodeAgent(candPath.get(index));
           nextFTWs = nodeAgent
               .getFreeTimeWindows(currentFTWs.getLast().getExitWindow(), agvID);
+//          System.out.println("node" + candPath.get(index));
         }
         
         if (nextFTWs == null) {
@@ -170,12 +183,6 @@ public class VirtualEnvironment implements TickListener {
         Range.closed(lastFreeTimeWindow.getEntryWindow().lowerEndpoint(),
             lastFreeTimeWindow.getExitWindow().lowerEndpoint()));
  
-//    if (lastInterval.hasUpperBound()) {
-//      intervals.addFirst(Range.closed(lastInterval.lowerEndpoint(),
-//          lastInterval.upperEndpoint()));
-//    } else {
-//      intervals.addFirst(Range.atLeast(lastInterval.lowerEndpoint()));
-//    }
     for (int i = freeTimeWindows.size() - 2; i >= 0; i--) {
       intervals.addFirst(
           Range.closed(freeTimeWindows.get(i).getEntryWindow().lowerEndpoint(),

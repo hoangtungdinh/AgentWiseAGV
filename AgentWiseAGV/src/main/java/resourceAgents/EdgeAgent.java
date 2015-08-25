@@ -33,6 +33,9 @@ public class EdgeAgent {
   /** The length of the associated edge. */
   private double length;
   
+  /** The capacity. */
+  private int capacity;
+  
   /**
    * Instantiates a new edge agent.
    * The point p1 and p2 can be at any order
@@ -54,6 +57,8 @@ public class EdgeAgent {
     // reservation list of AGVs coming from point 2
     List<Reservation> reservationFromP2 = new ArrayList<>();
     reservationMap.put(p2, reservationFromP2);
+    
+    capacity = (int) ((length - AGVSystem.VEHICLE_LENGTH - 0.2) / AGVSystem.VEHICLE_LENGTH);
   }
   
   /**
@@ -98,9 +103,21 @@ public class EdgeAgent {
       }
     }
     
+//    System.out.println(agvID + " " + startPoint + endPoint);
+//    for (Reservation resv : resvList) {
+//      System.out.println(resv.getAgvID() + " " + resv.getInterval());
+//    }
+    
     // get all possible free ranges that do not conflict with AGVs from other direction
     RangeSet<Long> freeRanges = reservationsFromOtherDirection.complement()
         .subRangeSet(Range.atLeast(realPossibleEntryWindow.lowerEndpoint()));
+    
+//    System.out.println("Free range");
+//    for (Range<Long> rangeTest : freeRanges.asRanges()) {
+//      System.out.println(rangeTest);
+//    }
+    
+//    System.out.println(realPossibleEntryWindow + " " + agvID + startPoint + endPoint);
  
     // get all entryWindows based on the reservations of opposite direction AGVs
     RangeSet<Long> entryWindows = freeRanges.subRangeSet(realPossibleEntryWindow);
@@ -120,10 +137,52 @@ public class EdgeAgent {
     Range<Long> optimisticEntryWindow = entryWindows.span();
     
     // list of reservations from the same direction
-    List<Reservation> reservationsWithSameDirection = reservationMap.get(startPoint);
+    List<Reservation> reservationsFromSameDirection = reservationMap.get(startPoint);
+    
+    // compute the capacity at the start time
+    long startTime = optimisticEntryWindow.lowerEndpoint();
+    List<Reservation> overlappingReservations = new ArrayList<>();
+    for (Reservation resv : reservationsFromSameDirection) {
+      if (resv.getInterval().contains(startTime) && resv.getAgvID() != agvID) {
+        overlappingReservations.add(resv);
+      }
+    }
+    
+    // if the edge is already full, we have to calculate the start time
+    // note that, because the capacity of the node is only 1, it means that
+    // during the possible entry window, the capacity can only decrease. It
+    // cannot increase because no vehicle can enter the edge while the current
+    // AGV is occupying the start node.
+    if (overlappingReservations.size() > capacity) {
+      throw new Error("It cannot happen");
+    }
+    
+    if (overlappingReservations.size() == capacity) {
+      long newStartTime = Long.MAX_VALUE;
+      
+      for (Reservation resv : overlappingReservations) {
+        if (resv.getInterval().upperEndpoint() < newStartTime) {
+          newStartTime = resv.getInterval().upperEndpoint();
+        }
+      }
+      
+      // update the optimistic entry window
+      if (optimisticEntryWindow.hasUpperBound()
+          && newStartTime > optimisticEntryWindow.upperEndpoint()) {
+        return null;
+      } else {
+        if (optimisticEntryWindow.hasUpperBound()) {
+          final long upperBound = optimisticEntryWindow.upperEndpoint();
+          optimisticEntryWindow = Range.closed(newStartTime, upperBound);
+        } else {
+          optimisticEntryWindow = Range.atLeast(newStartTime);
+        }
+      }
+    }
     
     // minimum travel time
-    long minTravelTime = (long) (((length + AGVSystem.VEHICLE_LENGTH) * 1000) / AGVSystem.VEHICLE_SPEED);
+    long minTravelTime = (long) (((length + AGVSystem.VEHICLE_LENGTH) * 1000)
+        / AGVSystem.VEHICLE_SPEED);
     
     long lowerEndExitWindow = -1;
     long upperEndExitWindow = Long.MAX_VALUE;
@@ -138,7 +197,10 @@ public class EdgeAgent {
     // the edge from the same direction. That's why we don't have to care the
     // overlapping of entry time windows of AGVs from the same direction on an
     // edge.
-    for (Reservation reservation : reservationsWithSameDirection) {
+    for (Reservation reservation : reservationsFromSameDirection) {
+      if (reservation.getAgvID() == agvID) {
+        continue;
+      }
       final long reservedEntryTime = reservation.getInterval().lowerEndpoint();
       final long reservedExitTime = reservation.getInterval().upperEndpoint();
       if (reservedEntryTime < optimisticStartTime && reservedExitTime + minDifferentTime > lowerEndExitWindow) {
@@ -156,6 +218,7 @@ public class EdgeAgent {
     }
     
     long lowerEndEntryWindow = optimisticEntryWindow.lowerEndpoint();
+    
     long upperEndEntryWindow;
     if (optimisticEntryWindow.hasUpperBound()) {
       upperEndEntryWindow = optimisticEntryWindow.upperEndpoint();
@@ -205,24 +268,22 @@ public class EdgeAgent {
    */
   public void addReservation(Point startPoint, Range<Long> interval,
       long lifeTime, int agvID) {
+    // remove all old reservations
+    for (Map.Entry<Point, List<Reservation>> entry : reservationMap.entrySet()) {
+      List<Reservation> reservationList = entry.getValue();
+      Iterator<Reservation> iter = reservationList.iterator();
+      while (iter.hasNext()) {
+        Reservation reservation = iter.next();
+        if (reservation.getAgvID() == agvID
+            && reservation.getLifeTime() != lifeTime) {
+          iter.remove();
+        }
+      }
+    }
     final long lowerEndPoint = interval.lowerEndpoint();
     final long upperEndPoint = interval.upperEndpoint();
     reservationMap.get(startPoint)
         .add(new Reservation(agvID, lifeTime, Range.open(lowerEndPoint, upperEndPoint)));
-  }
-  
-  /**
-   * Refresh reservation.
-   * Basically it just adds new reservation
-   *
-   * @param startPoint the start point
-   * @param interval the interval
-   * @param lifeTime the life time
-   * @param agvID the agv id
-   */
-  public void refreshReservation(Point startPoint, Range<Long> interval,
-      long lifeTime, int agvID) {
-    addReservation(startPoint, interval, lifeTime, agvID);
   }
   
   /**

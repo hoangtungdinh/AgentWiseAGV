@@ -130,21 +130,19 @@ public class NodeAgent {
    * @param interval the interval
    */
   public void addReservation(int agvID, long lifeTime, Range<Long> interval) {
+    // remove all old reservation of the same AGV
+    Iterator<Reservation> iter = reservations.iterator();
+    while (iter.hasNext()) {
+      Reservation reservation = iter.next();
+      if (reservation.getAgvID() == agvID
+          && reservation.getLifeTime() != lifeTime) {
+        iter.remove();
+      }
+    }
+    
     final long lowerEndPoint = interval.lowerEndpoint();
     final long upperEndPoint = interval.upperEndpoint();
     reservations.add(new Reservation(agvID, lifeTime, Range.open(lowerEndPoint, upperEndPoint)));
-  }
-  
-  /**
-   * Refresh reservation.
-   * Basically, it just adds new reservation
-   *
-   * @param agvID the agv id
-   * @param lifeTime the life time
-   * @param interval the interval
-   */
-  public void refreshReservation(int agvID, long lifeTime, Range<Long> interval) {
-    addReservation(agvID, lifeTime, interval);;
   }
   
   /**

@@ -118,6 +118,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   @Override
   public void tick(TimeLapse timeLapse) {
     
+//    if (currentPlan != null) {
+//      System.out.println();
+//      System.out.println(agvID + "current plan");
+//      System.out.println(currentPlan.getPath());
+//      System.out.println(currentPlan.getIntervals());
+//    }
+    
     if (state == State.ACTIVE
         && roadModel.get().getPosition(this).equals(destination.get())) {
       state = State.GOING_HOME;
@@ -137,6 +144,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     if (state != State.IDLE) {
+      // if not idle
       // if explore
       if (timeLapse.getStartTime() == nextExplorationTime) {
         // get the next check point

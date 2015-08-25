@@ -1,5 +1,7 @@
 package dmasForRouting;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Map;
@@ -20,6 +22,7 @@ import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 
 import destinationGenerator.DestinationGenerator;
@@ -31,7 +34,7 @@ public final class AGVSystem {
 
   public static final double VEHICLE_LENGTH = 2d;
   public static final double VEHICLE_SPEED = 1d;
-  public static final int NUM_AGVS = 5;
+  public static final int NUM_AGVS = 12;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
   public static final int NUM_DESTS = 100;
@@ -160,10 +163,17 @@ public final class AGVSystem {
       centralStation.addLast(stationExit);
       Collections.reverse(centralStation);
       
-      for (final Map<Integer, Point> column : matrix.columnMap().values()) {
-        Graphs.addBiPath(g, column.values());
-      }
+//      for (final Map<Integer, Point> column : matrix.columnMap().values()) {
+//        Graphs.addBiPath(g, column.values());
+//      }
+      
+      for (int i = 0; i < matrix.columnMap().size(); i++) {
 
+        if (i == 0) {
+          Graphs.addBiPath(g, matrix.column(i).values());
+        }
+      }
+      
       for (final Map<Integer, Point> row : matrix.rowMap().values()) {
         Graphs.addBiPath(g, row.values());
       }
