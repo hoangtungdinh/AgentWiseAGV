@@ -70,6 +70,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The station exit. */
   private Point stationExit;
   
+  private Simulator sim;
+  
 //  private int reachedDestinations = 0;
 
   public VehicleAgent(Destinations destinations, VirtualEnvironment virtualEnvironment,
@@ -84,6 +86,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     stationEntrance = centralStation.get(centralStation.size() - 1);
     stationExit = centralStation.get(0);
     state = State.IDLE;
+    this.sim = sim;
   }
 
   @Override
@@ -103,8 +106,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     destination = Optional.of(destinationList.getDestination());
     
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime,
-        roadModel.get().getPosition(this), destination.get(),
-        AGVSystem.NUM_OF_ROUTES, state);
+        roadModel.get().getPosition(this), destination.get());
     executablePlan = new ExecutablePlan(plan);
     currentPlan = plan;
     path = new LinkedList<>(executablePlan.getPath());
@@ -124,6 +126,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 //      System.out.println(currentPlan.getPath());
 //      System.out.println(currentPlan.getIntervals());
 //    }
+    
+    
     
     if (state == State.ACTIVE
         && roadModel.get().getPosition(this).equals(destination.get())) {
@@ -207,10 +211,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       roadModel.get().followPath(this, path, timeLapse);
     }
 
-//    if (roadModel.get().getPosition(this).equals(destination.get())) {
-////      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
+    if (destination.isPresent() && roadModel.get().getPosition(this).equals(destination.get())) {
+//      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
 //      nextDestination(timeLapse.getEndTime());
-//    }
+      System.out.println("x ");
+      sim.unregister(this);
+    }
     
     
   }
@@ -229,7 +235,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    */
   public boolean explore(long startTime, Point startNode, int numberOfRoutes) {
     nextExplorationTime = startTime + AGVSystem.EXPLORATION_DURATION;
-    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, destination.get(), numberOfRoutes, state);
+    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, destination.get());
     if (expectedArrivalTime - plan.getArrivalTime() > AGVSystem.SWITCHING_THRESHOLD) {
       executablePlan = new ExecutablePlan(plan);
       currentPlan = plan;

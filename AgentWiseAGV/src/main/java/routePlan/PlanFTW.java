@@ -58,4 +58,13 @@ public class PlanFTW {
   public long getArrivalTime() {
     return freeTimeWindows.getLast().getEntryWindow().lowerEndpoint();
   }
+  
+  /**
+   * Gets the earliest exit time.
+   *
+   * @return the earliest exit time
+   */
+  public long getEarliestExitTime() {
+    return freeTimeWindows.getLast().getExitWindow().lowerEndpoint();
+  }
 }
