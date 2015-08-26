@@ -94,11 +94,6 @@ public class VirtualEnvironment implements TickListener {
         }
       }
       
-//      System.out.println(agvID + " " + realStartTime);
-//      for (FreeTimeWindow ftwTest : firstFreeTimeWindows) {
-//        System.out.println(ftwTest.getInterval());
-//      }
-      
       // if no possible free time window then next candidate path
       if (startFTW == null) {
         continue;
@@ -114,13 +109,6 @@ public class VirtualEnvironment implements TickListener {
         final PlanFTW plan = planStack.pop();
         final LinkedList<FreeTimeWindow> currentFTWs = plan.getFreeTimeWindows();
         final int planLength = currentFTWs.size();
-//        System.out.println(planLength + " " + candPath);
-        
-//        System.out.println(agvID + " exploring plan: " + plan.getPath());
-//        for (FreeTimeWindow ftwTest : currentFTWs) {
-//          System.out.print(ftwTest.getInterval() + " ");
-//        }
-//        System.out.println();
         
         // if all the resources have been planned
         if (planLength == (2*candPath.size() - 1)) {

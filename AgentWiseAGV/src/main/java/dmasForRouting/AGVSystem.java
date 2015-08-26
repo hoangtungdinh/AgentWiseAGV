@@ -37,7 +37,7 @@ public final class AGVSystem {
   public static final int NUM_AGVS = 12;
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
-  public static final int NUM_DESTS = 100;
+  public static final int NUM_DESTS = 1000;
   public static final long EVAPORATION_DURATION = 10000;
   public static final long REFRESH_DURATION = 8000;
   public static final long EXPLORATION_DURATION = 5000;
