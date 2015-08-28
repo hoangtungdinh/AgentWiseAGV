@@ -214,7 +214,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     if (destination.isPresent() && roadModel.get().getPosition(this).equals(destination.get())) {
 //      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
 //      nextDestination(timeLapse.getEndTime());
-      System.out.println("x ");
       sim.unregister(this);
     }
     

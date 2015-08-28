@@ -1,15 +1,16 @@
 package virtualEnvironment;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
-import java.util.Stack;
 import java.util.TreeMap;
 
-import org.apache.commons.lang3.time.FastDatePrinter;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.eclipse.swt.internal.theme.Theme;
 
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.time.TickListener;
@@ -18,10 +19,7 @@ import com.github.rinde.rinsim.geom.Graphs;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
-import ch.qos.logback.core.pattern.parser.Node;
 import dmasForRouting.AGVSystem;
-import pathSampling.Path;
-import pathSampling.PathSampling;
 import resourceAgents.EdgeAgent;
 import resourceAgents.EdgeAgentList;
 import resourceAgents.FreeTimeWindow;
@@ -29,7 +27,6 @@ import resourceAgents.NodeAgent;
 import resourceAgents.NodeAgentList;
 import routePlan.Plan;
 import routePlan.PlanFTW;
-import vehicleAgent.State;
 
 /**
  * The Class VirtualEnvironment.
@@ -44,8 +41,8 @@ public class VirtualEnvironment implements TickListener {
   /** The edge agent list. */
   private EdgeAgentList edgeAgentList;
   
-  /** The list of points in the central station. */
-  private List<Point> centralStation;
+//  /** The list of points in the central station. */
+//  private List<Point> centralStation;
   
   /** The road model. */
   private CollisionGraphRoadModel roadModel;
@@ -61,7 +58,7 @@ public class VirtualEnvironment implements TickListener {
       RandomGenerator randomGenerator, List<Point> centralStation) {
     nodeAgentList = new NodeAgentList(roadModel);
     edgeAgentList = new EdgeAgentList(roadModel);
-    this.centralStation = centralStation;
+//    this.centralStation = centralStation;
     this.roadModel = roadModel;
   }
   
@@ -112,7 +109,8 @@ public class VirtualEnvironment implements TickListener {
 
     PlanFTW finalPlan = null;
 
-    // TODO we still need a closed list here
+    // TODO we still need a closed list here. It does not affect the result but
+    // will improve the simulation speed.
 
     while (!planQueue.isEmpty()) {
       // select and remove the first plan in the queue
@@ -275,6 +273,68 @@ public class VirtualEnvironment implements TickListener {
         .getNodeAgent(path.get(path.size() - 1));
     lastNodeAgent.addReservation(agvID, lifeTime,
         intervals.get(intervals.size() - 1));
+  }
+  
+  /**
+   * Find the lengths of the shortest paths from all nodes to dest
+   *
+   * @param dest the dest
+   * @return the map
+   */
+  public Map<Point, Double> shortestPathLengthsTo(Point dest) {
+    final Map<Point, Double> initialDist = new HashMap<>();
+    final Map<Point, Double> resultDist = new HashMap<>();
+
+    // node set
+    final Set<Point> nodeSet = roadModel.getGraph().getNodes();
+    for (Point node : nodeSet) {
+      if (node.equals(dest)) {
+        initialDist.put(node, 0d);
+      } else {
+        initialDist.put(node, Double.MAX_VALUE);
+      }
+    }
+
+    while (!initialDist.isEmpty()) {
+      final Point node = getKeyOfMinValue(initialDist);
+      final double dist = initialDist.remove(node);
+      resultDist.put(node, dist);
+
+      final List<Point> neighboringNodes = new ArrayList<>();
+      neighboringNodes
+          .addAll(roadModel.getGraph().getIncomingConnections(node));
+
+      for (Point neighbor : neighboringNodes) {
+        final double alt = dist
+            + roadModel.getGraph().getConnection(neighbor, node).getLength();
+        if (initialDist.containsKey(neighbor)
+            && alt < initialDist.get(neighbor)) {
+          initialDist.put(neighbor, alt);
+        }
+      }
+    }
+
+    return resultDist;
+  }
+  
+  /**
+   * Gets the key with minimum value.
+   *
+   * @param map the map
+   * @return the key with minimum value
+   */
+  public Point getKeyOfMinValue(Map<Point, Double> map) {
+    double minVal = Double.MAX_VALUE;
+    Point key = null;
+    
+    for (Entry<Point, Double> entry : map.entrySet()) {
+      if (minVal > entry.getValue()) {
+        minVal = entry.getValue();
+        key = entry.getKey();
+      }
+    }
+    
+    return key;
   }
   
   @Override
