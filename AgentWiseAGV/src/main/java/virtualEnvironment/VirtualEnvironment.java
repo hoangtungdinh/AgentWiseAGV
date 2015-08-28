@@ -73,6 +73,8 @@ public class VirtualEnvironment implements TickListener {
    */
   public Plan exploreRoute(int agvID, long startTime, Point origin,
       Point destination) {
+    // shortest path lengths from all nodes in the map to the destination
+    final Map<Point, Double> shortestLengthToDest = shortestPathLengthsTo(destination);
 
     // free time window of the start node
     final List<FreeTimeWindow> firstFreeTimeWindows = nodeAgentList
@@ -105,7 +107,7 @@ public class VirtualEnvironment implements TickListener {
     PlanFTW firstPlanFTW = new PlanFTW(firstFTW, firstPath);
 
     final SortedMap<Long, PlanFTW> planQueue = new TreeMap<>();
-    planQueue.put(computeCost(firstPlanFTW, destination), firstPlanFTW);
+    planQueue.put(computeCost(firstPlanFTW, shortestLengthToDest), firstPlanFTW);
 
     PlanFTW finalPlan = null;
 
@@ -153,7 +155,7 @@ public class VirtualEnvironment implements TickListener {
             PlanFTW newPlanFTW = new PlanFTW(newListOfFTWs, newPath);
             // add next plan step to the queue
             // solve problem when have the same cost
-            long estimatedCost = computeCost(newPlanFTW, destination);
+            long estimatedCost = computeCost(newPlanFTW, shortestLengthToDest);
             while (planQueue.containsKey(estimatedCost)) {
               estimatedCost++;
             }
@@ -172,7 +174,7 @@ public class VirtualEnvironment implements TickListener {
           newListOfFTWs.addLast(newFTW);
           getClass();
           PlanFTW newPlanFTW = new PlanFTW(newListOfFTWs, path);
-          long estimatedCost = computeCost(newPlanFTW, destination);
+          long estimatedCost = computeCost(newPlanFTW, shortestLengthToDest);
           while (planQueue.containsKey(estimatedCost)) {
             estimatedCost++;
           }
@@ -208,20 +210,19 @@ public class VirtualEnvironment implements TickListener {
    * Compute cost.
    *
    * @param planFTW the plan ftw
-   * @param destination the destination
+   * @param shortestLengthToDest the shortest length to dest
    * @return the cost
    */
-  public long computeCost(PlanFTW planFTW, Point destination) {
+  public long computeCost(PlanFTW planFTW,
+      Map<Point, Double> shortestLengthToDest) {
     final List<Point> path = planFTW.getPath();
     final List<FreeTimeWindow> ftwList = planFTW.getFreeTimeWindows();
     
     long estimatedCost = -1;
     
-    // the shortest path from the last node of the plan
-    final List<Point> nextShortestPath = getShortestPath(
-        path.get(path.size() - 1), destination);
     // calculate the length of the shortest path
-    final double lengthShortestPath = Graphs.pathLength(nextShortestPath);
+    final double lengthShortestPath = shortestLengthToDest
+        .get(path.get(path.size() - 1));
     final long earliestExitTime = planFTW.getEarliestExitTime();
     
     if (ftwList.size() % 2 == 1) {
