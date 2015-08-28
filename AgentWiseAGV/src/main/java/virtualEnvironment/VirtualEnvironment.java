@@ -72,9 +72,14 @@ public class VirtualEnvironment implements TickListener {
    * @return the plan
    */
   public Plan exploreRoute(int agvID, long startTime, Point origin,
-      Point destination) {
-    // shortest path lengths from all nodes in the map to the destination
-    final Map<Point, Double> shortestLengthToDest = shortestPathLengthsTo(destination);
+      List<Point> destinations) {
+    // shortest path lengths from all nodes to a destination
+    // the keys are destinations, the values are the map of points and shortest path lengths
+    final Map<Point, ShortestPathLengths> shortestLengthToDest = new HashMap<>();
+    for (Point node : destinations) {
+      shortestLengthToDest.put(node,
+          new ShortestPathLengths(shortestPathLengthsTo(node)));
+    }
 
     // free time window of the start node
     final List<FreeTimeWindow> firstFreeTimeWindows = nodeAgentList
@@ -104,10 +109,10 @@ public class VirtualEnvironment implements TickListener {
     LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
     firstFTW.addLast(startFTW);
 
-    PlanFTW firstPlanFTW = new PlanFTW(firstFTW, firstPath);
+    PlanFTW firstPlanFTW = new PlanFTW(firstFTW, firstPath, 0, destinations);
 
     final SortedMap<Long, PlanFTW> planQueue = new TreeMap<>();
-    planQueue.put(computeCost(firstPlanFTW, shortestLengthToDest), firstPlanFTW);
+    planQueue.put(computeCost(firstPlanFTW, shortestLengthToDest, destinations), firstPlanFTW);
 
     PlanFTW finalPlan = null;
 
@@ -121,12 +126,19 @@ public class VirtualEnvironment implements TickListener {
       final List<Point> path = planFTW.getPath();
       final List<FreeTimeWindow> ftwList = planFTW.getFreeTimeWindows();
 
-      if (path.get(path.size() - 1).equals(destination) && ftwList.size() % 2 == 1) {
-        // if reached the destination then break
+      if ((planFTW.getStage() == destinations.size())
+          && path.get(path.size() - 1)
+              .equals(destinations.get(destinations.size() - 1))
+          && ftwList.size() % 2 == 1) {
+        // if it is a complete plan then break
+        // The first condition says that the AGV is at the last stage (only one
+        // more destination to reach). The second condition says that the AGV
+        // has reached the last destination. The last condition say that the
+        // plan finish at a node (which is the last destination)
         finalPlan = planFTW;
         break;
       }
-
+      
       if (ftwList.size() % 2 == 1) {
         // if the last plan step is for a node
         // get all possible next node
@@ -135,10 +147,19 @@ public class VirtualEnvironment implements TickListener {
             .getOutgoingConnections(path.get(path.size() - 1)));
         for (Point nextNode : nextNodes) {
           // for each possible next node
-          if (path.contains(nextNode)) {
+          if (!planFTW.isValid(nextNode)) {
             // we do not allow cyclic plan
             continue;
           }
+          
+          // check the new stage
+          int newStage = -1;
+          if (nextNode.equals(destinations.get(planFTW.getStage()))) {
+            newStage = planFTW.getStage() + 1;
+          } else {
+            newStage = planFTW.getStage();
+          }
+          
           // now we get the free time window of the edge
           // call the edge agent
           final EdgeAgent edgeAgent = edgeAgentList
@@ -148,14 +169,17 @@ public class VirtualEnvironment implements TickListener {
               ftwList.get(ftwList.size() - 1).getExitWindow(), agvID);
           final List<Point> newPath = new ArrayList<>(path);
           newPath.add(nextNode);
+          if (nextFTWs == null) {
+            continue;
+          }
           for (FreeTimeWindow newFTW : nextFTWs) {
             LinkedList<FreeTimeWindow> newListOfFTWs = new LinkedList<>(
                 ftwList);
             newListOfFTWs.addLast(newFTW);
-            PlanFTW newPlanFTW = new PlanFTW(newListOfFTWs, newPath);
+            PlanFTW newPlanFTW = new PlanFTW(newListOfFTWs, newPath, newStage, destinations);
             // add next plan step to the queue
             // solve problem when have the same cost
-            long estimatedCost = computeCost(newPlanFTW, shortestLengthToDest);
+            long estimatedCost = computeCost(newPlanFTW, shortestLengthToDest, destinations);
             while (planQueue.containsKey(estimatedCost)) {
               estimatedCost++;
             }
@@ -173,8 +197,8 @@ public class VirtualEnvironment implements TickListener {
           LinkedList<FreeTimeWindow> newListOfFTWs = new LinkedList<>(ftwList);
           newListOfFTWs.addLast(newFTW);
           getClass();
-          PlanFTW newPlanFTW = new PlanFTW(newListOfFTWs, path);
-          long estimatedCost = computeCost(newPlanFTW, shortestLengthToDest);
+          PlanFTW newPlanFTW = new PlanFTW(newListOfFTWs, path, planFTW.getStage(), destinations);
+          long estimatedCost = computeCost(newPlanFTW, shortestLengthToDest, destinations);
           while (planQueue.containsKey(estimatedCost)) {
             estimatedCost++;
           }
@@ -209,20 +233,30 @@ public class VirtualEnvironment implements TickListener {
   /**
    * Compute cost.
    *
-   * @param planFTW the plan ftw
-   * @param shortestLengthToDest the shortest length to dest
+   * @param planFTW the plan
+   * @param shortestLengths the shortest lengths
+   * @param destinations the destinations
    * @return the cost
    */
   public long computeCost(PlanFTW planFTW,
-      Map<Point, Double> shortestLengthToDest) {
+      Map<Point, ShortestPathLengths> shortestLengths, List<Point> destinations) {
     final List<Point> path = planFTW.getPath();
     final List<FreeTimeWindow> ftwList = planFTW.getFreeTimeWindows();
     
     long estimatedCost = -1;
     
     // calculate the length of the shortest path
-    final double lengthShortestPath = shortestLengthToDest
-        .get(path.get(path.size() - 1));
+    double lengthShortestPath = 0;
+    for (int i = planFTW.getStage(); i < destinations.size(); i++) {
+      if (i == planFTW.getStage()) {
+        lengthShortestPath += shortestLengths.get(destinations.get(i))
+            .getLength(path.get(path.size() - 1));
+      } else {
+        lengthShortestPath += shortestLengths.get(destinations.get(i))
+            .getLength(destinations.get(i - 1));
+      }
+    }
+    
     final long earliestExitTime = planFTW.getEarliestExitTime();
     
     if (ftwList.size() % 2 == 1) {

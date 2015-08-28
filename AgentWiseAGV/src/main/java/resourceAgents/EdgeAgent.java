@@ -103,11 +103,6 @@ public class EdgeAgent {
       }
     }
     
-//    System.out.println(agvID + " " + startPoint + endPoint);
-//    for (Reservation resv : resvList) {
-//      System.out.println(resv.getAgvID() + " " + resv.getInterval());
-//    }
-    
     // get all possible free ranges that do not conflict with AGVs from other direction
     RangeSet<Long> freeRanges = reservationsFromOtherDirection.complement()
         .subRangeSet(Range.atLeast(realPossibleEntryWindow.lowerEndpoint()));
