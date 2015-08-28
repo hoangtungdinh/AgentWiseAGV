@@ -68,11 +68,12 @@ public class VirtualEnvironment implements TickListener {
    * @param agvID the agv id
    * @param startTime the start time
    * @param origin the origin
-   * @param destination the destination
+   * @param destinations the destinations
+   * @param stationEntraces the station entraces
    * @return the plan
    */
   public Plan exploreRoute(int agvID, long startTime, Point origin,
-      List<Point> destinations) {
+      List<Point> destinations, List<Point> stationExits) {
     // shortest path lengths from all nodes to a destination
     // the keys are destinations, the values are the map of points and shortest path lengths
     final Map<Point, ShortestPathLengths> shortestLengthToDest = new HashMap<>();
@@ -147,8 +148,10 @@ public class VirtualEnvironment implements TickListener {
             .getOutgoingConnections(path.get(path.size() - 1)));
         for (Point nextNode : nextNodes) {
           // for each possible next node
-          if (!planFTW.isValid(nextNode)) {
-            // we do not allow cyclic plan
+          if (!planFTW.isValid(nextNode)
+              || stationExits.contains(nextNode)) {
+            // we do not allow cyclic plan and plan contain the entrance of the
+            // station
             continue;
           }
           
@@ -226,7 +229,7 @@ public class VirtualEnvironment implements TickListener {
     }
 
     Plan plan = new Plan(finalPlan.getPath(), intervals);
-
+    
     return plan;
   }
   
