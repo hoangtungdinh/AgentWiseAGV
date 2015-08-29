@@ -38,11 +38,6 @@ public final class AGVSystem {
   public static final long TEST_END_TIME = 10 * 60 * 1000L;
   public static final int TEST_SPEED_UP = 16;
   public static final int NUM_DESTS = 1000;
-  public static final long EVAPORATION_DURATION = Long.MAX_VALUE;
-  public static final long REFRESH_DURATION = Long.MAX_VALUE;
-  public static final long EXPLORATION_DURATION = Long.MAX_VALUE;
-  public static final long SWITCHING_THRESHOLD = Long.MAX_VALUE;
-  public static final int NUM_OF_ROUTES = 30;
   
   private static LinkedList<Point> centralStation;
 
