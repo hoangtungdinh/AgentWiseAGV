@@ -231,6 +231,53 @@ public class EdgeAgent {
     
     upperEndExitWindow = feasibleTimeWindow.upperEndpoint();
     
+    // calculate the capacity of the edge at upperEndExitWindow
+    // if the capacity is overloaded, mean that another AGV will come to the
+    // edge after the entry time of the current AGV
+    List<Reservation> overlappingAtUpperEndPoint = new ArrayList<>();
+    for (Reservation resv : reservationsFromSameDirection) {
+      if (resv.getInterval().contains(upperEndExitWindow) && resv.getAgvID() != agvID) {
+        overlappingAtUpperEndPoint.add(resv);
+      }
+    }
+    
+    // check first case
+    if (overlappingAtUpperEndPoint.size() == capacity) {
+      long newExitTime = 0;
+
+      for (Reservation resv : overlappingAtUpperEndPoint) {
+        if (resv.getInterval().lowerEndpoint() > newExitTime) {
+          newExitTime = resv.getInterval().lowerEndpoint();
+        }
+      }
+      
+      upperEndExitWindow = newExitTime;
+    }
+    
+    // check second case
+    long latestEntryTimeOfOtherAGVs = -1;
+    for (Reservation resv : reservationsFromSameDirection) {
+      if (resv.getInterval().contains(upperEndExitWindow) && resv.getAgvID() != agvID) {
+        if (resv.getInterval().lowerEndpoint() > latestEntryTimeOfOtherAGVs) {
+          latestEntryTimeOfOtherAGVs = resv.getInterval().lowerEndpoint();
+        }
+      }
+    }
+    
+    // check capacity at the entry time of the latest AGV
+    List<Reservation> overlappingAtLatestEntryTime = new ArrayList<>();
+    for (Reservation resv : reservationsFromSameDirection) {
+      if (resv.getInterval().contains(latestEntryTimeOfOtherAGVs) && resv.getAgvID() != agvID) {
+        overlappingAtLatestEntryTime.add(resv);
+      }
+    }
+    
+    if (overlappingAtLatestEntryTime.size() == capacity - 1) {
+      upperEndExitWindow = latestEntryTimeOfOtherAGVs;
+    }
+    
+    
+    // now check feasibility
     if (lowerEndExitWindow < lowerEndEntryWindow + minTravelTime) {
       lowerEndExitWindow = lowerEndEntryWindow + minTravelTime;
     }
