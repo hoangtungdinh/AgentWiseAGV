@@ -65,6 +65,9 @@ public class DestinationGenerator {
       if (i == 0) {
         // generate the first destination
         Point nextDes = roadModel.getRandomPosition(randomGenerator);
+        while (centralStation.contains(nextDes)) {
+          nextDes = roadModel.getRandomPosition(randomGenerator);
+        }
         destinations.add(nextDes);
       } else {
         Point nextDes = roadModel.getRandomPosition(randomGenerator);
