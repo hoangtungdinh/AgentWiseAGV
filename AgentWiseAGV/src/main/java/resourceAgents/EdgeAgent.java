@@ -107,13 +107,6 @@ public class EdgeAgent {
     RangeSet<Long> freeRanges = reservationsFromOtherDirection.complement()
         .subRangeSet(Range.atLeast(realPossibleEntryWindow.lowerEndpoint()));
     
-//    System.out.println("Free range");
-//    for (Range<Long> rangeTest : freeRanges.asRanges()) {
-//      System.out.println(rangeTest);
-//    }
-    
-//    System.out.println(realPossibleEntryWindow + " " + agvID + startPoint + endPoint);
- 
     // get all entryWindows based on the reservations of opposite direction AGVs
     RangeSet<Long> entryWindows = freeRanges.subRangeSet(realPossibleEntryWindow);
     
@@ -186,12 +179,6 @@ public class EdgeAgent {
     final long optimisticStartTime = optimisticEntryWindow.lowerEndpoint();
     final long minDifferentTime = (long) (AGVSystem.VEHICLE_LENGTH * 1000
         / AGVSystem.VEHICLE_SPEED);
-    // here we make another assumption. Since the capacity of a node is 1, the
-    // entry time window of the current AGV is continuous. There cannot be the
-    // case that during the entry time window of this AGV, another AGV enters
-    // the edge from the same direction. That's why we don't have to care the
-    // overlapping of entry time windows of AGVs from the same direction on an
-    // edge.
     for (Reservation reservation : reservationsFromSameDirection) {
       if (reservation.getAgvID() == agvID) {
         continue;
@@ -233,7 +220,12 @@ public class EdgeAgent {
     
     // calculate the capacity of the edge at upperEndExitWindow
     // if the capacity is overloaded, mean that another AGV will come to the
-    // edge after the entry time of the current AGV
+    // edge after the entry time of the current AGV, then we have to decrease
+    // the upperEndExitWindow
+    // --------------------------
+    // we     ----------------------|---
+    //               ---------------|-------------
+    //                              |--------------------     
     List<Reservation> overlappingAtUpperEndPoint = new ArrayList<>();
     for (Reservation resv : reservationsFromSameDirection) {
       if (resv.getInterval().contains(upperEndExitWindow) && resv.getAgvID() != agvID) {
@@ -254,7 +246,13 @@ public class EdgeAgent {
       upperEndExitWindow = newExitTime;
     }
     
-    // check second case
+    // check second case, when the capacity is overloaded at some interval (not
+    // end points)
+    // --------------|------------   t
+    // we     -------|---------------|---
+    //               |---------------|-------------
+    //                               |--------------------     
+    // we check the latest reservation after us that overlap with the updated end point t
     long latestEntryTimeOfOtherAGVs = -1;
     for (Reservation resv : reservationsFromSameDirection) {
       if (resv.getInterval().contains(upperEndExitWindow) && resv.getAgvID() != agvID) {
@@ -276,8 +274,7 @@ public class EdgeAgent {
       upperEndExitWindow = latestEntryTimeOfOtherAGVs;
     }
     
-    
-    // now check feasibility
+    // now the capacity condition is guaranteed. We start checking the feasibility
     if (lowerEndExitWindow < lowerEndEntryWindow + minTravelTime) {
       lowerEndExitWindow = lowerEndEntryWindow + minTravelTime;
     }
