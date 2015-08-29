@@ -279,7 +279,7 @@ public class EdgeAgent {
       lowerEndExitWindow = lowerEndEntryWindow + minTravelTime;
     }
     
-    if (upperEndExitWindow <= lowerEndExitWindow) {
+    if (upperEndExitWindow < lowerEndExitWindow) {
       return null;
     }
     
