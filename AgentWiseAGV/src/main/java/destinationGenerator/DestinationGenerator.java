@@ -20,15 +20,9 @@ public class DestinationGenerator {
 
   /** The number of AGVs. */
   private int numberOfAGVs;
-
-  /** The number of destinations for each AGVs. */
-  private int numOfDesForEachAGV;
   
   /** The road model. */
   private CollisionGraphRoadModel roadModel;
-  
-  /** The list of points that are in the central station. */
-  private List<Point> centralStation;
 
   /**
    * Instantiates a new destination generator.
@@ -36,17 +30,12 @@ public class DestinationGenerator {
    * @param randomGenerator the random generator
    * @param roadModel the road model
    * @param numberOfAGVs the number of agvs
-   * @param numOfDesForEachAGV the number of destinations for each agv
-   * @param centralStation the central station
    */
   public DestinationGenerator(RandomGenerator randomGenerator,
-      CollisionGraphRoadModel roadModel, int numberOfAGVs,
-      int numOfDesForEachAGV, List<Point> centralStation) {
+      CollisionGraphRoadModel roadModel, int numberOfAGVs) {
     this.randomGenerator = randomGenerator;
     this.roadModel = roadModel;
     this.numberOfAGVs = numberOfAGVs;
-    this.numOfDesForEachAGV = numOfDesForEachAGV;
-    this.centralStation = centralStation;
   }
   
   /**
@@ -54,32 +43,22 @@ public class DestinationGenerator {
    *
    * @return the list of the destinationList of each AGV
    */
-  public Destinations run() {
+  public List<OriginDestination> run() {
     // List of all destination
-    List<Point> destinations = new ArrayList<>();
+    List<OriginDestination> odList = new ArrayList<>();
     
     // total number of destinations
-    final int numOfDestinations = numberOfAGVs * numOfDesForEachAGV;
+    final int numOfDestinations = numberOfAGVs;
     
     for (int i = 0; i < numOfDestinations; i++) {
-      if (i == 0) {
-        // generate the first destination
-        Point nextDes = roadModel.getRandomPosition(randomGenerator);
-        while (centralStation.contains(nextDes)) {
-          nextDes = roadModel.getRandomPosition(randomGenerator);
-        }
-        destinations.add(nextDes);
-      } else {
-        Point nextDes = roadModel.getRandomPosition(randomGenerator);
-        // make sure that two consecutive destinations have to be different
-        // and the destination is not in the central station
-        while (nextDes == destinations.get(i - 1) || centralStation.contains(nextDes)) {
-          nextDes = roadModel.getRandomPosition(randomGenerator);
-        }
-        destinations.add(nextDes);
+      Point origin = roadModel.getRandomPosition(randomGenerator);
+      Point destination = roadModel.getRandomPosition(randomGenerator);
+      while (destination.equals(origin)) {
+        destination = roadModel.getRandomPosition(randomGenerator);
       }
+      odList.add(new OriginDestination(origin, destination));
     }
     
-    return new Destinations(destinations);
+    return odList;
   }
 }

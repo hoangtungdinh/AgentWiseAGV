@@ -41,9 +41,6 @@ public class VirtualEnvironment implements TickListener {
   /** The edge agent list. */
   private EdgeAgentList edgeAgentList;
   
-//  /** The list of points in the central station. */
-//  private List<Point> centralStation;
-  
   /** The road model. */
   private CollisionGraphRoadModel roadModel;
   
@@ -55,10 +52,9 @@ public class VirtualEnvironment implements TickListener {
    * @param centralStation the central station
    */
   public VirtualEnvironment(CollisionGraphRoadModel roadModel,
-      RandomGenerator randomGenerator, List<Point> centralStation) {
+      RandomGenerator randomGenerator) {
     nodeAgentList = new NodeAgentList(roadModel);
     edgeAgentList = new EdgeAgentList(roadModel);
-//    this.centralStation = centralStation;
     this.roadModel = roadModel;
   }
   
@@ -66,14 +62,14 @@ public class VirtualEnvironment implements TickListener {
    * Explore route.
    *
    * @param agvID the agv id
-   * @param startTime the start time
    * @param origin the origin
    * @param destinations the destinations
-   * @param stationEntraces the station entraces
    * @return the plan
    */
-  public Plan exploreRoute(int agvID, long startTime, Point origin,
-      List<Point> destinations, List<Point> stationExits) {
+  public Plan exploreRoute(int agvID, Point origin,
+      List<Point> destinations) {
+    // TODO remove startTime, all start at 0 
+    
     // shortest path lengths from all nodes to a destination
     // the keys are destinations, the values are the map of points and shortest path lengths
     final Map<Point, ShortestPathLengths> shortestLengthToDest = new HashMap<>();
@@ -85,36 +81,30 @@ public class VirtualEnvironment implements TickListener {
     // free time window of the start node
     final List<FreeTimeWindow> firstFreeTimeWindows = nodeAgentList
         .getNodeAgent(origin)
-        .getFreeTimeWindows(Range.atLeast(startTime), agvID);
-
-    FreeTimeWindow startFTW = null;
-
-    // there should be only one free time window that contains the startTime
-    final long realStartTime = startTime
-        - ((long) (AGVSystem.VEHICLE_LENGTH * 1000 / AGVSystem.VEHICLE_SPEED));
-    for (FreeTimeWindow ftw : firstFreeTimeWindows) {
-      if (ftw.getEntryWindow().contains(realStartTime)
-          || ftw.getEntryWindow().lowerEndpoint() == realStartTime) {
-        startFTW = ftw;
-        break;
-      }
-    }
+        .getFreeTimeWindows(Range.atLeast(0L), agvID);
 
     // if no possible free time window then it is an error
-    if (startFTW == null) {
+    if (firstFreeTimeWindows.isEmpty()) {
       throw new Error("No free time window for the first node!");
     }
 
+    // the queue
+    final SortedMap<Long, PlanFTW> planQueue = new TreeMap<>();
+    
+    // the first path containing only the origin
     List<Point> firstPath = new ArrayList<>();
     firstPath.add(origin);
-    LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
-    firstFTW.addLast(startFTW);
-
-    PlanFTW firstPlanFTW = new PlanFTW(firstFTW, firstPath, 0, destinations);
-
-    final SortedMap<Long, PlanFTW> planQueue = new TreeMap<>();
-    planQueue.put(computeCost(firstPlanFTW, shortestLengthToDest, destinations), firstPlanFTW);
-
+    
+    for (FreeTimeWindow startFTW : firstFreeTimeWindows) {
+      final LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
+      firstFTW.addLast(startFTW);
+      final PlanFTW firstPlanFTW = new PlanFTW(firstFTW, firstPath, 0,
+          destinations);
+      planQueue.put(
+          computeCost(firstPlanFTW, shortestLengthToDest, destinations),
+          firstPlanFTW);
+    }
+    
     PlanFTW finalPlan = null;
 
     // TODO we still need a closed list here. It does not affect the result but
@@ -148,8 +138,7 @@ public class VirtualEnvironment implements TickListener {
             .getOutgoingConnections(path.get(path.size() - 1)));
         for (Point nextNode : nextNodes) {
           // for each possible next node
-          if (!planFTW.isValid(nextNode)
-              || stationExits.contains(nextNode)) {
+          if (!planFTW.isValid(nextNode)) {
             // we do not allow cyclic plan and plan contain the entrance of the
             // station
             continue;
