@@ -58,8 +58,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private Simulator sim;
   
-//  private int reachedDestinations = 0;
-
+  private Point destination;
+  
   public VehicleAgent(Destinations destinations, VirtualEnvironment virtualEnvironment,
       int agvID, Simulator sim, Point initialPos, List<Point> centralStation) {
     roadModel = Optional.absent();
@@ -88,12 +88,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   }
 
   void nextDestination(long startTime) {
-//    destination = Optional.of(destinationList.getDestination());
     
+    destination = destinationList.getDestination();
     List<Point> dest = new ArrayList<>();
-    dest.add(destinationList.getDestination());
-    dest.add(destinationList.getDestination());
-    dest.add(stationEntrance);
+    dest.add(destination);
     
     List<Point> stationExits = new ArrayList<>();
     stationExits.add(stationExit);
@@ -166,11 +164,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       roadModel.get().followPath(this, path, timeLapse);
     }
 
-//    if (destination.isPresent() && roadModel.get().getPosition(this).equals(destination.get())) {
-//      System.out.println(agvID + ": Reached destination: " + ++reachedDestinations);
-//      nextDestination(timeLapse.getEndTime());
-//      sim.unregister(this);
-//    }
+    if (roadModel.get().getPosition(this).equals(destination)) {
+      sim.unregister(this);
+    }
     
     
   }
