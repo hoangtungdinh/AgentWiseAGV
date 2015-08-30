@@ -48,6 +48,7 @@ public class Experiment {
   public static void print(List<Sample> samples) {
     try {
       PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsCA_makespan.txt"));
+      printWriterMS.println("numAGVs\tmakespan");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();
         for (Result result : results) {
@@ -57,6 +58,7 @@ public class Experiment {
       printWriterMS.close();
       
       PrintWriter printWriterPC = new PrintWriter(new File("src/main/resources/ResultsCA_plancost.txt"));
+      printWriterPC.println("numAGVs\tPlanCost");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();
         for (Result result : results) {
