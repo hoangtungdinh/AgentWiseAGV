@@ -47,6 +47,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The check points. */
   private LinkedList<CheckPoint> checkPoints;
   
+  private long startTime;
+  
   private Simulator sim;
   
   public VehicleAgent(OriginDestination originDestination, VirtualEnvironment virtualEnvironment,
@@ -58,13 +60,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
     this.sim = sim;
+    planRoute();
+    startTime = checkPoints.getFirst().getExpectedTime();
   }
 
   @Override
   public void initRoadUser(RoadModel model) {
     roadModel = Optional.of((CollisionGraphRoadModel) model);
-//    roadModel.get().addObjectAt(this, origin);
-    planRoute();
   }
 
   @Override
@@ -101,8 +103,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 //      System.out.println(agvID + " " + destination.get());
 //    }
     
-    if (timeLapse.getStartTime() == checkPoints.getFirst().getExpectedTime()) {
+    if (timeLapse.getStartTime() == startTime) {
       roadModel.get().addObjectAt(this, origin);
+    }
+    
+    if (!roadModel.isPresent() || !roadModel.get().containsObject(this)) {
+      return;
     }
     
     // IDEA: check the position. If right before it leaves an edge or a node,
@@ -133,6 +139,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
 
     if (roadModel.get().getPosition(this).equals(destination)) {
+      System.out.println("x");
       sim.unregister(this);
     }
   }
