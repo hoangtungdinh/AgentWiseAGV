@@ -11,7 +11,7 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
-import dmasForRouting.AGVSystem;
+import dmasForRouting.Setting;
 
 /**
  * The Class ResourceAgent.
@@ -32,13 +32,20 @@ public class NodeAgent {
    */
   private Map<Point, Double> shortestPathLength;
   
+  /** The setting. */
+  private Setting setting;
+  
   /**
    * Instantiates a new node agent.
+   *
+   * @param node the node
+   * @param setting the setting
    */
-  public NodeAgent(Point node) {
+  public NodeAgent(Point node, Setting setting) {
     reservations = new ArrayList<>();
     shortestPathLength = new HashMap<>();
     this.node = node;
+    this.setting = setting;
   }
   
   /**
@@ -53,10 +60,10 @@ public class NodeAgent {
     // actual entry window (take into account the length of vehicles)
     Range<Long> realPossibleEntryWindow;
     final long lowerEndPoint = possibleEntryWindow.lowerEndpoint()
-        - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
+        - ((long) (setting.getVehicleLength()*1000 / setting.getVehicleSpeed()));
     if (possibleEntryWindow.hasUpperBound()) {
       final long upperEndPoint = possibleEntryWindow.upperEndpoint()
-          - ((long) (AGVSystem.VEHICLE_LENGTH / AGVSystem.VEHICLE_SPEED));
+          - ((long) (setting.getVehicleLength() / setting.getVehicleSpeed()));
       realPossibleEntryWindow = Range.closed(lowerEndPoint, upperEndPoint);
     } else {
       realPossibleEntryWindow = Range.atLeast(lowerEndPoint);
@@ -75,7 +82,7 @@ public class NodeAgent {
         .subRangeSet(Range.atLeast(realPossibleEntryWindow.lowerEndpoint()));
   
     // mininum travel time required for AGVs to traverse a node
-    final long minTravelTime = (long) ((AGVSystem.VEHICLE_LENGTH*2*1000) / AGVSystem.VEHICLE_SPEED);
+    final long minTravelTime = (long) ((setting.getVehicleLength()*2*1000) / setting.getVehicleSpeed());
     
     // list of free time windows
     List<FreeTimeWindow> freeTimeWindows = new ArrayList<>();

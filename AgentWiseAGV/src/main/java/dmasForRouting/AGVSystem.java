@@ -23,36 +23,30 @@ import com.google.common.collect.Table;
 
 import destinationGenerator.DestinationGenerator;
 import destinationGenerator.OriginDestination;
+import resultRecording.Result;
 import vehicleAgent.VehicleAgent;
 import virtualEnvironment.VirtualEnvironment;
 
 public final class AGVSystem {
 
-  public static final double VEHICLE_LENGTH = 2d;
-  public static final double VEHICLE_SPEED = 1d;
-  public static final int NUM_AGVS = 1000;
-  public static final long TEST_END_TIME = 10 * 60 * 1000L;
-  public static final int TEST_SPEED_UP = 16;
-
-  private AGVSystem() {}
+  private Setting setting;
 
   /**
-   * @param args - No args.
+   * Instantiates a new AGV system.
+   *
+   * @param setting the setting
    */
-  public static void main(String[] args) {
-    run(false);
+  public AGVSystem(Setting setting) {
+    this.setting = setting;
   }
 
   /**
-   * Runs the example.
-   * @param testing If <code>true</code> the example will run in testing mode,
-   *          automatically starting and stopping itself such that it can be run
-   *          from a unit test.
+   * Run.
    */
-  public static void run(boolean testing) {
+  public Result run() {
     View.Builder viewBuilder = View.builder()
         .with(WarehouseRenderer.builder()
-            .withMargin(VEHICLE_LENGTH)
+            .withMargin(setting.getVehicleLength())
             .withNodes()
             .withNodeOccupancy())
         .with(AGVRenderer.builder()
@@ -60,22 +54,14 @@ public final class AGVSystem {
             .withVehicleCreationNumber()
             .withVehicleOrigin());
 
-    if (testing) {
-      viewBuilder = viewBuilder.withAutoPlay()
-          .withAutoClose()
-          .withSimulatorEndTime(TEST_END_TIME)
-          .withTitleAppendix("TESTING")
-          .withSpeedUp(TEST_SPEED_UP);
-    } else {
-      viewBuilder = viewBuilder.withTitleAppendix("Warehouse Example");
-    }
+    viewBuilder = viewBuilder.withTitleAppendix("Warehouse Example");
     
     final Simulator sim = Simulator.builder()
         .addModel(
-            RoadModelBuilders.dynamicGraph(GraphCreator.createSimpleGraph())
+            RoadModelBuilders.dynamicGraph(createSimpleGraph())
                 .withCollisionAvoidance()
                 .withDistanceUnit(SI.METER)
-                .withVehicleLength(VEHICLE_LENGTH)
+                .withVehicleLength(setting.getVehicleLength())
                 .withSpeedUnit(SI.METERS_PER_SECOND)
                 .withMinDistance(0d))
         .setTimeUnit(SI.MILLI(SI.SECOND))
@@ -94,61 +80,55 @@ public final class AGVSystem {
     }
     
     VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel,
-        sim.getRandomGenerator());
+        sim.getRandomGenerator(), setting);
     sim.addTickListener(virtualEnvironment);
     
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
-        sim.getRandomGenerator(), roadModel, NUM_AGVS);
+        sim.getRandomGenerator(), roadModel, setting.getNumOfAGVs());
     
     List<OriginDestination> odList = destinationGenerator.run();
+    
+    Result result = new Result(setting, sim);
 
-    for (int i = 0; i < NUM_AGVS; i++) {
-      sim.register(new VehicleAgent(odList.get(i), virtualEnvironment, i, sim));
+    for (int i = 0; i < setting.getNumOfAGVs(); i++) {
+      sim.register(new VehicleAgent(odList.get(i), virtualEnvironment, i, sim,
+          setting, result));
     }
 
     sim.start();
+    
+    return result;
   }
-  
-  public static class GraphCreator {
-    static final int LEFT_CENTER_U_ROW = 4;
-    static final int LEFT_CENTER_L_ROW = 5;
-    static final int LEFT_COL = 4;
-    static final int RIGHT_CENTER_U_ROW = 2;
-    static final int RIGHT_CENTER_L_ROW = 4;
-    static final int RIGHT_COL = 0;
 
-    GraphCreator() {}
-
-    static ImmutableTable<Integer, Integer, Point> createMatrix(int cols,
-        int rows, Point offset) {
-      final ImmutableTable.Builder<Integer, Integer, Point> builder =
-          ImmutableTable.builder();
-      for (int c = 0; c < cols; c++) {
-        for (int r = 0; r < rows; r++) {
-          builder.put(r, c, new Point(
-              offset.x + c * VEHICLE_LENGTH * 4,
-              offset.y + r * VEHICLE_LENGTH * 4));
-        }
+  public ImmutableTable<Integer, Integer, Point> createMatrix(int cols,
+      int rows, Point offset) {
+    final ImmutableTable.Builder<Integer, Integer, Point> builder = ImmutableTable
+        .builder();
+    for (int c = 0; c < cols; c++) {
+      for (int r = 0; r < rows; r++) {
+        builder.put(r, c,
+            new Point(offset.x + c * setting.getVehicleLength() * 4,
+                offset.y + r * setting.getVehicleLength() * 4));
       }
-      return builder.build();
+    }
+    return builder.build();
+  }
+
+  public ListenableGraph<LengthData> createSimpleGraph() {
+    final Graph<LengthData> g = new TableGraph<>();
+
+    final Table<Integer, Integer, Point> matrix = createMatrix(10, 10,
+        new Point(0, 0));
+
+    for (final Map<Integer, Point> row : matrix.rowMap().values()) {
+      Graphs.addBiPath(g, row.values());
     }
 
-    public static ListenableGraph<LengthData> createSimpleGraph() {
-      final Graph<LengthData> g = new TableGraph<>();
-
-      final Table<Integer, Integer, Point> matrix = createMatrix(4, 4,
-          new Point(0, 0));
-      
-      for (final Map<Integer, Point> row : matrix.rowMap().values()) {
-        Graphs.addBiPath(g, row.values());
-      }
-      
-      for (final Map<Integer, Point> col : matrix.columnMap().values()) {
-        Graphs.addBiPath(g, col.values());
-      }
-      
-      return new ListenableGraph<>(g);
+    for (final Map<Integer, Point> col : matrix.columnMap().values()) {
+      Graphs.addBiPath(g, col.values());
     }
+
+    return new ListenableGraph<>(g);
   }
 }

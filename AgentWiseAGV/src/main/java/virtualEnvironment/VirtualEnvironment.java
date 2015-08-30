@@ -19,7 +19,7 @@ import com.github.rinde.rinsim.geom.Graphs;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
-import dmasForRouting.AGVSystem;
+import dmasForRouting.Setting;
 import resourceAgents.EdgeAgent;
 import resourceAgents.EdgeAgentList;
 import resourceAgents.FreeTimeWindow;
@@ -44,17 +44,21 @@ public class VirtualEnvironment implements TickListener {
   /** The road model. */
   private CollisionGraphRoadModel roadModel;
   
+  /** The setting. */
+  private Setting setting;
+  
   /**
    * Instantiates a new virtual environment.
    *
    * @param roadModel the road model
    * @param randomGenerator the random generator
-   * @param centralStation the central station
+   * @param setting the setting
    */
   public VirtualEnvironment(CollisionGraphRoadModel roadModel,
-      RandomGenerator randomGenerator) {
-    nodeAgentList = new NodeAgentList(roadModel);
-    edgeAgentList = new EdgeAgentList(roadModel);
+      RandomGenerator randomGenerator, Setting setting) {
+    this.setting = setting;
+    nodeAgentList = new NodeAgentList(roadModel, setting);
+    edgeAgentList = new EdgeAgentList(roadModel, setting);
     this.roadModel = roadModel;
   }
   
@@ -213,8 +217,8 @@ public class VirtualEnvironment implements TickListener {
       intervals.addFirst(
           Range.closed(freeTimeWindows.get(i).getEntryWindow().lowerEndpoint(),
               intervals.getFirst().lowerEndpoint()
-                  + ((long) (AGVSystem.VEHICLE_LENGTH * 1000
-                      / AGVSystem.VEHICLE_SPEED))));
+                  + ((long) (setting.getVehicleLength() * 1000
+                      / setting.getVehicleSpeed()))));
     }
 
     Plan plan = new Plan(finalPlan.getPath(), intervals);
@@ -255,14 +259,14 @@ public class VirtualEnvironment implements TickListener {
       // if the plan stop at a node (note that the exit time is the time when
       // the vehicle is completely out of the node
       estimatedCost = earliestExitTime
-          + ((long) (lengthShortestPath * 1000 / AGVSystem.VEHICLE_SPEED))
-          - ((long) (AGVSystem.VEHICLE_LENGTH * 1000
-              / AGVSystem.VEHICLE_SPEED));
+          + ((long) (lengthShortestPath * 1000 / setting.getVehicleSpeed()))
+          - ((long) (setting.getVehicleLength() * 1000
+              / setting.getVehicleSpeed()));
     } else {
       // if the plan stop at an edge, the exit time is the time when the vehicle
       // is exactly at the central of the next node
       estimatedCost = earliestExitTime
-          + ((long) (lengthShortestPath * 1000 / AGVSystem.VEHICLE_SPEED));
+          + ((long) (lengthShortestPath * 1000 / setting.getVehicleSpeed()));
     }
     
     return estimatedCost;

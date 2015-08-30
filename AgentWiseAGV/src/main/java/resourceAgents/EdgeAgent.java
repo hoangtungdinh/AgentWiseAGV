@@ -11,7 +11,7 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
-import dmasForRouting.AGVSystem;
+import dmasForRouting.Setting;
 
 /**
  * The Class EdgeAgent.
@@ -36,29 +36,34 @@ public class EdgeAgent {
   /** The capacity. */
   private int capacity;
   
+  private Setting setting;
+  
   /**
    * Instantiates a new edge agent.
    * The point p1 and p2 can be at any order
-   * 
+   *
    * @param p1 the first point of the edge
    * @param p2 the second point of the edge
    * @param length the length of the edge
+   * @param setting the setting
    */
-  public EdgeAgent(Point p1, Point p2, double length) {
-    this.length = length - AGVSystem.VEHICLE_LENGTH;
+  public EdgeAgent(Point p1, Point p2, double length, Setting setting) {
+    this.setting = setting;
+    this.length = length - setting.getVehicleLength();
     node1 = p1;
     node2 = p2;
-    
+
     reservationMap = new HashMap<>();
-    
+
     // reservation list of AGVs coming from point 1
     List<Reservation> reservationFromP1 = new ArrayList<>();
     reservationMap.put(p1, reservationFromP1);
     // reservation list of AGVs coming from point 2
     List<Reservation> reservationFromP2 = new ArrayList<>();
     reservationMap.put(p2, reservationFromP2);
-    
-    capacity = (int) ((length - AGVSystem.VEHICLE_LENGTH - 0.2) / AGVSystem.VEHICLE_LENGTH);
+
+    capacity = (int) ((length - setting.getVehicleLength() - 0.2)
+        / setting.getVehicleLength());
   }
   
   /**
@@ -85,10 +90,10 @@ public class EdgeAgent {
     // actual entry window (take into account the length of vehicles)
     Range<Long> realPossibleEntryWindow;
     final long lowerEndPoint = possibleEntryWindow.lowerEndpoint()
-        - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
+        - ((long) (setting.getVehicleLength()*1000 / setting.getVehicleSpeed()));
     if (possibleEntryWindow.hasUpperBound()) {
       final long upperEndPoint = possibleEntryWindow.upperEndpoint()
-          - ((long) (AGVSystem.VEHICLE_LENGTH*1000 / AGVSystem.VEHICLE_SPEED));
+          - ((long) (setting.getVehicleLength()*1000 / setting.getVehicleSpeed()));
       realPossibleEntryWindow = Range.closed(lowerEndPoint, upperEndPoint);
     } else {
       realPossibleEntryWindow = Range.atLeast(lowerEndPoint);
@@ -169,16 +174,16 @@ public class EdgeAgent {
     }
     
     // minimum travel time
-    long minTravelTime = (long) (((length + AGVSystem.VEHICLE_LENGTH) * 1000)
-        / AGVSystem.VEHICLE_SPEED);
+    long minTravelTime = (long) (((length + setting.getVehicleLength()) * 1000)
+        / setting.getVehicleSpeed());
     
     long lowerEndExitWindow = -1;
     long upperEndExitWindow = Long.MAX_VALUE;
     
     // compute the exit window
     final long optimisticStartTime = optimisticEntryWindow.lowerEndpoint();
-    final long minDifferentTime = (long) (AGVSystem.VEHICLE_LENGTH * 1000
-        / AGVSystem.VEHICLE_SPEED);
+    final long minDifferentTime = (long) (setting.getVehicleLength() * 1000
+        / setting.getVehicleSpeed());
     for (Reservation reservation : reservationsFromSameDirection) {
       if (reservation.getAgvID() == agvID) {
         continue;

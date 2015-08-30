@@ -10,6 +10,8 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import dmasForRouting.Setting;
+
 /**
  * The Class EdgeAgentList.
  *
@@ -26,11 +28,12 @@ public class EdgeAgentList {
    * Instantiates a new edge agent list.
    *
    * @param roadModel the road model
+   * @param setting the setting
    */
-  public EdgeAgentList(CollisionGraphRoadModel roadModel) {
+  public EdgeAgentList(CollisionGraphRoadModel roadModel, Setting setting) {
     edgeAgentTable = HashBasedTable.create();
     edgeAgentList = new ArrayList<>();
-    
+
     Set<Point> allNodes = roadModel.getGraph().getNodes();
     for (Point node : allNodes) {
       Collection<Point> connectedNodes = roadModel.getGraph()
@@ -38,7 +41,8 @@ public class EdgeAgentList {
       for (Point outgoingNode : connectedNodes) {
         if (!edgeAgentTable.contains(node, outgoingNode)) {
           EdgeAgent edgeAgent = new EdgeAgent(node, outgoingNode, roadModel
-              .getGraph().getConnection(node, outgoingNode).getLength());
+              .getGraph().getConnection(node, outgoingNode).getLength(),
+              setting);
           edgeAgentTable.put(node, outgoingNode, edgeAgent);
           edgeAgentTable.put(outgoingNode, node, edgeAgent);
           edgeAgentList.add(edgeAgent);

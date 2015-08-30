@@ -9,6 +9,8 @@ import java.util.Set;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.geom.Point;
 
+import dmasForRouting.Setting;
+
 /**
  * The Class NodeAgentList.
  *
@@ -26,14 +28,15 @@ public class NodeAgentList {
    * Instantiates a new node agent list.
    *
    * @param roadModel the road model
+   * @param setting the setting
    */
-  public NodeAgentList(CollisionGraphRoadModel roadModel) {
+  public NodeAgentList(CollisionGraphRoadModel roadModel, Setting setting) {
     nodeAgentMap = new HashMap<>();
     nodeAgentList = new ArrayList<>();
     
     Set<Point> allNodes = roadModel.getGraph().getNodes();
     for (Point node : allNodes) {
-      NodeAgent nodeAgent = new NodeAgent(node);
+      NodeAgent nodeAgent = new NodeAgent(node, setting);
       nodeAgentMap.put(node, nodeAgent);
       nodeAgentList.add(nodeAgent);
     }

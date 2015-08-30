@@ -6,7 +6,7 @@ import java.util.List;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
-import dmasForRouting.AGVSystem;
+import dmasForRouting.Setting;
 
 /**
  * The Class ExecutablePlan.
@@ -24,15 +24,19 @@ public class ExecutablePlan {
   /** The check points. */
   private List<CheckPoint> checkPoints;
   
+  /** The setting. */
+  private Setting setting;
+  
   /**
    * Instantiates a new executable plan.
    *
    * @param plan the plan
    */
-  public ExecutablePlan(Plan plan) {
+  public ExecutablePlan(Plan plan, Setting setting) {
     this.path = plan.getPath();
     this.intervals = plan.getIntervals();
     this.checkPoints = new ArrayList<>();
+    this.setting = setting;
     calculateCheckPoints();
   }
   
@@ -40,9 +44,9 @@ public class ExecutablePlan {
    * Calculate check points.
    */
   private void calculateCheckPoints() {
-    final double safeDistance = AGVSystem.VEHICLE_LENGTH + 0.1;
-    final long timeLeftToLeaveNode = (long) (AGVSystem.VEHICLE_LENGTH *1000 / AGVSystem.VEHICLE_SPEED);
-    final long timeLeftToLeaveEdge = (long) (safeDistance*1000 / AGVSystem.VEHICLE_SPEED);
+    final double safeDistance = setting.getVehicleLength() + 0.1;
+    final long timeLeftToLeaveNode = (long) (setting.getVehicleLength() *1000 / setting.getVehicleSpeed());
+    final long timeLeftToLeaveEdge = (long) (safeDistance*1000 / setting.getVehicleSpeed());
     
     checkPoints.add(new CheckPoint(path.get(0), intervals.get(0).upperEndpoint() - timeLeftToLeaveNode));
     

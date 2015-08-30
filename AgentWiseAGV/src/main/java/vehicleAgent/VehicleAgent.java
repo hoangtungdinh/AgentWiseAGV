@@ -15,7 +15,8 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
 import destinationGenerator.OriginDestination;
-import dmasForRouting.AGVSystem;
+import dmasForRouting.Setting;
+import resultRecording.Result;
 import routePlan.CheckPoint;
 import routePlan.ExecutablePlan;
 import routePlan.Plan;
@@ -47,12 +48,20 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The check points. */
   private LinkedList<CheckPoint> checkPoints;
   
+  /** The start time of the plan of this AGV. */
   private long startTime;
   
+  /** The simulator. */
   private Simulator sim;
   
+  /** The setting. */
+  private Setting setting;
+  
+  /** The result. */
+  private Result result;
+  
   public VehicleAgent(OriginDestination originDestination, VirtualEnvironment virtualEnvironment,
-      int agvID, Simulator sim) {
+      int agvID, Simulator sim, Setting setting, Result result) {
     roadModel = Optional.absent();
     path = new LinkedList<>();
     this.origin = originDestination.getOrigin();
@@ -60,8 +69,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
     this.sim = sim;
+    this.setting = setting;
     planRoute();
     startTime = checkPoints.getFirst().getExpectedTime();
+    this.result = result;
   }
 
   @Override
@@ -71,7 +82,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
   @Override
   public double getSpeed() {
-    return AGVSystem.VEHICLE_SPEED;
+    return setting.getVehicleSpeed();
   }
 
   /**
@@ -83,7 +94,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     List<Point> dest = new ArrayList<>();
     dest.add(destination);
     Plan plan = virtualEnvironment.exploreRoute(agvID, origin, dest);
-    executablePlan = new ExecutablePlan(plan);
+    executablePlan = new ExecutablePlan(plan, setting);
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
     virtualEnvironment.makeReservation(agvID, plan, 0, plan.getArrivalTime());
@@ -139,7 +150,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
 
     if (roadModel.get().getPosition(this).equals(destination)) {
-      System.out.println("x");
+      result.updateResult(startTime, timeLapse.getTime());
       sim.unregister(this);
     }
   }
