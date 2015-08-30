@@ -49,23 +49,19 @@ public class Experiment {
     try {
       PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsCA_makespan.txt"));
       for (Sample sample : samples) {
-        printWriterMS.print(sample.getNumOfAGVs());
         List<Result> results = sample.getResults();
         for (Result result : results) {
-          printWriterMS.print("\t" + result.getMakeSpan());
+          printWriterMS.println(sample.getNumOfAGVs() + "\t" + result.getMakeSpan());
         }
-        printWriterMS.println();
       }
       printWriterMS.close();
       
       PrintWriter printWriterPC = new PrintWriter(new File("src/main/resources/ResultsCA_plancost.txt"));
       for (Sample sample : samples) {
-        printWriterPC.print(sample.getNumOfAGVs());
         List<Result> results = sample.getResults();
         for (Result result : results) {
-          printWriterPC.print("\t" + result.getJointPlanCost());
+          printWriterPC.println(sample.getNumOfAGVs() + "\t" + result.getJointPlanCost());
         }
-        printWriterPC.println();
       }
       printWriterPC.close();
     } catch (FileNotFoundException e) {

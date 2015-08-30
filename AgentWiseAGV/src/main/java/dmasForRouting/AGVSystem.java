@@ -68,7 +68,7 @@ public final class AGVSystem {
         .setTickLength(100)
 //        .addModel(viewBuilder)
         // add a random seed
-        .setRandomSeed(0)
+        .setRandomSeed(setting.getSeed())
         .build();
     
     CollisionGraphRoadModel roadModel = (CollisionGraphRoadModel) sim.getModelProvider().tryGetModel(RoadModel.class);
