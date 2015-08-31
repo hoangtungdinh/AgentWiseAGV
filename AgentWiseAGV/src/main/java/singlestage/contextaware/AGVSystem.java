@@ -21,10 +21,10 @@ import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 
-import resultrecording.Result;
 import setting.Setting;
 import singlestage.destinationgenerator.DestinationGenerator;
 import singlestage.destinationgenerator.OriginDestination;
+import singlestage.result.Result;
 
 public final class AGVSystem {
 

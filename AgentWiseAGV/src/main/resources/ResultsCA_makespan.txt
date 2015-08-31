@@ -1,2 +1,0 @@
-numAGVs	makespan
-100	132000

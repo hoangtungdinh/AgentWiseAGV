@@ -1,9 +1,7 @@
-package singlestage.contextaware;
+package singlestage.result;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import resultrecording.Result;
 
 public class Sample {
   

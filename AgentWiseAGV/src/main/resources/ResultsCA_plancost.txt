@@ -1,2 +1,0 @@
-numAGVs	PlanCost
-100	6144000

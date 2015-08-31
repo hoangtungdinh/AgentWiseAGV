@@ -8,8 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import resultrecording.Result;
 import setting.Setting;
+import singlestage.result.Result;
+import singlestage.result.Sample;
 
 public class Experiment {
 

@@ -1,4 +1,4 @@
-package resultrecording;
+package singlestage.result;
 
 import com.github.rinde.rinsim.core.Simulator;
 
