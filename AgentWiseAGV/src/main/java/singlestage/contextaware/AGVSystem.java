@@ -1,7 +1,6 @@
 package singlestage.contextaware;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.measure.unit.SI;
 
@@ -9,19 +8,12 @@ import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
-import com.github.rinde.rinsim.geom.Graph;
-import com.github.rinde.rinsim.geom.Graphs;
-import com.github.rinde.rinsim.geom.LengthData;
-import com.github.rinde.rinsim.geom.ListenableGraph;
-import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.geom.TableGraph;
 import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer2;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
-import com.google.common.collect.ImmutableTable;
-import com.google.common.collect.Table;
 
 import setting.Setting;
+import singlestage.GraphCreator;
 import singlestage.destinationgenerator.DestinationGenerator;
 import singlestage.destinationgenerator.OriginDestination;
 import singlestage.result.Result;
@@ -60,7 +52,7 @@ public final class AGVSystem {
     
     final Simulator sim = Simulator.builder()
         .addModel(
-            RoadModelBuilders.dynamicGraph(createSimpleGraph())
+            RoadModelBuilders.dynamicGraph((new GraphCreator(setting)).createGraph())
                 .withCollisionAvoidance()
                 .withDistanceUnit(SI.METER)
                 .withVehicleLength(setting.getVehicleLength())
@@ -101,36 +93,5 @@ public final class AGVSystem {
     sim.start();
     
     return result;
-  }
-
-  public ImmutableTable<Integer, Integer, Point> createMatrix(int cols,
-      int rows, Point offset) {
-    final ImmutableTable.Builder<Integer, Integer, Point> builder = ImmutableTable
-        .builder();
-    for (int c = 0; c < cols; c++) {
-      for (int r = 0; r < rows; r++) {
-        builder.put(r, c,
-            new Point(offset.x + c * setting.getVehicleLength() * 4,
-                offset.y + r * setting.getVehicleLength() * 4));
-      }
-    }
-    return builder.build();
-  }
-
-  public ListenableGraph<LengthData> createSimpleGraph() {
-    final Graph<LengthData> g = new TableGraph<>();
-
-    final Table<Integer, Integer, Point> matrix = createMatrix(10, 10,
-        new Point(0, 0));
-
-    for (final Map<Integer, Point> row : matrix.rowMap().values()) {
-      Graphs.addBiPath(g, row.values());
-    }
-
-    for (final Map<Integer, Point> col : matrix.columnMap().values()) {
-      Graphs.addBiPath(g, col.values());
-    }
-
-    return new ListenableGraph<>(g);
   }
 }

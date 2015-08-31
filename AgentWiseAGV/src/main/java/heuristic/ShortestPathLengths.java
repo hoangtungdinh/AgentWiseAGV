@@ -1,4 +1,4 @@
-package virtualenvironment;
+package heuristic;
 
 import java.util.Map;
 

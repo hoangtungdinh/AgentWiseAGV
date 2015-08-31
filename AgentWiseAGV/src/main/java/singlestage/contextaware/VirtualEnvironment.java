@@ -19,15 +19,15 @@ import com.github.rinde.rinsim.geom.Graphs;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
+import heuristic.ShortestPathLengths;
 import resourceagents.EdgeAgent;
 import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
 import routeplan.Plan;
-import routeplan.PlanFTW;
+import routeplan.contextaware.PlanFTW;
 import setting.Setting;
-import virtualenvironment.ShortestPathLengths;
 
 /**
  * The Class VirtualEnvironment.
