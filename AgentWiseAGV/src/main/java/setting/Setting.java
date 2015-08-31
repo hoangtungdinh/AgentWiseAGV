@@ -85,8 +85,8 @@ public class Setting {
   public static class SettingBuilder {
     private double vehicleLength = 2d;
     private double vehicleSpeed = 1d;
-    private int numOfAGVs = 1000;
-    private long endTime = 10 * 60 * 1000L;
+    private int numOfAGVs = 100;
+    private long endTime = 200 * 1000L;
     private int speedUp = 2;
     private long seed = 0;
     
