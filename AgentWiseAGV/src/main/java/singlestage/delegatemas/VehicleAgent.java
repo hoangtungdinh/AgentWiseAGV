@@ -111,7 +111,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     dest.add(destination);
 
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, origin, dest,
-        setting.getNumOfAlterRoutes());
+        setting.getNumOfAlterRoutes(), false);
     
     executablePlan = new ExecutablePlan(plan, setting);
     currentPlan = plan;
@@ -133,7 +133,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     if (!roadModel.get().containsObject(this)) {
 
       if (timeLapse.getStartTime() == nextExplorationTime) {
-        explore(timeLapse.getEndTime(), origin, setting.getNumOfAlterRoutes());
+        explore(timeLapse.getEndTime(), origin, setting.getNumOfAlterRoutes(), false);
         startTime = checkPoints.getFirst().getExpectedTime();
       }
 
@@ -152,7 +152,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (startPoint.equals(nextCheckPoint.getPoint())) {
         // if the next check point is a node, then just explore
         explore(nextCheckPoint.getExpectedTime(), startPoint,
-            setting.getNumOfAlterRoutes());
+            setting.getNumOfAlterRoutes(), true);
       } else {
         if (!startPoint.equals(checkPoints.get(1).getPoint())) {
           // this one cannot happen
@@ -161,7 +161,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         // if the check point is on an edge, then start explore from the end
         // node of that edge
         boolean changePlan = explore(checkPoints.get(1).getExpectedTime(),
-            checkPoints.get(1).getPoint(), setting.getNumOfAlterRoutes());
+            checkPoints.get(1).getPoint(), setting.getNumOfAlterRoutes(), true);
         if (changePlan) {
           // if the AGV change the plan, add the check point on the edge to
           // the checkpoint list
@@ -217,13 +217,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    * @param startTime the start time
    * @param startNode the start node
    * @param numberOfRoutes the number of routes
+   * @param started the started
    * @return true, if change the current plan
    */
-  public boolean explore(long startTime, Point startNode, int numberOfRoutes) {
+  public boolean explore(long startTime, Point startNode, int numberOfRoutes, boolean started) {
     nextExplorationTime = startTime + setting.getEvaporationDuration();
     List<Point> dest = new ArrayList<>();
     dest.add(destination);
-    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, dest, numberOfRoutes);
+    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, dest, numberOfRoutes, started);
     if (expectedArrivalTime - plan.getArrivalTime() > setting.getSwitchingThreshold()) {
       executablePlan = new ExecutablePlan(plan, setting);
       currentPlan = plan;

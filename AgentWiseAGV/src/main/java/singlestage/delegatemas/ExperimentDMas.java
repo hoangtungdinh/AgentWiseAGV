@@ -47,7 +47,7 @@ public class ExperimentDMas {
   
   public static void print(List<Sample> samples) {
     try {
-      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsCA_makespan.txt"));
+      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsDMAS_makespan.txt"));
       printWriterMS.println("numAGVs\tmakespan");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();
@@ -57,7 +57,7 @@ public class ExperimentDMas {
       }
       printWriterMS.close();
       
-      PrintWriter printWriterPC = new PrintWriter(new File("src/main/resources/ResultsCA_plancost.txt"));
+      PrintWriter printWriterPC = new PrintWriter(new File("src/main/resources/ResultsDMAS_plancost.txt"));
       printWriterPC.println("numAGVs\tPlanCost");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();

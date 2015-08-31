@@ -1,12 +1,8 @@
 package singlestage.delegatemas;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Stack;
 
 import org.apache.commons.math3.random.RandomGenerator;
@@ -39,9 +35,6 @@ public class VirtualEnvironment implements TickListener {
   /** The edge agent list. */
   private EdgeAgentList edgeAgentList;
   
-  /** The road model. */
-  private CollisionGraphRoadModel roadModel;
-  
   /** The setting. */
   private Setting setting;
   
@@ -59,7 +52,6 @@ public class VirtualEnvironment implements TickListener {
     this.setting = setting;
     nodeAgentList = new NodeAgentList(roadModel, setting);
     edgeAgentList = new EdgeAgentList(roadModel, setting);
-    this.roadModel = roadModel;
     this.pathSampling = new PathSampling(setting);
   }
   
@@ -71,10 +63,11 @@ public class VirtualEnvironment implements TickListener {
    * @param origin the origin
    * @param destinations the destinations
    * @param numOfPaths the num of paths
+   * @param started the started
    * @return the plan
    */
   public Plan exploreRoute(int agvID, long startTime, Point origin,
-      List<Point> destinations, int numOfPaths) {
+      List<Point> destinations, int numOfPaths, boolean started) {
     
     // sampling the environment to get several feasible paths
     final List<Path> feasiblePaths = pathSampling.getFeasiblePaths(origin,
@@ -90,28 +83,40 @@ public class VirtualEnvironment implements TickListener {
           .getNodeAgent(candPath.get(0))
           .getFreeTimeWindows(Range.atLeast(startTime), agvID);
       
-      FreeTimeWindow startFTW = null;
+      Stack<PlanFTW> planStack = new Stack<>();
       
-      // there should be only one free time window that contains the startTime
-      final long realStartTime = startTime - ((long) (setting.getVehicleLength()*1000 / setting.getVehicleSpeed()));
-      for (FreeTimeWindow ftw : firstFreeTimeWindows) {
-        if (ftw.getEntryWindow().contains(realStartTime)
-            || ftw.getEntryWindow().lowerEndpoint() == realStartTime) {
-          startFTW = ftw;
-          break;
+      if (started) {
+        // if the AGV already started
+        FreeTimeWindow startFTW = null;
+        
+        // there should be only one free time window that contains the startTime
+        final long realStartTime = startTime - ((long) (setting.getVehicleLength()*1000 / setting.getVehicleSpeed()));
+        for (FreeTimeWindow ftw : firstFreeTimeWindows) {
+          if (ftw.getEntryWindow().contains(realStartTime)
+              || ftw.getEntryWindow().lowerEndpoint() == realStartTime) {
+            startFTW = ftw;
+            break;
+          }
+        }
+        
+        // if no possible free time window then next candidate path
+        if (startFTW == null) {
+          continue;
+        }
+        
+        LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
+        firstFTW.addLast(startFTW);
+        
+        planStack.push(new PlanFTW(firstFTW, candPath));
+      } else {
+        // if the AGV hasn't entered the map yet
+        for (FreeTimeWindow startFTW : firstFreeTimeWindows) {
+          final LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
+          firstFTW.addLast(startFTW);
+          final PlanFTW firstPlanFTW = new PlanFTW(firstFTW, candPath);
+          planStack.push(firstPlanFTW);
         }
       }
-      
-      // if no possible free time window then next candidate path
-      if (startFTW == null) {
-        continue;
-      }
-      
-      LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
-      firstFTW.addLast(startFTW);
-      
-      Stack<PlanFTW> planStack = new Stack<>();
-      planStack.push(new PlanFTW(firstFTW, candPath));
       
       while (!planStack.isEmpty()) {
         final PlanFTW plan = planStack.pop();
@@ -216,68 +221,6 @@ public class VirtualEnvironment implements TickListener {
         .getNodeAgent(path.get(path.size() - 1));
     lastNodeAgent.addReservation(agvID, lifeTime,
         intervals.get(intervals.size() - 1));
-  }
-  
-  /**
-   * Find the lengths of the shortest paths from all nodes to dest
-   *
-   * @param dest the dest
-   * @return the map
-   */
-  public Map<Point, Double> shortestPathLengthsTo(Point dest) {
-    final Map<Point, Double> initialDist = new HashMap<>();
-    final Map<Point, Double> resultDist = new HashMap<>();
-
-    // node set
-    final Set<Point> nodeSet = roadModel.getGraph().getNodes();
-    for (Point node : nodeSet) {
-      if (node.equals(dest)) {
-        initialDist.put(node, 0d);
-      } else {
-        initialDist.put(node, Double.MAX_VALUE);
-      }
-    }
-
-    while (!initialDist.isEmpty()) {
-      final Point node = getKeyOfMinValue(initialDist);
-      final double dist = initialDist.remove(node);
-      resultDist.put(node, dist);
-
-      final List<Point> neighboringNodes = new ArrayList<>();
-      neighboringNodes
-          .addAll(roadModel.getGraph().getIncomingConnections(node));
-
-      for (Point neighbor : neighboringNodes) {
-        final double alt = dist
-            + roadModel.getGraph().getConnection(neighbor, node).getLength();
-        if (initialDist.containsKey(neighbor)
-            && alt < initialDist.get(neighbor)) {
-          initialDist.put(neighbor, alt);
-        }
-      }
-    }
-
-    return resultDist;
-  }
-  
-  /**
-   * Gets the key with minimum value.
-   *
-   * @param map the map
-   * @return the key with minimum value
-   */
-  public Point getKeyOfMinValue(Map<Point, Double> map) {
-    double minVal = Double.MAX_VALUE;
-    Point key = null;
-    
-    for (Entry<Point, Double> entry : map.entrySet()) {
-      if (minVal > entry.getValue()) {
-        minVal = entry.getValue();
-        key = entry.getKey();
-      }
-    }
-    
-    return key;
   }
   
   @Override

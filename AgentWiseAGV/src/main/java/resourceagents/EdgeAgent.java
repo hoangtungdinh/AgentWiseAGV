@@ -103,7 +103,15 @@ public class EdgeAgent {
     RangeSet<Long> reservationsFromOtherDirection = TreeRangeSet.create();
     List<Reservation> resvList = reservationMap.get(endPoint);
     for (Reservation reservation : resvList) {
-      if (reservation.getAgvID() != agvID) {
+      // the AGV can understand that a reservation is still valid if two
+      // conditions are satisfied
+      // 1. the reservation is of another AGV
+      // 2. the reservation does not totally lie in the possible entry window,
+      // so the entry window is not separated into two ranges
+      // if the 2nd condition is not satisfied, it means that an AGV removed its
+      // reservation at node, but not at the edge
+      if (reservation.getAgvID() != agvID
+          && !realPossibleEntryWindow.encloses(reservation.getInterval())) {
         reservationsFromOtherDirection.add(reservation.getInterval());
       }
     }

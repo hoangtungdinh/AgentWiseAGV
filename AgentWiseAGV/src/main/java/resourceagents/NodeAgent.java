@@ -57,6 +57,10 @@ public class NodeAgent {
    */
   public List<FreeTimeWindow> getFreeTimeWindows(Range<Long> possibleEntryWindow, int agvID) {
     
+//    if (agvID == 7 && node.equals(new Point(40d, 32d))) {
+//      System.out.println("hello");
+//    }
+    
     // actual entry window (take into account the length of vehicles)
     Range<Long> realPossibleEntryWindow;
     final long lowerEndPoint = possibleEntryWindow.lowerEndpoint()
