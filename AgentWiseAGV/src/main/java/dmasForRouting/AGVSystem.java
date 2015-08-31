@@ -16,7 +16,7 @@ import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.geom.TableGraph;
 import com.github.rinde.rinsim.ui.View;
-import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
+import com.github.rinde.rinsim.ui.renderers.AGVRenderer2;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
@@ -45,11 +45,14 @@ public final class AGVSystem {
    */
   public Result run() {
     View.Builder viewBuilder = View.builder()
+        .withAutoPlay()
+        .withSpeedUp(setting.getSpeedUp())
+        .withAutoClose()
         .with(WarehouseRenderer.builder()
             .withMargin(setting.getVehicleLength())
             .withNodes()
             .withNodeOccupancy())
-        .with(AGVRenderer.builder()
+        .with(AGVRenderer2.builder()
             .withDifferentColorsForVehicles()
             .withVehicleCreationNumber()
             .withVehicleOrigin());
@@ -66,7 +69,7 @@ public final class AGVSystem {
                 .withMinDistance(0d))
         .setTimeUnit(SI.MILLI(SI.SECOND))
         .setTickLength(100)
-//        .addModel(viewBuilder)
+        .addModel(viewBuilder)
         // add a random seed
         .setRandomSeed(setting.getSeed())
         .build();
