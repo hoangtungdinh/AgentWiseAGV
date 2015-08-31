@@ -10,7 +10,7 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
-import dmasForRouting.Setting;
+import setting.Setting;
 
 /**
  * The Class EdgeAgentList.

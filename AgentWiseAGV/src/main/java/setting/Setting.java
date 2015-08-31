@@ -1,4 +1,4 @@
-package dmasForRouting;
+package setting;
 
 public class Setting {
   

@@ -6,7 +6,7 @@ import java.util.List;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
-import dmasForRouting.Setting;
+import setting.Setting;
 
 /**
  * The Class ExecutablePlan.

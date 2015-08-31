@@ -1,4 +1,4 @@
-package vehicleAgent;
+package singlestage.contextaware;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -14,13 +14,12 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
-import destinationgenerator.OriginDestination;
-import dmasForRouting.Setting;
 import resultrecording.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
-import virtualenvironment.VirtualEnvironment;
+import setting.Setting;
+import singlestage.destinationgenerator.OriginDestination;
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
   

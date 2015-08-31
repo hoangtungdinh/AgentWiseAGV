@@ -2,7 +2,7 @@ package resultrecording;
 
 import com.github.rinde.rinsim.core.Simulator;
 
-import dmasForRouting.Setting;
+import setting.Setting;
 
 public class Result {
   

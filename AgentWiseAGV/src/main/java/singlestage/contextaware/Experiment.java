@@ -1,4 +1,4 @@
-package experiments;
+package singlestage.contextaware;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,9 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import dmasForRouting.AGVSystem;
-import dmasForRouting.Setting;
 import resultrecording.Result;
+import setting.Setting;
 
 public class Experiment {
 

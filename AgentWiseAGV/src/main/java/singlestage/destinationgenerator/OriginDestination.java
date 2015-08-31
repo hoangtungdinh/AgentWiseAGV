@@ -1,4 +1,4 @@
-package destinationgenerator;
+package singlestage.destinationgenerator;
 
 import com.github.rinde.rinsim.geom.Point;
 

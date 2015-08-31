@@ -9,7 +9,7 @@ import java.util.Set;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.geom.Point;
 
-import dmasForRouting.Setting;
+import setting.Setting;
 
 /**
  * The Class NodeAgentList.

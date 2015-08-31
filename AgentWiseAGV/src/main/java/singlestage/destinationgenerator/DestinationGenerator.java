@@ -1,4 +1,4 @@
-package destinationgenerator;
+package singlestage.destinationgenerator;
 
 import java.util.ArrayList;
 import java.util.List;

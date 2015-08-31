@@ -1,4 +1,4 @@
-package dmasForRouting;
+package singlestage.contextaware;
 
 import java.util.List;
 import java.util.Map;
@@ -21,11 +21,10 @@ import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 
-import destinationgenerator.DestinationGenerator;
-import destinationgenerator.OriginDestination;
 import resultrecording.Result;
-import vehicleAgent.VehicleAgent;
-import virtualenvironment.VirtualEnvironment;
+import setting.Setting;
+import singlestage.destinationgenerator.DestinationGenerator;
+import singlestage.destinationgenerator.OriginDestination;
 
 public final class AGVSystem {
 
