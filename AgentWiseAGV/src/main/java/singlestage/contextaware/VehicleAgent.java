@@ -116,7 +116,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       roadModel.get().addObjectAt(this, origin);
     }
     
-    if (!roadModel.isPresent() || !roadModel.get().containsObject(this)) {
+    if (!roadModel.get().containsObject(this)) {
       return;
     }
     

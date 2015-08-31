@@ -130,7 +130,16 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       roadModel.get().addObjectAt(this, origin);
     }
     
-    if (!roadModel.isPresent() || !roadModel.get().containsObject(this)) {
+    if (!roadModel.get().containsObject(this)) {
+
+      if (timeLapse.getStartTime() == nextExplorationTime) {
+        explore(timeLapse.getEndTime(), origin, setting.getNumOfAlterRoutes());
+        startTime = checkPoints.getFirst().getExpectedTime();
+      }
+
+      if (timeLapse.getStartTime() == nextRefreshTime) {
+        refresh(timeLapse.getStartTime());
+      }
       return;
     }
     
@@ -159,39 +168,36 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           checkPoints.addFirst(nextCheckPoint);
         }
       }
+    }
 
-      if (timeLapse.getStartTime() == nextRefreshTime) {
-        refresh(timeLapse.getStartTime());
-      }
+    if (timeLapse.getStartTime() == nextRefreshTime) {
+      refresh(timeLapse.getStartTime());
+    }
 
-      // IDEA: check the position. If right before it leaves an edge or a node,
-      // it still have to wait, then consume time
-      Point currentPos = roadModel.get().getPosition(this);
-      Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
-      if (!checkPoints.isEmpty()
-          && roundedPos.equals(checkPoints.getFirst().getPoint())) {
-        // System.out.println(roadModel.get().getPosition(this));
-        // sim.stop();
-        if (timeLapse.getStartTime() < checkPoints.getFirst()
-            .getExpectedTime()) {
-          final long timeDifference = checkPoints.getFirst().getExpectedTime()
-              - timeLapse.getStartTime();
-          if (timeDifference <= timeLapse.getTimeLeft()) {
-            timeLapse.consume(timeDifference);
-            checkPoints.removeFirst();
-          } else {
-            // time difference is larger than time left
-            timeLapse.consumeAll();
-          }
-        } else {
+    // IDEA: check the position. If right before it leaves an edge or a node,
+    // it still have to wait, then consume time
+    Point currentPos = roadModel.get().getPosition(this);
+    Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
+    if (!checkPoints.isEmpty()
+        && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+      // System.out.println(roadModel.get().getPosition(this));
+      // sim.stop();
+      if (timeLapse.getStartTime() < checkPoints.getFirst().getExpectedTime()) {
+        final long timeDifference = checkPoints.getFirst().getExpectedTime()
+            - timeLapse.getStartTime();
+        if (timeDifference <= timeLapse.getTimeLeft()) {
+          timeLapse.consume(timeDifference);
           checkPoints.removeFirst();
+        } else {
+          // time difference is larger than time left
+          timeLapse.consumeAll();
         }
+      } else {
+        checkPoints.removeFirst();
       }
+    }
 
-      if (timeLapse.hasTimeLeft()) {
-        roadModel.get().followPath(this, path, timeLapse);
-      }
-    } else {
+    if (timeLapse.hasTimeLeft()) {
       roadModel.get().followPath(this, path, timeLapse);
     }
     
