@@ -1,4 +1,4 @@
-package resultRecording;
+package resultrecording;
 
 import com.github.rinde.rinsim.core.Simulator;
 

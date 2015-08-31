@@ -14,13 +14,13 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
-import destinationGenerator.OriginDestination;
+import destinationgenerator.OriginDestination;
 import dmasForRouting.Setting;
-import resultRecording.Result;
-import routePlan.CheckPoint;
-import routePlan.ExecutablePlan;
-import routePlan.Plan;
-import virtualEnvironment.VirtualEnvironment;
+import resultrecording.Result;
+import routeplan.CheckPoint;
+import routeplan.ExecutablePlan;
+import routeplan.Plan;
+import virtualenvironment.VirtualEnvironment;
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
   

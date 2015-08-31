@@ -1,4 +1,4 @@
-package virtualEnvironment;
+package virtualenvironment;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package experiment;
+package experiments;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 import dmasForRouting.AGVSystem;
 import dmasForRouting.Setting;
-import resultRecording.Result;
+import resultrecording.Result;
 
 public class Experiment {
 

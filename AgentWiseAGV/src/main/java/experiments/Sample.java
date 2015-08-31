@@ -1,9 +1,9 @@
-package experiment;
+package experiments;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import resultRecording.Result;
+import resultrecording.Result;
 
 public class Sample {
   

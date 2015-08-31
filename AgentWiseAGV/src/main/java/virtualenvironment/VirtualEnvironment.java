@@ -1,4 +1,4 @@
-package virtualEnvironment;
+package virtualenvironment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,13 +20,13 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
 import dmasForRouting.Setting;
-import resourceAgents.EdgeAgent;
-import resourceAgents.EdgeAgentList;
-import resourceAgents.FreeTimeWindow;
-import resourceAgents.NodeAgent;
-import resourceAgents.NodeAgentList;
-import routePlan.Plan;
-import routePlan.PlanFTW;
+import resourceagents.EdgeAgent;
+import resourceagents.EdgeAgentList;
+import resourceagents.FreeTimeWindow;
+import resourceagents.NodeAgent;
+import resourceagents.NodeAgentList;
+import routeplan.Plan;
+import routeplan.PlanFTW;
 
 /**
  * The Class VirtualEnvironment.

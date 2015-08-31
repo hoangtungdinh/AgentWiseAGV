@@ -1,4 +1,4 @@
-package destinationGenerator;
+package destinationgenerator;
 
 import java.util.ArrayList;
 import java.util.List;

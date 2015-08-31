@@ -1,11 +1,11 @@
-package routePlan;
+package routeplan;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import com.github.rinde.rinsim.geom.Point;
 
-import resourceAgents.FreeTimeWindow;
+import resourceagents.FreeTimeWindow;
 
 /**
  * The Class PlanFTW.

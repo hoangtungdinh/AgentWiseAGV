@@ -1,4 +1,4 @@
-package routePlan;
+package routeplan;
 
 import com.github.rinde.rinsim.geom.Point;
 

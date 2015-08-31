@@ -1,4 +1,4 @@
-package destinationGenerator;
+package destinationgenerator;
 
 import com.github.rinde.rinsim.geom.Point;
 

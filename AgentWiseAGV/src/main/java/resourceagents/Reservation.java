@@ -1,4 +1,4 @@
-package resourceAgents;
+package resourceagents;
 
 import com.google.common.collect.Range;
 

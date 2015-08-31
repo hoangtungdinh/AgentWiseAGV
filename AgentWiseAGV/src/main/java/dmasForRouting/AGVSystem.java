@@ -21,11 +21,11 @@ import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 
-import destinationGenerator.DestinationGenerator;
-import destinationGenerator.OriginDestination;
-import resultRecording.Result;
+import destinationgenerator.DestinationGenerator;
+import destinationgenerator.OriginDestination;
+import resultrecording.Result;
 import vehicleAgent.VehicleAgent;
-import virtualEnvironment.VirtualEnvironment;
+import virtualenvironment.VirtualEnvironment;
 
 public final class AGVSystem {
 
@@ -69,7 +69,7 @@ public final class AGVSystem {
                 .withMinDistance(0d))
         .setTimeUnit(SI.MILLI(SI.SECOND))
         .setTickLength(100)
-        .addModel(viewBuilder)
+//        .addModel(viewBuilder)
         // add a random seed
         .setRandomSeed(setting.getSeed())
         .build();

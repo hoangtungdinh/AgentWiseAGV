@@ -1,4 +1,4 @@
-package routePlan;
+package routeplan;
 
 import java.util.ArrayList;
 import java.util.List;
