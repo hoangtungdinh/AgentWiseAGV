@@ -38,6 +38,7 @@ public class VirtualEnvironment implements TickListener {
   /** The setting. */
   private Setting setting;
   
+  /** The path sampling. */
   private PathSampling pathSampling;
   
   /**
@@ -169,6 +170,10 @@ public class VirtualEnvironment implements TickListener {
           || bestPlan.getArrivalTime() > planFTW.getArrivalTime()) {
         bestPlan = planFTW;
       }
+    }
+    
+    if (bestPlan == null) {
+      return null;
     }
     
     // generate actual plan from the time window plan

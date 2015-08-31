@@ -225,6 +225,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     List<Point> dest = new ArrayList<>();
     dest.add(destination);
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, dest, numberOfRoutes, started);
+    
+    if (started && plan == null) {
+      return false;
+    }
+    
     if (expectedArrivalTime - plan.getArrivalTime() > setting.getSwitchingThreshold()) {
       executablePlan = new ExecutablePlan(plan, setting);
       currentPlan = plan;
