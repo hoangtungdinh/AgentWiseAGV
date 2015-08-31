@@ -59,6 +59,16 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The result. */
   private Result result;
   
+  /**
+   * Instantiates a new vehicle agent.
+   *
+   * @param originDestination the origin destination
+   * @param virtualEnvironment the virtual environment
+   * @param agvID the agv id
+   * @param sim the sim
+   * @param setting the setting
+   * @param result the result
+   */
   public VehicleAgent(OriginDestination originDestination, VirtualEnvironment virtualEnvironment,
       int agvID, Simulator sim, Setting setting, Result result) {
     roadModel = Optional.absent();
@@ -102,17 +112,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   @Override
   public void tick(TimeLapse timeLapse) {
     
-//    if (currentPlan != null) {
-//      System.out.println();
-//      System.out.println(agvID + " current plan");
-//      System.out.println(currentPlan.getPath());
-//      System.out.println(currentPlan.getIntervals());
-//    }
-    
-//    if (destination.isPresent()) {
-//      System.out.println(agvID + " " + destination.get());
-//    }
-    
     if (timeLapse.getStartTime() == startTime) {
       roadModel.get().addObjectAt(this, origin);
     }
@@ -127,8 +126,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     if (!checkPoints.isEmpty()
         && roundedPos.equals(checkPoints.getFirst().getPoint())) {
-      // System.out.println(roadModel.get().getPosition(this));
-      // sim.stop();
       if (timeLapse.getStartTime() < checkPoints.getFirst().getExpectedTime()) {
         final long timeDifference = checkPoints.getFirst().getExpectedTime()
             - timeLapse.getStartTime();

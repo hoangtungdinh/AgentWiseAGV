@@ -14,12 +14,12 @@ public class Setting {
   private long refreshDuration;
   private long explorationDuration;
   private long switchingThreshold;
-  private long numOfAlterRoutes;
+  private int numOfAlterRoutes;
   
   public Setting(double vehicleLength, double vehicleSpeed, int numOfAGVs,
       long endTime, int speedUp, long seed, int numOfDestinations,
       long evaporationDuration, long refreshDuration, long explorationDuration,
-      long switchingThreshold, long numOfAlterRoutes) {
+      long switchingThreshold, int numOfAlterRoutes) {
     this.vehicleLength = vehicleLength;
     this.vehicleSpeed = vehicleSpeed;
     this.numOfAGVs = numOfAGVs;
@@ -78,7 +78,7 @@ public class Setting {
     return switchingThreshold;
   }
 
-  public long getNumOfAlterRoutes() {
+  public int getNumOfAlterRoutes() {
     return numOfAlterRoutes;
   }
 
@@ -95,7 +95,7 @@ public class Setting {
     private long refreshDuration = 8000;
     private long explorationDuration = 5000;
     private long switchingThreshold = 6000;
-    private long numOfAlterRoutes = 10;
+    private int numOfAlterRoutes = 10;
     
     public SettingBuilder() {
 
@@ -156,7 +156,7 @@ public class Setting {
       return this;
     }
 
-    public SettingBuilder setNumOfAlterRoutes(long numOfAlterRoutes) {
+    public SettingBuilder setNumOfAlterRoutes(int numOfAlterRoutes) {
       this.numOfAlterRoutes = numOfAlterRoutes;
       return this;
     }

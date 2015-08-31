@@ -48,7 +48,7 @@ public final class AGVSystem {
             .withVehicleCreationNumber()
             .withVehicleOrigin());
 
-    viewBuilder = viewBuilder.withTitleAppendix("Warehouse Example");
+    viewBuilder = viewBuilder.withTitleAppendix("Context Aware Single Stage");
     
     final Simulator sim = Simulator.builder()
         .addModel(
@@ -60,7 +60,7 @@ public final class AGVSystem {
                 .withMinDistance(0d))
         .setTimeUnit(SI.MILLI(SI.SECOND))
         .setTickLength(100)
-//        .addModel(viewBuilder)
+        .addModel(viewBuilder)
         // add a random seed
         .setRandomSeed(setting.getSeed())
         .build();
