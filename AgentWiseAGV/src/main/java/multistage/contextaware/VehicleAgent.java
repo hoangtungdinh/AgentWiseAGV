@@ -73,8 +73,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
     this.initialPos = centralStation.get(agvID);
-    stationEntrance = centralStation.get(centralStation.size() - 1);
-    stationExit = centralStation.get(0);
+    stationExit = centralStation.get(centralStation.size() - 1);
+    stationEntrance = centralStation.get(0);
     state = State.IDLE;
     this.setting = setting;
     this.destinations = new LinkedList<>();
@@ -114,6 +114,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   @Override
   public void tick(TimeLapse timeLapse) {
     
+    if (agvID == 9) {
+      System.out.println("hello");
+    }
+    
     if (state == State.ACTIVE
         && roadModel.get().getPosition(this).equals(stationEntrance)
         && path.size() == 1) {
@@ -122,8 +126,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       state = State.IDLE;
       path = new LinkedList<>(
           roadModel.get().getShortestPathTo(this, stationExit));
-    } else if (state == State.IDLE
-        && roadModel.get().getPosition(this).equals(stationExit)) {
+    } else if (state == State.IDLE && roadModel.get().getPosition(this).equals(stationExit)) {
       // of the agv reaches the exit of the station, then it becomes active
       state = State.ACTIVE;
       nextDestination(timeLapse.getEndTime());

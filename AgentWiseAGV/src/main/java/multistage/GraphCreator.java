@@ -1,6 +1,5 @@
 package multistage;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,26 +41,33 @@ public class GraphCreator {
 
   public ListenableGraph<LengthData> createGraph() {
     final Graph<LengthData> g = new TableGraph<>();
+    
+    int numOfNodes = -1;
+    
+    if (setting.getNumOfAGVs() % 2 == 0) {
+      numOfNodes = setting.getNumOfAGVs()  / 2;
+    } else {
+      numOfNodes = (setting.getNumOfAGVs() + 1) / 2;
+    }
+    
+    Point origin = new Point(numOfNodes * 8, 0);
 
-    final Table<Integer, Integer, Point> matrix = createMatrix(4, 4,
-        new Point(8, 0));
+    final Table<Integer, Integer, Point> matrix = createMatrix(4, 4, origin);
 
     centralStation = new LinkedList<>();
-    final Point stationEntrace = new Point(0, 0);
-    final Point stationExit = new Point(0, 24);
-    centralStation.addLast(stationEntrace);
-    for (int i = 0; i < setting.getNumOfAGVs() - 1; i++) {
+    final Point stationEntrace = new Point(origin.x - 8, 8);
+    final Point stationExit = new Point(origin.x - 8, 0);
+    for (int i = 0; i < numOfNodes; i++) {
       centralStation
-          .addLast(new Point(0, (i + 1) * setting.getVehicleLength()));
+          .addLast(new Point(origin.x - 8*(i + 1), 8));
     }
-    centralStation.addLast(stationExit);
-    Collections.reverse(centralStation);
+    for (int i = 0; i < numOfNodes; i++) {
+      centralStation
+          .addLast(new Point(8*i, 0));
+    }
 
     for (int i = 0; i < matrix.columnMap().size(); i++) {
-
-      if (i == 0) {
-        Graphs.addBiPath(g, matrix.column(i).values());
-      }
+      Graphs.addBiPath(g, matrix.column(i).values());
     }
 
     for (final Map<Integer, Point> row : matrix.rowMap().values()) {
@@ -69,10 +75,8 @@ public class GraphCreator {
     }
 
     Graphs.addPath(g, centralStation);
-    Graphs.addBiPath(g, stationEntrace, new Point(8, 0));
-    Graphs.addBiPath(g, stationExit, new Point(8, 24));
-
-    Collections.reverse(centralStation);
+    Graphs.addPath(g, new Point(numOfNodes * 8, 8), stationEntrace);
+    Graphs.addPath(g, stationExit, new Point(numOfNodes * 8, 0));
 
     return new ListenableGraph<>(g);
   }

@@ -86,7 +86,7 @@ public class Setting {
     private double vehicleLength = 2d;
     private double vehicleSpeed = 1d;
     private int numOfAGVs = 100;
-    private long endTime = 200 * 1000L;
+    private long endTime = 1000 * 1000L;
     private int speedUp = 2;
     private long seed = 0;
     

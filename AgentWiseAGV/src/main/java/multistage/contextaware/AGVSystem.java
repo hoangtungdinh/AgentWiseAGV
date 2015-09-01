@@ -8,8 +8,6 @@ import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
-import com.github.rinde.rinsim.geom.LengthData;
-import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer2;
@@ -65,7 +63,7 @@ public final class AGVSystem {
                 .withMinDistance(0d))
         .setTimeUnit(SI.MILLI(SI.SECOND))
         .setTickLength(100)
-//        .addModel(viewBuilder)
+        .addModel(viewBuilder)
         // add a random seed
         .setRandomSeed(setting.getSeed())
         .build();

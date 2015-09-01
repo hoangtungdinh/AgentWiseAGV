@@ -153,7 +153,7 @@ public class VirtualEnvironment implements TickListener {
         for (Point nextNode : nextNodes) {
           // for each possible next node
           if (!planFTW.isValid(nextNode) || stationExits.contains(nextNode)) {
-            // we do not allow cyclic plan and plan contain the entrance of the
+            // we do not allow cyclic plan and plan contain the exit of the
             // station
             continue;
           }
