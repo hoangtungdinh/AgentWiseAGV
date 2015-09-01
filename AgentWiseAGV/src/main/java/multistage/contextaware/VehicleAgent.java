@@ -66,13 +66,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   private int reachedDestinations = 0;
 
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
-      int agvID, Point initialPos, List<Point> centralStation, Setting setting, Result result) {
+      int agvID, List<Point> centralStation, Setting setting, Result result) {
     roadModel = Optional.absent();
     path = new LinkedList<>();
     this.destinationList = destinationList;
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
-    this.initialPos = initialPos;
+    this.initialPos = centralStation.get(agvID);
     stationEntrance = centralStation.get(centralStation.size() - 1);
     stationExit = centralStation.get(0);
     state = State.IDLE;
