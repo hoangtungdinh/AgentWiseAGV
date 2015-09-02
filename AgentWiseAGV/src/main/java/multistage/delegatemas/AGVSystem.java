@@ -1,4 +1,4 @@
-package multistage.contextaware;
+package multistage.delegatemas;
 
 import java.util.List;
 
@@ -49,7 +49,7 @@ public final class AGVSystem {
             .withVehicleCreationNumber()
             .withVehicleOrigin());
 
-    viewBuilder = viewBuilder.withTitleAppendix("Context Aware Multi Stage");
+    viewBuilder = viewBuilder.withTitleAppendix("Delegate MAS Multi Stage");
     
     final GraphCreator graph = new GraphCreator(setting);
     
