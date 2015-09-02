@@ -64,6 +64,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   private Result result;
   
   private int reachedDestinations = 0;
+  
+  private List<Point> centralStation;
 
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
       int agvID, List<Point> centralStation, Setting setting, Result result) {
@@ -72,9 +74,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.destinationList = destinationList;
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
-    this.initialPos = centralStation.get(agvID);
-    stationExit = centralStation.get(centralStation.size() - 1);
-    stationEntrance = centralStation.get(0);
+    this.initialPos = centralStation.get(centralStation.size() - 1 - agvID);
+    this.stationExit = centralStation.get(centralStation.size() - 1);
+    this.stationEntrance = centralStation.get(0);
+    this.centralStation = new ArrayList<>(centralStation);
+    this.centralStation.remove(stationEntrance);
     state = State.IDLE;
     this.setting = setting;
     this.destinations = new LinkedList<>();
@@ -99,12 +103,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     destinations = new LinkedList<>();
     destinations.addLast(destinationList.getDestination());
     destinations.addLast(destinationList.getDestination());
+    destinations.addLast(destinationList.getDestination());
     destinations.addLast(stationEntrance);
     
-    List<Point> stationExits = new ArrayList<>();
-    stationExits.add(stationExit);
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime,
-        roadModel.get().getPosition(this), destinations, stationExits);
+        roadModel.get().getPosition(this), destinations, centralStation);
     executablePlan = new ExecutablePlan(plan, setting);
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
@@ -113,10 +116,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
   @Override
   public void tick(TimeLapse timeLapse) {
-    
-    if (agvID == 9) {
-      System.out.println("hello");
-    }
     
     if (state == State.ACTIVE
         && roadModel.get().getPosition(this).equals(stationEntrance)

@@ -125,6 +125,7 @@ public class VirtualEnvironment implements TickListener {
     // will improve the simulation speed.
 
     while (!planQueue.isEmpty()) {
+      System.out.println(agvID + ": " + planQueue.size());
       // select and remove the first plan in the queue
       final PlanFTW planFTW = planQueue.remove(planQueue.firstKey());
 
@@ -246,6 +247,7 @@ public class VirtualEnvironment implements TickListener {
    */
   public long computeCost(PlanFTW planFTW,
       Map<Point, ShortestPathLengths> shortestLengths, List<Point> destinations) {
+    
     final List<Point> path = planFTW.getPath();
     final List<FreeTimeWindow> ftwList = planFTW.getFreeTimeWindows();
     
