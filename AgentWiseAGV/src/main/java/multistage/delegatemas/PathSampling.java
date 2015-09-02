@@ -1,4 +1,4 @@
-package singlestage.delegatemas;
+package multistage.delegatemas;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +9,8 @@ import com.github.rinde.rinsim.geom.LengthData;
 import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 
+import multistage.GraphCreator;
 import setting.Setting;
-import singlestage.GraphCreator;
 
 public class PathSampling {
   
@@ -22,9 +22,13 @@ public class PathSampling {
   
   @SuppressWarnings("unchecked")
   public List<Path> getFeasiblePaths(Point origin, List<Point> destinations,
-      int numOfPaths) {
+      int numOfPaths, List<Point> centralStation) {
     // a clone graph
     ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
+    
+    for (int i = 0; i < centralStation.size() - 1; i++) {
+      graph.removeNode(centralStation.get(i));
+    }
     
     List<Path> paths = new ArrayList<>();
     double w = -1;
