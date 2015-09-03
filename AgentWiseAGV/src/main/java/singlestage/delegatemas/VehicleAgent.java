@@ -227,12 +227,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       roadModel.get().followPath(this, path, timeLapse);
     }
     
-//    if (agvID == 31) {
-//      System.out.println(currentPlan.getPath());
-//      System.out.println(currentPlan.getIntervals());
-//      System.out.println(checkPoints.getFirst().getPoint() + " " + checkPoints.getFirst().getExpectedTime());
-//    }
-    
     if (roadModel.get().getPosition(this).equals(destination)) {
       result.updateResult(startTime, timeLapse.getTime());
       sim.unregister(this);

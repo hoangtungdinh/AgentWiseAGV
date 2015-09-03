@@ -187,7 +187,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           final Point lastNode = currentPlan.getPath().get(0);
           final Range<Long> nodeInterval = currentPlan.getIntervals().get(0);
           final Range<Long> edgeInterval = currentPlan.getIntervals().get(1);
-          final long startTime = checkPoints.get(1).getExpectedTime();
+          final long startTime = nextCheckPoint.getExpectedTime()
+              + ((long) ((setting.getVehicleLength() + 0.1) * 1000
+                  / setting.getVehicleSpeed()));
           boolean changePlan = explore(startTime, checkPoints.get(1).getPoint(),
               setting.getNumOfAlterRoutes());
           if (changePlan) {
