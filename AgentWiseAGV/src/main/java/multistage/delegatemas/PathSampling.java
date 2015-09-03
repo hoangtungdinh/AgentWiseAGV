@@ -53,7 +53,8 @@ public class PathSampling {
       paths.add(new Path(candidatePath));
       
       if (w == -1) {
-        w = 2 * Graphs.pathLength(candidatePath);
+//        w = 2 * Graphs.pathLength(candidatePath);
+        w = 2 * 8;
       }
       
       final double deltaW = Math.pow(0.5, i) * w;
