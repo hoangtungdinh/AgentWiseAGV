@@ -38,7 +38,7 @@ public class GraphCreator {
   public ListenableGraph<LengthData> createGraph() {
     final Graph<LengthData> g = new TableGraph<>();
 
-    final Table<Integer, Integer, Point> matrix = createMatrix(10, 10,
+    final Table<Integer, Integer, Point> matrix = createMatrix(5, 5,
         new Point(0, 0));
 
     for (final Map<Integer, Point> row : matrix.rowMap().values()) {

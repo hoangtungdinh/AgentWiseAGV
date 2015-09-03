@@ -130,8 +130,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     final long currentTime = timeLapse.getStartTime();
     
     if (currentPlan != null && currentPlan.getIntervals().size() > 1
-        && currentPlan.getIntervals().get(1).upperEndpoint() < timeLapse
-            .getStartTime()) {
+        && currentPlan.getIntervals().get(1).upperEndpoint() < currentTime) {
       currentPlan.removeOldSteps();
     }
     
@@ -181,7 +180,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         final Point lastNode = currentPlan.getPath().get(0);
         final Range<Long> nodeInterval = currentPlan.getIntervals().get(0);
         final Range<Long> edgeInterval = currentPlan.getIntervals().get(1);
-        final long startTime = checkPoints.get(1).getExpectedTime();
+        final long startTime = nextCheckPoint.getExpectedTime()
+            + ((long) ((setting.getVehicleLength() + 0.1) * 1000
+                / setting.getVehicleSpeed()));
         boolean changePlan = explore(startTime, checkPoints.get(1).getPoint(),
             setting.getNumOfAlterRoutes(), true);
         if (changePlan) {
@@ -226,6 +227,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       roadModel.get().followPath(this, path, timeLapse);
     }
     
+//    if (agvID == 31) {
+//      System.out.println(currentPlan.getPath());
+//      System.out.println(currentPlan.getIntervals());
+//      System.out.println(checkPoints.getFirst().getPoint() + " " + checkPoints.getFirst().getExpectedTime());
+//    }
+    
     if (roadModel.get().getPosition(this).equals(destination)) {
       result.updateResult(startTime, timeLapse.getTime());
       sim.unregister(this);
@@ -260,8 +267,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       currentPlan = plan;
       path = new LinkedList<>(executablePlan.getPath());
       checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-//      virtualEnvironment.makeReservation(agvID, plan, startTime, startTime + setting.getEvaporationDuration());
       expectedArrivalTime = plan.getArrivalTime();
+//      virtualEnvironment.makeReservation(agvID, plan, startTime, startTime + setting.getEvaporationDuration());
 //      nextRefreshTime = startTime + setting.getRefreshDuration();
       return true;
     } else {
