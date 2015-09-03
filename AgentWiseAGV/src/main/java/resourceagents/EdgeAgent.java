@@ -1,10 +1,14 @@
 package resourceagents;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
@@ -84,6 +88,7 @@ public class EdgeAgent {
    * @param agvID the agv id
    * @return the free time windows
    */
+  @Nullable
   public List<FreeTimeWindow> getFreeTimeWindows(Point startPoint,
       Point endPoint, Range<Long> possibleEntryWindow, int agvID) {
     
@@ -207,9 +212,9 @@ public class EdgeAgent {
       }
     }
     
-    // if no valid exit window at this time then it is an error
+    // example: (728300‥756300) (744300‥758300)
     if (lowerEndExitWindow > upperEndExitWindow) {
-      throw new Error("Invalid exit window");
+      return null;
     }
     
     long lowerEndEntryWindow = optimisticEntryWindow.lowerEndpoint();
@@ -224,10 +229,7 @@ public class EdgeAgent {
     Range<Long> optimisticTimeWindow = Range.closed(lowerEndEntryWindow, upperEndExitWindow);
     RangeSet<Long> allNonConflictTimeWindow = freeRanges.subRangeSet(optimisticTimeWindow);
     Range<Long> feasibleTimeWindow = allNonConflictTimeWindow.rangeContaining(lowerEndEntryWindow);
-    
-    if (feasibleTimeWindow == null) {
-      throw new Error("Time window cannot be null");
-    }
+    checkNotNull(feasibleTimeWindow, "cannot be null %s", feasibleTimeWindow);
     
     upperEndExitWindow = feasibleTimeWindow.upperEndpoint();
     

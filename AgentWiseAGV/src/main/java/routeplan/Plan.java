@@ -1,5 +1,6 @@
 package routeplan;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import com.github.rinde.rinsim.geom.Point;
@@ -13,10 +14,10 @@ import com.google.common.collect.Range;
 public class Plan {
   
   /** The path. */
-  private List<Point> path;
+  private LinkedList<Point> path;
   
   /** The intervals. */
-  private List<Range<Long>> intervals;
+  private LinkedList<Range<Long>> intervals;
 
   /**
    * Instantiates a new plan.
@@ -25,8 +26,8 @@ public class Plan {
    * @param intervals the intervals
    */
   public Plan(List<Point> path, List<Range<Long>> intervals) {
-    this.path = path;
-    this.intervals = intervals;
+    this.path = new LinkedList<>(path);
+    this.intervals = new LinkedList<>(intervals);
   }
 
   /**
@@ -54,5 +55,28 @@ public class Plan {
    */
   public long getArrivalTime() {
     return intervals.get(intervals.size() - 1).lowerEndpoint();
+  }
+  
+  /**
+   * Removes the out-dated steps
+   */
+  public void removeOldSteps() {
+    path.removeFirst();
+    intervals.removeFirst();
+    intervals.removeFirst();
+  }
+  
+  /**
+   * Adds the last node.
+   * This method is useful when exploration.
+   *
+   * @param lastNode the last node
+   * @param currentTime the current time
+   * @param timeToLeaveEdge the time to leave edge
+   */
+  public void addLastNode(Point lastNode, Range<Long> nodeInterval, Range<Long> edgeInterval) {
+    path.addFirst(lastNode);
+    intervals.addFirst(edgeInterval);
+    intervals.addFirst(nodeInterval);
   }
 }

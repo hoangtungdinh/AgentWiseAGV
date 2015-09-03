@@ -12,6 +12,7 @@ import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
+import com.google.common.collect.Range;
 
 import multistage.State;
 import multistage.destinationgenerator.Destinations;
@@ -81,8 +82,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   private List<Point> centralStation;
   
   private int reachedDestinations = 0;
-  
-//  private int reachedDestinations = 0;
 
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
       int agvID, List<Point> centralStation, Setting setting, Result result) {
@@ -154,6 +153,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       nextDestination(timeLapse.getEndTime());
     }
     
+    if (currentPlan != null && currentPlan.getIntervals().size() > 1
+        && currentPlan.getIntervals().get(1).upperEndpoint() < timeLapse
+            .getStartTime()) {
+      currentPlan.removeOldSteps();
+    }
+    
     if (state == State.ACTIVE) {
       // if not idle
       // if explore
@@ -164,8 +169,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         final Point startPoint = path.peek();
         if (startPoint.equals(nextCheckPoint.getPoint())) {
           // if the next check point is a node, then just explore
-          explore(nextCheckPoint.getExpectedTime(), startPoint,
-              setting.getNumOfAlterRoutes());
+          final long startTime = nextCheckPoint.getExpectedTime();
+          boolean changePlan = explore(startTime, startPoint, setting.getNumOfAlterRoutes());
+          if (changePlan) {
+            virtualEnvironment.makeReservation(agvID, currentPlan, startTime, startTime + setting.getEvaporationDuration());
+            nextRefreshTime = startTime + setting.getRefreshDuration();
+          }
         } else {
           if (!startPoint.equals(checkPoints.get(1).getPoint())) {
             // this one cannot happen
@@ -173,12 +182,19 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           }
           // if the check point is on an edge, then start explore from the end
           // node of that edge
-          boolean changePlan = explore(checkPoints.get(1).getExpectedTime(),
-              checkPoints.get(1).getPoint(), setting.getNumOfAlterRoutes());
+          final Point lastNode = currentPlan.getPath().get(0);
+          final Range<Long> nodeInterval = currentPlan.getIntervals().get(0);
+          final Range<Long> edgeInterval = currentPlan.getIntervals().get(1);
+          final long startTime = checkPoints.get(1).getExpectedTime();
+          boolean changePlan = explore(startTime, checkPoints.get(1).getPoint(),
+              setting.getNumOfAlterRoutes());
           if (changePlan) {
             // if the AGV change the plan, add the check point on the edge to
             // the checkpoint list
             checkPoints.addFirst(nextCheckPoint);
+            currentPlan.addLastNode(lastNode, nodeInterval, edgeInterval);
+            virtualEnvironment.makeReservation(agvID, currentPlan, startTime, startTime + setting.getEvaporationDuration());
+            nextRefreshTime = startTime + setting.getRefreshDuration();
           }
         }
       }
@@ -244,14 +260,19 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   public boolean explore(long startTime, Point startNode, int numberOfRoutes) {
     nextExplorationTime = startTime + setting.getExplorationDuration();
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, destinations, numberOfRoutes, centralStation);
+    
+    if (plan == null) {
+      return false;
+    }
+    
     if (expectedArrivalTime - plan.getArrivalTime() > setting.getSwitchingThreshold()) {
       executablePlan = new ExecutablePlan(plan, setting);
       currentPlan = plan;
       path = new LinkedList<>(executablePlan.getPath());
       checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-      virtualEnvironment.makeReservation(agvID, plan, startTime, startTime + setting.getEvaporationDuration());
       expectedArrivalTime = plan.getArrivalTime();
-      nextRefreshTime = startTime + setting.getRefreshDuration();
+//      virtualEnvironment.makeReservation(agvID, plan, startTime, startTime + setting.getEvaporationDuration());
+//      nextRefreshTime = startTime + setting.getRefreshDuration();
       return true;
     } else {
       return false;

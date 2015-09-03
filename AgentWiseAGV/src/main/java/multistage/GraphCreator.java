@@ -52,7 +52,7 @@ public class GraphCreator {
     
     Point origin = new Point(numOfNodes * 8, 0);
 
-    final Table<Integer, Integer, Point> matrix = createMatrix(10, 10, origin);
+    final Table<Integer, Integer, Point> matrix = createMatrix(5, 5, origin);
 
     centralStation = new LinkedList<>();
     final Point stationEntrace = new Point(origin.x - 8, 8);

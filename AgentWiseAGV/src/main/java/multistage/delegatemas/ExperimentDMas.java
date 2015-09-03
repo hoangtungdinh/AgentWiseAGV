@@ -29,12 +29,13 @@ public class ExperimentDMas {
       for (int numAGV = 1; numAGV <= 10; numAGV++) {
         final Sample sample = new Sample(numAGV*10);
         for (int i = 0; i < 100; i++) {
+          final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
-              .setNumOfAGVs(numAGV * 10).setSeed(seeds.removeFirst()).build();
-          final AGVSystem agvSystem = new AGVSystem(setting);
+              .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
+          final multistage.delegatemas.AGVSystem agvSystem = new AGVSystem(setting);
           final Result result = agvSystem.run();
           sample.addResult(result);
-          System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i);
+          System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i + "\tSeed: " + seed);
         }
         samples.add(sample);
       }

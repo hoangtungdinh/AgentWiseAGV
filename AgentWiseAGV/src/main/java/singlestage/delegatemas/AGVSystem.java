@@ -48,7 +48,7 @@ public final class AGVSystem {
             .withVehicleCreationNumber()
             .withVehicleOrigin());
 
-    viewBuilder = viewBuilder.withTitleAppendix("Context Aware Single Stage");
+    viewBuilder = viewBuilder.withTitleAppendix("Delegate MAS Single Stage");
     
     final Simulator sim = Simulator.builder()
         .addModel(

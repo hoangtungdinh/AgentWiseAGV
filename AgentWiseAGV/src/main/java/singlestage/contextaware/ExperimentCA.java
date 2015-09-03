@@ -31,7 +31,7 @@ public class ExperimentCA {
         for (int i = 0; i < 100; i++) {
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seeds.removeFirst()).build();
-          final AGVSystem agvSystem = new AGVSystem(setting);
+          final singlestage.contextaware.AGVSystem agvSystem = new AGVSystem(setting);
           final Result result = agvSystem.run();
           sample.addResult(result);
           System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i);
