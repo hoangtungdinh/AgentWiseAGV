@@ -111,3 +111,26 @@ ggplot(throughput_datC, aes(x=numAGVs, y=FinishedTask, color=approach, group=app
   scale_x_discrete(limits=throughput_datC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105))
+
+################################################
+
+numAGVs = c()
+percentageOfThroughPut = c()
+
+for (i in 1:nrow(caMultiStage)) {
+  numAGVs[i] = caMultiStage[i,1]
+  percentageOfThroughPut[i] = (dMasMultiStage[i,2] / caMultiStage[i,2])*100
+}
+
+percentageThroughPut = data.frame(numAGVs, percentageOfThroughPut)
+
+percentageThroughPutC <- summarySE(percentageThroughPut, measurevar="percentageOfThroughPut", groupvars=c("numAGVs"))
+
+ggplot(percentageThroughPutC, aes(x=numAGVs, y=percentageOfThroughPut)) + 
+  geom_errorbar(aes(ymin=percentageOfThroughPut-sd, ymax=percentageOfThroughPut+sd), width=3, position=pd) +
+  geom_line(position=pd) +
+  geom_point(size=3, position=pd) +
+  theme_classic() + 
+  scale_x_discrete(limits=percentageMSC[,1]) +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
+  coord_cartesian(xlim = c(5, 105))
