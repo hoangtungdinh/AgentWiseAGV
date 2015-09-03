@@ -127,37 +127,38 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   @Override
   public void tick(TimeLapse timeLapse) {
     
+    final long currentTime = timeLapse.getStartTime();
+    
     if (currentPlan != null && currentPlan.getIntervals().size() > 1
         && currentPlan.getIntervals().get(1).upperEndpoint() < timeLapse
             .getStartTime()) {
       currentPlan.removeOldSteps();
     }
     
-    if (timeLapse.getStartTime() == startTime) {
+    if (currentTime == startTime) {
       roadModel.get().addObjectAt(this, origin);
     }
     
     if (!roadModel.get().containsObject(this)) {
 
-      if (timeLapse.getStartTime() == nextExplorationTime) {
+      if (currentTime == nextExplorationTime) {
         final long startTimeOfExploration = timeLapse.getEndTime();
         boolean changePlan = explore(startTimeOfExploration, origin, setting.getNumOfAlterRoutes(), false);
         if (changePlan) {
           startTime = checkPoints.getFirst().getExpectedTime();
-          //TODO WTF???
-          virtualEnvironment.makeReservation(agvID, currentPlan, startTimeOfExploration, startTimeOfExploration + setting.getEvaporationDuration());
-          nextRefreshTime = startTimeOfExploration + setting.getRefreshDuration();
+          virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
+          nextRefreshTime = currentTime + setting.getRefreshDuration();
         }
       }
 
-      if (timeLapse.getStartTime() == nextRefreshTime) {
-        refresh(timeLapse.getStartTime());
+      if (currentTime == nextRefreshTime) {
+        refresh(currentTime);
       }
       return;
     }
     
     // if explore
-    if (timeLapse.getStartTime() == nextExplorationTime) {
+    if (currentTime == nextExplorationTime) {
       // get the next check point
       final CheckPoint nextCheckPoint = checkPoints.getFirst();
       // get the next point of the path, we will explore from this point
@@ -167,8 +168,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         final long startTime = nextCheckPoint.getExpectedTime();
         boolean changePlan = explore(startTime, startPoint, setting.getNumOfAlterRoutes(), true);
         if (changePlan) {
-          virtualEnvironment.makeReservation(agvID, currentPlan, startTime, startTime + setting.getEvaporationDuration());
-          nextRefreshTime = startTime + setting.getRefreshDuration();
+          virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
+          nextRefreshTime = currentTime + setting.getRefreshDuration();
         }
       } else {
         if (!startPoint.equals(checkPoints.get(1).getPoint())) {
@@ -188,14 +189,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           // the checkpoint list
           checkPoints.addFirst(nextCheckPoint);
           currentPlan.addLastNode(lastNode, nodeInterval, edgeInterval);
-          virtualEnvironment.makeReservation(agvID, currentPlan, startTime, startTime + setting.getEvaporationDuration());
-          nextRefreshTime = startTime + setting.getRefreshDuration();
+          virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
+          nextRefreshTime = currentTime + setting.getRefreshDuration();
         }
       }
     }
 
-    if (timeLapse.getStartTime() == nextRefreshTime) {
-      refresh(timeLapse.getStartTime());
+    if (currentTime == nextRefreshTime) {
+      refresh(currentTime);
     }
 
     // IDEA: check the position. If right before it leaves an edge or a node,
@@ -206,9 +207,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         && roundedPos.equals(checkPoints.getFirst().getPoint())) {
       // System.out.println(roadModel.get().getPosition(this));
       // sim.stop();
-      if (timeLapse.getStartTime() < checkPoints.getFirst().getExpectedTime()) {
+      if (currentTime < checkPoints.getFirst().getExpectedTime()) {
         final long timeDifference = checkPoints.getFirst().getExpectedTime()
-            - timeLapse.getStartTime();
+            - currentTime;
         if (timeDifference <= timeLapse.getTimeLeft()) {
           timeLapse.consume(timeDifference);
           checkPoints.removeFirst();

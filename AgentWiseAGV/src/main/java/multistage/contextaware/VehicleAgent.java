@@ -101,9 +101,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   void nextDestination(long startTime) {
     
     destinations = new LinkedList<>();
-    destinations.addLast(destinationList.getDestination());
-    destinations.addLast(destinationList.getDestination());
-    destinations.addLast(destinationList.getDestination());
+    for (int i = 0; i < setting.getNumOfDestsForEachAGV(); i++) {
+      destinations.addLast(destinationList.getDestination());
+    }
     destinations.addLast(stationEntrance);
     
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime,

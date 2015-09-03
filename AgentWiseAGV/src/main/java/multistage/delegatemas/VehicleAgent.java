@@ -82,7 +82,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   private List<Point> centralStation;
   
   private int reachedDestinations = 0;
-
+  
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
       int agvID, List<Point> centralStation, Setting setting, Result result) {
     roadModel = Optional.absent();
@@ -116,9 +116,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
   void nextDestination(long startTime) {
     
-    destinations.addLast(destinationList.getDestination());
-    destinations.addLast(destinationList.getDestination());
-    destinations.addLast(destinationList.getDestination());
+    destinations = new LinkedList<>();
+    for (int i = 0; i < setting.getNumOfDestsForEachAGV(); i++) {
+      destinations.addLast(destinationList.getDestination());
+    }
     destinations.addLast(stationEntrance);
     
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime,
@@ -138,6 +139,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   @Override
   public void tick(TimeLapse timeLapse) {
     
+    final long currentTime = timeLapse.getStartTime();
+    
     if (state == State.ACTIVE
         && roadModel.get().getPosition(this).equals(stationEntrance)
         && path.size() == 1) {
@@ -154,15 +157,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     if (currentPlan != null && currentPlan.getIntervals().size() > 1
-        && currentPlan.getIntervals().get(1).upperEndpoint() < timeLapse
-            .getStartTime()) {
+        && currentPlan.getIntervals().get(1).upperEndpoint() < currentTime) {
       currentPlan.removeOldSteps();
     }
     
     if (state == State.ACTIVE) {
       // if not idle
       // if explore
-      if (timeLapse.getStartTime() == nextExplorationTime) {
+      if (currentTime == nextExplorationTime) {
         // get the next check point
         final CheckPoint nextCheckPoint = checkPoints.getFirst();
         // get the next point of the path, we will explore from this point
@@ -172,8 +174,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           final long startTime = nextCheckPoint.getExpectedTime();
           boolean changePlan = explore(startTime, startPoint, setting.getNumOfAlterRoutes());
           if (changePlan) {
-            virtualEnvironment.makeReservation(agvID, currentPlan, startTime, startTime + setting.getEvaporationDuration());
-            nextRefreshTime = startTime + setting.getRefreshDuration();
+            virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
+            nextRefreshTime = currentTime + setting.getRefreshDuration();
           }
         } else {
           if (!startPoint.equals(checkPoints.get(1).getPoint())) {
@@ -193,14 +195,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             // the checkpoint list
             checkPoints.addFirst(nextCheckPoint);
             currentPlan.addLastNode(lastNode, nodeInterval, edgeInterval);
-            virtualEnvironment.makeReservation(agvID, currentPlan, startTime, startTime + setting.getEvaporationDuration());
-            nextRefreshTime = startTime + setting.getRefreshDuration();
+            virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
+            nextRefreshTime = currentTime + setting.getRefreshDuration();
           }
         }
       }
 
-      if (timeLapse.getStartTime() == nextRefreshTime) {
-        refresh(timeLapse.getStartTime());
+      if (currentTime == nextRefreshTime) {
+        refresh(currentTime);
       }
 
       // IDEA: check the position. If right before it leaves an edge or a node,
@@ -211,10 +213,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           && roundedPos.equals(checkPoints.getFirst().getPoint())) {
         // System.out.println(roadModel.get().getPosition(this));
         // sim.stop();
-        if (timeLapse.getStartTime() < checkPoints.getFirst()
-            .getExpectedTime()) {
+        if (currentTime < checkPoints.getFirst().getExpectedTime()) {
           final long timeDifference = checkPoints.getFirst().getExpectedTime()
-              - timeLapse.getStartTime();
+              - currentTime;
           if (timeDifference <= timeLapse.getTimeLeft()) {
             timeLapse.consume(timeDifference);
             checkPoints.removeFirst();
@@ -234,8 +235,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       roadModel.get().followPath(this, path, timeLapse);
     }
     
-    if (!destinations.isEmpty()
-        && roadModel.get().getPosition(this).equals(destinations.getFirst())) {
+    if (destinations.size() > 1 && roadModel.get().getPosition(this).equals(destinations.getFirst())) {
       reachedDestinations++;
       destinations.removeFirst();
     }

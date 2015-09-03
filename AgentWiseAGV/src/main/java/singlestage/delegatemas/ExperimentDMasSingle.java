@@ -30,12 +30,12 @@ public class ExperimentDMasSingle {
         final Sample sample = new Sample(numAGV*10);
         for (int i = 0; i < 100; i++) {
           final long seed = seeds.removeFirst();
+          System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i + "\tSeed: " + seed);
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
           final singlestage.delegatemas.AGVSystem agvSystem = new AGVSystem(setting);
           final Result result = agvSystem.run();
           sample.addResult(result);
-          System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i + "\tSeed: " + seed);
         }
         samples.add(sample);
       }
@@ -44,6 +44,7 @@ public class ExperimentDMasSingle {
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
+    System.out.println("DONE!");
   }
   
   public static void print(List<Sample> samples) {

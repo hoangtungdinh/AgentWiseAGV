@@ -15,11 +15,12 @@ public class Setting {
   private long explorationDuration;
   private long switchingThreshold;
   private int numOfAlterRoutes;
+  private int numOfDestsForEachAGV;
   
   public Setting(double vehicleLength, double vehicleSpeed, int numOfAGVs,
       long endTime, int speedUp, long seed, int numOfDestinations,
       long evaporationDuration, long refreshDuration, long explorationDuration,
-      long switchingThreshold, int numOfAlterRoutes) {
+      long switchingThreshold, int numOfAlterRoutes, int numOfDestsForEachAGV) {
     this.vehicleLength = vehicleLength;
     this.vehicleSpeed = vehicleSpeed;
     this.numOfAGVs = numOfAGVs;
@@ -32,6 +33,7 @@ public class Setting {
     this.explorationDuration = explorationDuration;
     this.switchingThreshold = switchingThreshold;
     this.numOfAlterRoutes = numOfAlterRoutes;
+    this.numOfDestsForEachAGV = numOfDestsForEachAGV;
   }
 
   public double getVehicleLength() {
@@ -81,13 +83,17 @@ public class Setting {
   public int getNumOfAlterRoutes() {
     return numOfAlterRoutes;
   }
+  
+  public int getNumOfDestsForEachAGV() {
+    return numOfDestsForEachAGV;
+  }
 
   public static class SettingBuilder {
     private double vehicleLength = 2d;
     private double vehicleSpeed = 1d;
     private int numOfAGVs = 100;
     private long endTime = 1000 * 1000L;
-    private int speedUp = 10;
+    private int speedUp = 2;
     private long seed = 0;
     
     private int numOfDestinations = 1000;
@@ -96,6 +102,7 @@ public class Setting {
     private long explorationDuration = 5000;
     private long switchingThreshold = 6000;
     private int numOfAlterRoutes = 10;
+    private int numOfDestsForEachAGV = 3;
     
     public SettingBuilder() {
 
@@ -160,12 +167,17 @@ public class Setting {
       this.numOfAlterRoutes = numOfAlterRoutes;
       return this;
     }
+    
+    public SettingBuilder setNumOfDestsForEachAGV(int numOfDestsForEachAGV) {
+      this.numOfDestsForEachAGV = numOfDestsForEachAGV;
+      return this;
+    }
 
     public Setting build() {
       return new Setting(vehicleLength, vehicleSpeed, numOfAGVs, endTime,
           speedUp, seed, numOfDestinations, evaporationDuration,
           refreshDuration, explorationDuration, switchingThreshold,
-          numOfAlterRoutes);
+          numOfAlterRoutes, numOfDestsForEachAGV);
     }
   }
   

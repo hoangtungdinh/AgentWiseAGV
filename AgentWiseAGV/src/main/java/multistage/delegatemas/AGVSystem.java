@@ -92,8 +92,9 @@ public final class AGVSystem {
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
-      sim.register(new VehicleAgent(destinations, virtualEnvironment, i,
-          centralStation, setting, result));
+      final VehicleAgent vehicleAgent = new VehicleAgent(destinations, virtualEnvironment, i,
+          centralStation, setting, result);
+      sim.register(vehicleAgent);
     }
 
     sim.start();

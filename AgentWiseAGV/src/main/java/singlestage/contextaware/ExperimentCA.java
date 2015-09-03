@@ -29,12 +29,13 @@ public class ExperimentCA {
       for (int numAGV = 1; numAGV <= 10; numAGV++) {
         final Sample sample = new Sample(numAGV*10);
         for (int i = 0; i < 100; i++) {
+          final long seed = seeds.removeFirst();
+          System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i + "\tSeed: " + seed);
           final Setting setting = new Setting.SettingBuilder()
-              .setNumOfAGVs(numAGV * 10).setSeed(seeds.removeFirst()).build();
+              .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
           final singlestage.contextaware.AGVSystem agvSystem = new AGVSystem(setting);
           final Result result = agvSystem.run();
           sample.addResult(result);
-          System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i);
         }
         samples.add(sample);
       }
@@ -43,6 +44,7 @@ public class ExperimentCA {
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
+    System.out.println("DONE!");
   }
   
   public static void print(List<Sample> samples) {
