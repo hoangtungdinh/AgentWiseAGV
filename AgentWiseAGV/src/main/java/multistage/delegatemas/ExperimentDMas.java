@@ -28,7 +28,7 @@ public class ExperimentDMas {
       
       for (int numAGV = 1; numAGV <= 10; numAGV++) {
         final Sample sample = new Sample(numAGV*10);
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
