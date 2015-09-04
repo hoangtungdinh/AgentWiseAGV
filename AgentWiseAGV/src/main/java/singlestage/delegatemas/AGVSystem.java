@@ -21,49 +21,70 @@ import singlestage.result.Result;
 public final class AGVSystem {
 
   private Setting setting;
-
+  
+  private boolean visualization;
+  
   /**
    * Instantiates a new AGV system.
    *
    * @param setting the setting
    */
-  public AGVSystem(Setting setting) {
+  public AGVSystem(Setting setting, boolean visualization) {
     this.setting = setting;
+    this.visualization = visualization;
   }
 
   /**
    * Run.
    */
   public Result run() {
-    View.Builder viewBuilder = View.builder()
-        .withAutoPlay()
-        .withSpeedUp(setting.getSpeedUp())
-        .withAutoClose()
-        .with(WarehouseRenderer.builder()
-            .withMargin(setting.getVehicleLength())
-            .withNodes()
-            .withNodeOccupancy())
-        .with(AGVRenderer2.builder()
-            .withDifferentColorsForVehicles()
-            .withVehicleCreationNumber()
-            .withVehicleOrigin());
-
-    viewBuilder = viewBuilder.withTitleAppendix("Delegate MAS Single Stage");
+    final Simulator sim;
     
-    final Simulator sim = Simulator.builder()
-        .addModel(
-            RoadModelBuilders.dynamicGraph((new GraphCreator(setting)).createGraph())
-                .withCollisionAvoidance()
-                .withDistanceUnit(SI.METER)
-                .withVehicleLength(setting.getVehicleLength())
-                .withSpeedUnit(SI.METERS_PER_SECOND)
-                .withMinDistance(0d))
-        .setTimeUnit(SI.MILLI(SI.SECOND))
-        .setTickLength(100)
-//        .addModel(viewBuilder)
-        // add a random seed
-        .setRandomSeed(setting.getSeed())
-        .build();
+    if (visualization) {
+      View.Builder viewBuilder = View.builder()
+          .withAutoPlay()
+          .withSpeedUp(setting.getSpeedUp())
+          .withAutoClose()
+          .with(WarehouseRenderer.builder()
+              .withMargin(setting.getVehicleLength())
+              .withNodes()
+              .withNodeOccupancy())
+          .with(AGVRenderer2.builder()
+              .withDifferentColorsForVehicles()
+              .withVehicleCreationNumber()
+              .withVehicleOrigin());
+
+      viewBuilder = viewBuilder.withTitleAppendix("Delegate MAS Single Stage");
+      
+      sim = Simulator.builder()
+          .addModel(
+              RoadModelBuilders.dynamicGraph((new GraphCreator(setting)).createGraph())
+                  .withCollisionAvoidance()
+                  .withDistanceUnit(SI.METER)
+                  .withVehicleLength(setting.getVehicleLength())
+                  .withSpeedUnit(SI.METERS_PER_SECOND)
+                  .withMinDistance(0d))
+          .setTimeUnit(SI.MILLI(SI.SECOND))
+          .setTickLength(100)
+          .addModel(viewBuilder)
+          // add a random seed
+          .setRandomSeed(setting.getSeed())
+          .build();
+    } else {
+      sim = Simulator.builder()
+          .addModel(
+              RoadModelBuilders.dynamicGraph((new GraphCreator(setting)).createGraph())
+                  .withCollisionAvoidance()
+                  .withDistanceUnit(SI.METER)
+                  .withVehicleLength(setting.getVehicleLength())
+                  .withSpeedUnit(SI.METERS_PER_SECOND)
+                  .withMinDistance(0d))
+          .setTimeUnit(SI.MILLI(SI.SECOND))
+          .setTickLength(100)
+          // add a random seed
+          .setRandomSeed(setting.getSeed())
+          .build();
+    }
     
     CollisionGraphRoadModel roadModel = (CollisionGraphRoadModel) sim.getModelProvider().tryGetModel(RoadModel.class);
     

@@ -22,21 +22,28 @@ import setting.Setting;
 public final class AGVSystem {
 
   private Setting setting;
+  
+  private boolean visualization;
 
   /**
    * Instantiates a new AGV system.
    *
    * @param setting the setting
    */
-  public AGVSystem(Setting setting) {
+  public AGVSystem(Setting setting, boolean visualization) {
     this.setting = setting;
+    this.visualization = visualization;
   }
 
   /**
    * Run.
    */
   public Result run() {
-    View.Builder viewBuilder = View.builder()
+    final GraphCreator graph = new GraphCreator(setting);
+    final Simulator sim;
+    
+    if (visualization) {
+      View.Builder viewBuilder = View.builder()
 //        .withAutoPlay()
         .withSpeedUp(setting.getSpeedUp())
         .withAutoClose()
@@ -51,9 +58,7 @@ public final class AGVSystem {
 
     viewBuilder = viewBuilder.withTitleAppendix("Context Aware Multi Stage");
     
-    final GraphCreator graph = new GraphCreator(setting);
-    
-    final Simulator sim = Simulator.builder()
+    sim = Simulator.builder()
         .addModel(
             RoadModelBuilders.dynamicGraph(graph.createGraph())
                 .withCollisionAvoidance()
@@ -63,10 +68,25 @@ public final class AGVSystem {
                 .withMinDistance(0d))
         .setTimeUnit(SI.MILLI(SI.SECOND))
         .setTickLength(100)
-//        .addModel(viewBuilder)
+        .addModel(viewBuilder)
         // add a random seed
         .setRandomSeed(setting.getSeed())
         .build();
+    } else {
+      sim = Simulator.builder()
+          .addModel(
+              RoadModelBuilders.dynamicGraph(graph.createGraph())
+                  .withCollisionAvoidance()
+                  .withDistanceUnit(SI.METER)
+                  .withVehicleLength(setting.getVehicleLength())
+                  .withSpeedUnit(SI.METERS_PER_SECOND)
+                  .withMinDistance(0d))
+          .setTimeUnit(SI.MILLI(SI.SECOND))
+          .setTickLength(100)
+          // add a random seed
+          .setRandomSeed(setting.getSeed())
+          .build();
+    }
     
     CollisionGraphRoadModel roadModel = (CollisionGraphRoadModel) sim.getModelProvider().tryGetModel(RoadModel.class);
     
