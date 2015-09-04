@@ -1,0 +1,5 @@
+numAGVs	FinishedTask
+10	145
+10	143
+20	193
+20	195
