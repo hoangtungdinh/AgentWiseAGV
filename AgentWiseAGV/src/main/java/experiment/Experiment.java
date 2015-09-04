@@ -48,12 +48,14 @@ public class Experiment {
         }
       }
       
-      try {
-        executor.shutdown();
-        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+      executor.shutdown();
+      
+//      try {
+//        executor.shutdown();
+//        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
       
       print(futures);
 
