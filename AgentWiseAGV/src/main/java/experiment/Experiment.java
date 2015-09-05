@@ -1,15 +1,16 @@
 package experiment;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -30,14 +31,20 @@ public class Experiment {
     try {
       LinkedList<Long> seeds = new LinkedList<>();
       
-      Scanner fileScanner = new Scanner(
-          new File("src/main/resources/seeds.txt"));
+      InputStream inputStream = Experiment.class
+          .getResourceAsStream("seeds.txt");
+      BufferedReader bufferedReader = new BufferedReader(
+          new InputStreamReader(inputStream));
       
-      while (fileScanner.hasNextLine()) {
-        seeds.add(fileScanner.nextLong());
+      String line = bufferedReader.readLine();
+      
+      while(line != null && !line.isEmpty()) {
+        long seed = Long.parseLong(line);
+        seeds.add(seed);
+        line = bufferedReader.readLine();
       }
       
-      fileScanner.close();
+      bufferedReader.close();
 
       for (int numAGV = 1; numAGV <= 2; numAGV++) {
         for (int i = 0; i < 2; i++) {
@@ -50,16 +57,9 @@ public class Experiment {
       
       executor.shutdown();
       
-//      try {
-//        executor.shutdown();
-//        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//      }
-      
       print(futures);
 
-    } catch (FileNotFoundException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
     
@@ -69,7 +69,7 @@ public class Experiment {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("src/main/resources/TestParExperiment.txt"));
+          new File("TestParExperiment.txt"));
       printWriterMS.println("numAGVs\tFinishedTask");
       for (ListenableFuture<Result> result : futures) {
         try {
