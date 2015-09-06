@@ -1,8 +1,7 @@
 package multistage.garagemodel;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.github.rinde.rinsim.geom.Graph;
 import com.github.rinde.rinsim.geom.Graphs;
@@ -17,12 +16,13 @@ import setting.Setting;
 
 public class GraphCreator {
 
-  private Setting setting;
+  private double edgeLength;
   
-  private LinkedList<Point> centralStation;
+  private List<Point> garages;
   
   public GraphCreator(Setting setting) {
-    this.setting = setting;
+    edgeLength = setting.getVehicleLength() * 4;
+    garages = new ArrayList<Point>();
   }
   
   public ImmutableTable<Integer, Integer, Point> createMatrix(int cols,
@@ -32,61 +32,52 @@ public class GraphCreator {
     for (int c = 0; c < cols; c++) {
       for (int r = 0; r < rows; r++) {
         builder.put(r, c,
-            new Point(offset.x + c * setting.getVehicleLength() * 4,
-                offset.y + r * setting.getVehicleLength() * 4));
+            new Point(offset.x + c * edgeLength,
+                offset.y + r * edgeLength));
       }
     }
     return builder.build();
   }
 
   public ListenableGraph<LengthData> createGraph() {
+    final int size = 7; // mean that the real map is 5
+    
     final Graph<LengthData> g = new TableGraph<>();
-    
-    int numOfNodes = -1;
-    
-    if (setting.getNumOfAGVs() % 2 == 0) {
-      numOfNodes = setting.getNumOfAGVs()  / 2;
-    } else {
-      numOfNodes = (setting.getNumOfAGVs() + 1) / 2;
+
+    final Table<Integer, Integer, Point> matrix = createMatrix(size, size,
+        new Point(0, 0));
+
+    for (int i = 0; i < matrix.rowKeySet().size(); i++) {
+      if (i != 0 && i != size - 1) {
+        Graphs.addBiPath(g, matrix.rowMap().get(i).values());
+      }
     }
     
-    Point origin = new Point(numOfNodes * 8, 0);
-
-    final Table<Integer, Integer, Point> matrix = createMatrix(5, 5, origin);
-
-    centralStation = new LinkedList<>();
-    final Point stationEntrace = new Point(origin.x - 8, 8);
-    final Point stationExit = new Point(origin.x - 8, 0);
-    for (int i = 0; i < numOfNodes; i++) {
-      centralStation
-          .addLast(new Point(origin.x - 8*(i + 1), 8));
+    for (int i = 0; i < matrix.columnKeySet().size(); i++) {
+      if (i != 0 && i != size - 1) {
+        Graphs.addBiPath(g, matrix.columnMap().get(i).values());
+      }
     }
-    for (int i = 0; i < numOfNodes; i++) {
-      centralStation
-          .addLast(new Point(8*i, 0));
+    
+    double mapEdgeLength = (double) ((size - 1) * edgeLength);
+    g.removeNode(new Point(0d, 0d));
+    g.removeNode(new Point(0d, mapEdgeLength));
+    g.removeNode(new Point(mapEdgeLength, 0d));
+    g.removeNode(new Point(mapEdgeLength, mapEdgeLength));
+    
+    for (Point p : g.getNodes()) {
+      if (p.x == 0 || p.y == 0 || p.x == (size - 1) * edgeLength
+          || p.y == (size - 1) * edgeLength) {
+        garages.add(p);
+      }
     }
-
-    for (int i = 0; i < matrix.columnMap().size(); i++) {
-      Graphs.addBiPath(g, matrix.column(i).values());
-    }
-
-    for (final Map<Integer, Point> row : matrix.rowMap().values()) {
-      Graphs.addBiPath(g, row.values());
-    }
-
-    Graphs.addPath(g, centralStation);
-    Graphs.addPath(g, new Point(numOfNodes * 8, 8), stationEntrace);
-    Graphs.addPath(g, stationExit, new Point(numOfNodes * 8, 0));
+    
+    System.out.println(garages.size());
 
     return new ListenableGraph<>(g);
   }
-  
-  /**
-   * Gets the central station.
-   *
-   * @return all nodes in the central station
-   */
-  public List<Point> getCentralStation() {
-    return centralStation;
+
+  public List<Point> getGarages() {
+    return garages;
   }
 }

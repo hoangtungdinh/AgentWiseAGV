@@ -15,10 +15,10 @@ import setting.Setting;
 
 public class GraphCreator {
 
-  private Setting setting;
+  private double edgeLength;
   
   public GraphCreator(Setting setting) {
-    this.setting = setting;
+    edgeLength = setting.getVehicleLength() * 4;
   }
   
   public ImmutableTable<Integer, Integer, Point> createMatrix(int cols,
@@ -28,17 +28,19 @@ public class GraphCreator {
     for (int c = 0; c < cols; c++) {
       for (int r = 0; r < rows; r++) {
         builder.put(r, c,
-            new Point(offset.x + c * setting.getVehicleLength() * 4,
-                offset.y + r * setting.getVehicleLength() * 4));
+            new Point(offset.x + c * edgeLength,
+                offset.y + r * edgeLength));
       }
     }
     return builder.build();
   }
 
   public ListenableGraph<LengthData> createGraph() {
+    final int size = 5;
+    
     final Graph<LengthData> g = new TableGraph<>();
 
-    final Table<Integer, Integer, Point> matrix = createMatrix(5, 5,
+    final Table<Integer, Integer, Point> matrix = createMatrix(size, size,
         new Point(0, 0));
 
     for (final Map<Integer, Point> row : matrix.rowMap().values()) {

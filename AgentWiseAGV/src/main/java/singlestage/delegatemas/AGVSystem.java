@@ -42,7 +42,7 @@ public final class AGVSystem {
     
     if (visualization) {
       View.Builder viewBuilder = View.builder()
-          .withAutoPlay()
+//          .withAutoPlay()
           .withSpeedUp(setting.getSpeedUp())
           .withAutoClose()
           .with(WarehouseRenderer.builder()
