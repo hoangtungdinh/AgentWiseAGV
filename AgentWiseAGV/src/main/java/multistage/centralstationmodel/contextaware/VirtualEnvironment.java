@@ -1,4 +1,4 @@
-package multistage.contextaware;
+package multistage.centralstationmodel.contextaware;
 
 import java.util.ArrayList;
 import java.util.HashMap;

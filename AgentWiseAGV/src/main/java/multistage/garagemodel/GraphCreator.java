@@ -1,4 +1,4 @@
-package multistage;
+package multistage.garagemodel;
 
 import java.util.LinkedList;
 import java.util.List;

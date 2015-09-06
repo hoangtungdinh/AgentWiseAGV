@@ -1,4 +1,4 @@
-package multistage.delegatemas;
+package multistage.centralstationmodel.delegatemas;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import com.github.rinde.rinsim.geom.LengthData;
 import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 
-import multistage.GraphCreator;
+import multistage.centralstationmodel.GraphCreator;
 import setting.Setting;
 
 public class PathSampling {

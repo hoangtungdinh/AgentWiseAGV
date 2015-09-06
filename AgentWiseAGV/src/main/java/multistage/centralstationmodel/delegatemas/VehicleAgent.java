@@ -1,4 +1,4 @@
-package multistage.delegatemas;
+package multistage.centralstationmodel.delegatemas;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -14,9 +14,9 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 import com.google.common.collect.Range;
 
-import multistage.State;
-import multistage.destinationgenerator.Destinations;
-import multistage.result.Result;
+import multistage.centralstationmodel.State;
+import multistage.centralstationmodel.destinationgenerator.Destinations;
+import multistage.centralstationmodel.result.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;

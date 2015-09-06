@@ -1,4 +1,4 @@
-package multistage.delegatemas;
+package multistage.centralstationmodel.delegatemas;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

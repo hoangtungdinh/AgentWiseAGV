@@ -1,4 +1,4 @@
-package multistage.result;
+package multistage.centralstationmodel.result;
 
 import com.github.rinde.rinsim.core.Simulator;
 

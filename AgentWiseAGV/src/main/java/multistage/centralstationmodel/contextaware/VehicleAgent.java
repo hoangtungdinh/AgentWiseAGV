@@ -1,4 +1,4 @@
-package multistage.contextaware;
+package multistage.centralstationmodel.contextaware;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -13,9 +13,9 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
-import multistage.State;
-import multistage.destinationgenerator.Destinations;
-import multistage.result.Result;
+import multistage.centralstationmodel.State;
+import multistage.centralstationmodel.destinationgenerator.Destinations;
+import multistage.centralstationmodel.result.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;

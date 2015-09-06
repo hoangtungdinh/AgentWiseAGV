@@ -1,4 +1,4 @@
-package multistage.destinationgenerator;
+package multistage.centralstationmodel.destinationgenerator;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package multistage.delegatemas;
+package multistage.centralstationmodel.contextaware;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,11 +8,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import multistage.result.Result;
-import multistage.result.Sample;
+import multistage.centralstationmodel.result.Result;
+import multistage.centralstationmodel.result.Sample;
 import setting.Setting;
 
-public class ExperimentDMas {
+public class ExperimentCA {
 
   public static void main(String[] args) {
     LinkedList<Long> seeds = new LinkedList<>();
@@ -33,7 +33,7 @@ public class ExperimentDMas {
           System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i + "\tSeed: " + seed);
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
-          final multistage.delegatemas.AGVSystem agvSystem = new AGVSystem(setting, false);
+          final multistage.centralstationmodel.contextaware.AGVSystem agvSystem = new AGVSystem(setting, false);
           final Result result = agvSystem.run();
           sample.addResult(result);
         }
@@ -44,12 +44,13 @@ public class ExperimentDMas {
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
+    
     System.out.println("DONE!");
   }
   
   public static void print(List<Sample> samples) {
     try {
-      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsMultiDMAS.txt"));
+      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsMultiCA.txt"));
       printWriterMS.println("numAGVs\tFinishedTask");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();
