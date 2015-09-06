@@ -13,10 +13,10 @@ import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer2;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 
+import multistage.Destinations;
 import multistage.centralstationmodel.GraphCreator;
 import multistage.centralstationmodel.destinationgenerator.DestinationGenerator;
-import multistage.centralstationmodel.destinationgenerator.Destinations;
-import multistage.centralstationmodel.result.Result;
+import multistage.result.Result;
 import setting.Setting;
 
 public final class AGVSystem {

@@ -3,7 +3,7 @@ package experiment;
 import java.util.concurrent.Callable;
 
 import multistage.centralstationmodel.delegatemas.AGVSystem;
-import multistage.centralstationmodel.result.Result;
+import multistage.result.Result;
 import setting.Setting;
 
 public class ExperimentRunner implements Callable<Result> {

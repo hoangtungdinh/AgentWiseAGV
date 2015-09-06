@@ -8,6 +8,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.geom.Point;
 
+import multistage.Destinations;
+
 /**
  * The Class DestinationGenerator.
  *

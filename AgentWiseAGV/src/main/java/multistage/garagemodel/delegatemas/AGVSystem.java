@@ -1,4 +1,4 @@
-package multistage.centralstationmodel.contextaware;
+package multistage.garagemodel.delegatemas;
 
 import java.util.List;
 
@@ -14,8 +14,8 @@ import com.github.rinde.rinsim.ui.renderers.AGVRenderer2;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 
 import multistage.Destinations;
-import multistage.centralstationmodel.GraphCreator;
-import multistage.centralstationmodel.destinationgenerator.DestinationGenerator;
+import multistage.garagemodel.GraphCreator;
+import multistage.garagemodel.destinationgenerator.DestinationGenerator;
 import multistage.result.Result;
 import setting.Setting;
 
@@ -44,43 +44,40 @@ public final class AGVSystem {
     
     if (visualization) {
       View.Builder viewBuilder = View.builder()
-//        .withAutoPlay()
-        .withSpeedUp(setting.getSpeedUp())
-        .withAutoClose()
-        .with(WarehouseRenderer.builder()
-            .withMargin(setting.getVehicleLength())
-            .withNodes()
-            .withNodeOccupancy())
-        .with(AGVRenderer2.builder()
-            .withDifferentColorsForVehicles()
-            .withVehicleCreationNumber()
-            .withVehicleOrigin());
+          // .withAutoPlay()
+          .withSpeedUp(setting.getSpeedUp())
+          .withAutoClose()
+          .with(WarehouseRenderer.builder()
+              .withMargin(setting.getVehicleLength())
+                  .withNodes()
+                  .withNodeOccupancy())
+          .with(AGVRenderer2.builder()
+              .withDifferentColorsForVehicles()
+              .withVehicleCreationNumber().withVehicleOrigin());
 
-    viewBuilder = viewBuilder.withTitleAppendix("Context Aware Multi Stage");
-    
-    sim = Simulator.builder()
-        .addModel(
-            RoadModelBuilders.dynamicGraph(graph.createGraph())
-                .withCollisionAvoidance()
-                .withDistanceUnit(SI.METER)
-                .withVehicleLength(setting.getVehicleLength())
-                .withSpeedUnit(SI.METERS_PER_SECOND)
-                .withMinDistance(0d))
-        .setTimeUnit(SI.MILLI(SI.SECOND))
-        .setTickLength(100)
-        .addModel(viewBuilder)
-        // add a random seed
-        .setRandomSeed(setting.getSeed())
-        .build();
+      viewBuilder = viewBuilder.withTitleAppendix("Delegate MAS Multi Stage");
+
+      sim = Simulator.builder()
+          .addModel(RoadModelBuilders.dynamicGraph(graph.createGraph())
+              .withCollisionAvoidance()
+              .withDistanceUnit(SI.METER)
+              .withVehicleLength(setting.getVehicleLength())
+              .withSpeedUnit(SI.METERS_PER_SECOND)
+              .withMinDistance(0d))
+          .setTimeUnit(SI.MILLI(SI.SECOND))
+          .setTickLength(100)
+          .addModel(viewBuilder)
+          // add a random seed
+          .setRandomSeed(setting.getSeed())
+          .build();
     } else {
       sim = Simulator.builder()
-          .addModel(
-              RoadModelBuilders.dynamicGraph(graph.createGraph())
-                  .withCollisionAvoidance()
-                  .withDistanceUnit(SI.METER)
-                  .withVehicleLength(setting.getVehicleLength())
-                  .withSpeedUnit(SI.METERS_PER_SECOND)
-                  .withMinDistance(0d))
+          .addModel(RoadModelBuilders.dynamicGraph(graph.createGraph())
+              .withCollisionAvoidance()
+              .withDistanceUnit(SI.METER)
+              .withVehicleLength(setting.getVehicleLength())
+              .withSpeedUnit(SI.METERS_PER_SECOND)
+              .withMinDistance(0d))
           .setTimeUnit(SI.MILLI(SI.SECOND))
           .setTickLength(100)
           // add a random seed
@@ -100,20 +97,21 @@ public final class AGVSystem {
         sim.getRandomGenerator(), setting);
     sim.addTickListener(virtualEnvironment);
     
-    List<Point> centralStation = graph.getCentralStation();
+    List<Point> garageList = graph.getGarages();
     
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
         sim.getRandomGenerator(), roadModel, setting.getNumOfAGVs(),
-        setting.getNumOfDestinations(), graph.getCentralStation());
+        setting.getNumOfDestinations(), garageList);
     
     Destinations destinations = destinationGenerator.run();
     
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
-      sim.register(new VehicleAgent(destinations, virtualEnvironment, i,
-          centralStation, setting, result));
+      final VehicleAgent vehicleAgent = new VehicleAgent(destinations, virtualEnvironment, i,
+          garageList, setting, result);
+      sim.register(vehicleAgent);
     }
 
     sim.start();

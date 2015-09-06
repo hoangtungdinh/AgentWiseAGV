@@ -8,8 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import multistage.centralstationmodel.result.Result;
-import multistage.centralstationmodel.result.Sample;
+import multistage.result.Result;
+import multistage.result.Sample;
 import setting.Setting;
 
 public class ExperimentDMas {

@@ -16,7 +16,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import multistage.centralstationmodel.result.Result;
+import multistage.result.Result;
 import setting.Setting;
 
 public class Experiment {

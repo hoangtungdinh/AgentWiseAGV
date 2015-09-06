@@ -1,4 +1,4 @@
-package multistage.centralstationmodel.result;
+package multistage.result;
 
 import java.util.ArrayList;
 import java.util.List;

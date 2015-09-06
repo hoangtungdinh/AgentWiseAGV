@@ -1,6 +1,5 @@
-package multistage.centralstationmodel.delegatemas;
+package multistage.garagemodel.delegatemas;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -67,34 +66,28 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The state. */
   private State state;
   
-  /** The station entrance. */
-  private Point stationEntrance;
-  
-  /** The station exit. */
-  private Point stationExit;
-  
   private LinkedList<Point> destinations;
   
   private Setting setting;
   
   private Result result;
   
-  private List<Point> centralStation;
+  private List<Point> garageList;
+  
+  private Point garage;
   
   private int reachedDestinations = 0;
   
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
-      int agvID, List<Point> centralStation, Setting setting, Result result) {
+      int agvID, List<Point> garageList, Setting setting, Result result) {
     roadModel = Optional.absent();
     path = new LinkedList<>();
     this.destinationList = destinationList;
     this.virtualEnvironment = virtualEnvironment;
     this.agvID = agvID;
-    this.initialPos = centralStation.get(centralStation.size() - 1 - agvID);
-    this.stationExit = centralStation.get(centralStation.size() - 1);
-    this.stationEntrance = centralStation.get(0);
-    this.centralStation = new ArrayList<>(centralStation);
-    this.centralStation.remove(stationEntrance);
+    this.garageList = garageList;
+    this.garage = garageList.get(agvID);
+    this.initialPos = garage;
     state = State.IDLE;
     this.setting = setting;
     this.destinations = new LinkedList<>();
@@ -105,8 +98,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   public void initRoadUser(RoadModel model) {
     roadModel = Optional.of((CollisionGraphRoadModel) model);
     roadModel.get().addObjectAt(this, initialPos);
-    path = new LinkedList<>(
-        roadModel.get().getShortestPathTo(this, stationExit));
+    path = new LinkedList<>();
   }
 
   @Override
@@ -120,11 +112,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     for (int i = 0; i < setting.getNumOfDestsForEachAGV(); i++) {
       destinations.addLast(destinationList.getDestination());
     }
-    destinations.addLast(stationEntrance);
+    destinations.addLast(garage);
     
     Plan plan = virtualEnvironment.exploreRoute(agvID, startTime,
         roadModel.get().getPosition(this), destinations,
-        setting.getNumOfAlterRoutes(), centralStation);
+        setting.getNumOfAlterRoutes(), garageList);
     
     executablePlan = new ExecutablePlan(plan, setting);
     currentPlan = plan;
@@ -142,15 +134,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     final long currentTime = timeLapse.getStartTime();
     
     if (state == State.ACTIVE
-        && roadModel.get().getPosition(this).equals(stationEntrance)
+        && roadModel.get().getPosition(this).equals(garage)
         && path.size() == 1) {
       // if the agv reaches the entrance of the station, then it becomes idle
       // and will try to move to the exit of the station
       state = State.IDLE;
-      path = new LinkedList<>(
-          roadModel.get().getShortestPathTo(this, stationExit));
-    } else if (state == State.IDLE
-        && roadModel.get().getPosition(this).equals(stationExit)) {
+    } else if (state == State.IDLE) {
       // of the agv reaches the exit of the station, then it becomes active
       state = State.ACTIVE;
       nextDestination(timeLapse.getEndTime());
@@ -233,8 +222,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (timeLapse.hasTimeLeft()) {
         roadModel.get().followPath(this, path, timeLapse);
       }
-    } else {
-      roadModel.get().followPath(this, path, timeLapse);
     }
     
     if (destinations.size() > 1 && roadModel.get().getPosition(this).equals(destinations.getFirst())) {
@@ -261,7 +248,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    */
   public boolean explore(long startTime, Point startNode, int numberOfRoutes) {
     nextExplorationTime = startTime + setting.getExplorationDuration();
-    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, destinations, numberOfRoutes, centralStation);
+    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, destinations, numberOfRoutes, garageList);
     
     if (plan == null) {
       return false;

@@ -13,9 +13,9 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
-import multistage.centralstationmodel.State;
-import multistage.centralstationmodel.destinationgenerator.Destinations;
-import multistage.centralstationmodel.result.Result;
+import multistage.Destinations;
+import multistage.State;
+import multistage.result.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
