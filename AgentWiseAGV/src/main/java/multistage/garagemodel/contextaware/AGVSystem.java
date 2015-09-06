@@ -1,4 +1,4 @@
-package multistage.garagemodel.delegatemas;
+package multistage.garagemodel.contextaware;
 
 import java.util.List;
 
@@ -44,40 +44,43 @@ public final class AGVSystem {
     
     if (visualization) {
       View.Builder viewBuilder = View.builder()
-          // .withAutoPlay()
-          .withSpeedUp(setting.getSpeedUp())
-          .withAutoClose()
-          .with(WarehouseRenderer.builder()
-              .withMargin(setting.getVehicleLength())
-                  .withNodes()
-                  .withNodeOccupancy())
-          .with(AGVRenderer2.builder()
-              .withDifferentColorsForVehicles()
-              .withVehicleCreationNumber().withVehicleOrigin());
+//        .withAutoPlay()
+        .withSpeedUp(setting.getSpeedUp())
+        .withAutoClose()
+        .with(WarehouseRenderer.builder()
+            .withMargin(setting.getVehicleLength())
+            .withNodes()
+            .withNodeOccupancy())
+        .with(AGVRenderer2.builder()
+            .withDifferentColorsForVehicles()
+            .withVehicleCreationNumber()
+            .withVehicleOrigin());
 
-      viewBuilder = viewBuilder.withTitleAppendix("Delegate MAS Multi Stage");
-
-      sim = Simulator.builder()
-          .addModel(RoadModelBuilders.dynamicGraph(graph.createGraph())
-              .withCollisionAvoidance()
-              .withDistanceUnit(SI.METER)
-              .withVehicleLength(setting.getVehicleLength())
-              .withSpeedUnit(SI.METERS_PER_SECOND)
-              .withMinDistance(0d))
-          .setTimeUnit(SI.MILLI(SI.SECOND))
-          .setTickLength(100)
-          .addModel(viewBuilder)
-          // add a random seed
-          .setRandomSeed(setting.getSeed())
-          .build();
+    viewBuilder = viewBuilder.withTitleAppendix("Context Aware Multi Stage");
+    
+    sim = Simulator.builder()
+        .addModel(
+            RoadModelBuilders.dynamicGraph(graph.createGraph())
+                .withCollisionAvoidance()
+                .withDistanceUnit(SI.METER)
+                .withVehicleLength(setting.getVehicleLength())
+                .withSpeedUnit(SI.METERS_PER_SECOND)
+                .withMinDistance(0d))
+        .setTimeUnit(SI.MILLI(SI.SECOND))
+        .setTickLength(100)
+        .addModel(viewBuilder)
+        // add a random seed
+        .setRandomSeed(setting.getSeed())
+        .build();
     } else {
       sim = Simulator.builder()
-          .addModel(RoadModelBuilders.dynamicGraph(graph.createGraph())
-              .withCollisionAvoidance()
-              .withDistanceUnit(SI.METER)
-              .withVehicleLength(setting.getVehicleLength())
-              .withSpeedUnit(SI.METERS_PER_SECOND)
-              .withMinDistance(0d))
+          .addModel(
+              RoadModelBuilders.dynamicGraph(graph.createGraph())
+                  .withCollisionAvoidance()
+                  .withDistanceUnit(SI.METER)
+                  .withVehicleLength(setting.getVehicleLength())
+                  .withSpeedUnit(SI.METERS_PER_SECOND)
+                  .withMinDistance(0d))
           .setTimeUnit(SI.MILLI(SI.SECOND))
           .setTickLength(100)
           // add a random seed
@@ -100,7 +103,7 @@ public final class AGVSystem {
     List<Point> garageList = graph.getGarages();
     
     if (setting.getNumOfAGVs() > garageList.size()) {
-      throw new IllegalArgumentException("The number of AGVs cannot be larger than the number of garage");
+      throw new IllegalArgumentException("the number of agvs cannot be larger than the number of garages");
     }
     
     // generate destinations for all AGVs
@@ -113,9 +116,8 @@ public final class AGVSystem {
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
-      final VehicleAgent vehicleAgent = new VehicleAgent(destinations, virtualEnvironment, i,
-          garageList, setting, result);
-      sim.register(vehicleAgent);
+      sim.register(new VehicleAgent(destinations, virtualEnvironment, i,
+          garageList, setting, result));
     }
 
     sim.start();
