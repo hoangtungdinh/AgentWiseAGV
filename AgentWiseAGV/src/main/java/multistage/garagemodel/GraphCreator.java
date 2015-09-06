@@ -72,8 +72,6 @@ public class GraphCreator {
       }
     }
     
-    System.out.println(garages.size());
-
     return new ListenableGraph<>(g);
   }
 
