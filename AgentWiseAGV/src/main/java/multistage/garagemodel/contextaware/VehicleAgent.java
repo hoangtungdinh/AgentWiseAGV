@@ -104,6 +104,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
     virtualEnvironment.makeReservation(agvID, plan, startTime, plan.getArrivalTime());
+//    System.out.println(plan.getArrivalTime());
   }
 
   @Override

@@ -169,6 +169,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         } else {
           if (!startPoint.equals(checkPoints.get(1).getPoint())) {
             // this one cannot happen
+            System.out.println(roadModel.get().getPosition(this));
             throw new Error("Some problems here!");
           }
           // if the check point is on an edge, then start explore from the end
@@ -207,9 +208,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         if (currentTime < checkPoints.getFirst().getExpectedTime()) {
           final long timeDifference = checkPoints.getFirst().getExpectedTime()
               - currentTime;
-          if (timeDifference <= timeLapse.getTimeLeft()) {
+          if (timeDifference < timeLapse.getTimeLeft()) {
             timeLapse.consume(timeDifference);
             checkPoints.removeFirst();
+          } else if (timeDifference == timeLapse.getTimeLeft()) {
+            timeLapse.consume(timeDifference);
+            checkPoints.removeFirst();
+            if (currentPos.x % 1 == 0 && currentPos.y % 1 == 0) {
+              path.remove();
+            }
           } else {
             // time difference is larger than time left
             timeLapse.consumeAll();

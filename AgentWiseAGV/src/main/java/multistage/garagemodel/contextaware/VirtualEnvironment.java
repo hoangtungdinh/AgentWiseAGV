@@ -127,10 +127,12 @@ public class VirtualEnvironment implements TickListener {
     while (!planQueue.isEmpty()) {
       // select and remove the first plan in the queue
       final PlanFTW planFTW = planQueue.remove(planQueue.firstKey());
-
+      
       final List<Point> path = planFTW.getPath();
       final List<FreeTimeWindow> ftwList = planFTW.getFreeTimeWindows();
-
+      
+//      System.out.println(planQueue.size());
+      
       if ((planFTW.getStage() == destinations.size())
           && path.get(path.size() - 1)
               .equals(destinations.get(destinations.size() - 1))

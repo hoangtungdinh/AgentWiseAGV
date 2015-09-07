@@ -99,8 +99,8 @@ public class Setting {
     private int numOfDestinations = 1000;
     private long evaporationDuration = 10000;
     private long refreshDuration = 8000;
-    private long explorationDuration = 5000;
-    private long switchingThreshold = 6000;
+    private long explorationDuration = 8000;
+    private long switchingThreshold = 8000;
     private int numOfAlterRoutes = 10;
     private int numOfDestsForEachAGV = 3;
     
