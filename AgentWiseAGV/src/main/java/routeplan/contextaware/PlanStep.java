@@ -1,6 +1,9 @@
-package resourceagents;
+package routeplan.contextaware;
 
 import com.google.common.base.Objects;
+
+import resourceagents.FreeTimeWindow;
+import resourceagents.ResourceAgent;
 
 public class PlanStep {
   private final int stage;

@@ -26,9 +26,9 @@ import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
-import resourceagents.PlanStep;
 import routeplan.Plan;
 import routeplan.contextaware.PlanFTW;
+import routeplan.contextaware.PlanStep;
 import setting.Setting;
 
 /**

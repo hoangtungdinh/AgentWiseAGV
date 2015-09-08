@@ -26,7 +26,7 @@ public class ExperimentCA {
       
       List<Sample> samples = new ArrayList<>();
       
-      for (int numAGV = 1; numAGV <= 4; numAGV++) {
+      for (int numAGV = 1; numAGV <= 8; numAGV++) {
         final Sample sample = new Sample(numAGV*5);
         for (int i = 0; i < 5; i++) {
           final long seed = seeds.removeFirst();
