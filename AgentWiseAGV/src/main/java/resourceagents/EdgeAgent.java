@@ -22,7 +22,7 @@ import setting.Setting;
  *
  * @author Tung
  */
-public class EdgeAgent {
+public class EdgeAgent implements ResourceAgent {
   
   /**
    * The reservation map. There are always two reservation lists in the map,

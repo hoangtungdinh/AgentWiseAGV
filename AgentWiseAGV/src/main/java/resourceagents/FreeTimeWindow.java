@@ -1,5 +1,6 @@
 package resourceagents;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Range;
 
 /**
@@ -66,5 +67,29 @@ public class FreeTimeWindow {
   public String toString() {
     return ("\nInterval: " + interval + "\nEntry window: " + entryWindow
         + "\nExit window: " + exitWindow + "\n");
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == null) {
+      return false;
+    }
+    if (other == this) {
+      return true;
+    }
+    // allows comparison with subclasses
+    if (!(other instanceof FreeTimeWindow)) {
+      return false;
+    }
+
+    final FreeTimeWindow ftw = (FreeTimeWindow) other;
+    return this.interval.equals(ftw.getInterval())
+        && this.entryWindow.equals(ftw.getEntryWindow())
+        && this.exitWindow.equals(ftw.exitWindow);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(interval, entryWindow, exitWindow);
   }
 }

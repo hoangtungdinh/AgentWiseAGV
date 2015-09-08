@@ -18,7 +18,7 @@ import setting.Setting;
  *
  * @author Tung
  */
-public class NodeAgent {
+public class NodeAgent implements ResourceAgent {
   
  /** The reservations. */
  private List<Reservation> reservations;

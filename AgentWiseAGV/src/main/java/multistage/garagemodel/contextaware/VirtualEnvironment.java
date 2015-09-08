@@ -2,6 +2,7 @@ package multistage.garagemodel.contextaware;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
+import resourceagents.PlanStep;
 import routeplan.Plan;
 import routeplan.contextaware.PlanFTW;
 import setting.Setting;
@@ -121,11 +123,12 @@ public class VirtualEnvironment implements TickListener {
 
     PlanFTW finalPlan = null;
 
-    // TODO we still need a closed list here. It does not affect the result but
-    // will improve the simulation speed.
+    final Set<PlanStep> closedSet = new LinkedHashSet<>();
 
     while (!planQueue.isEmpty()) {
-//      System.out.println(planQueue.size());
+//      if (planQueue.size() % 10000 == 0) {
+//        System.out.println(planQueue.size());
+//      }
       // select and remove the first plan in the queue
       final PlanFTW planFTW = planQueue.remove(planQueue.firstKey());
       
@@ -182,6 +185,14 @@ public class VirtualEnvironment implements TickListener {
             continue;
           }
           for (FreeTimeWindow newFTW : nextFTWs) {
+            // add investigated plan step to the closedSet
+            final PlanStep planStep = new PlanStep(newStage, edgeAgent, newFTW);
+            if (closedSet.contains(planStep)) {
+              continue;
+            } else {
+              closedSet.add(planStep);
+            }
+            
             LinkedList<FreeTimeWindow> newListOfFTWs = new LinkedList<>(
                 ftwList);
             newListOfFTWs.addLast(newFTW);
@@ -203,6 +214,13 @@ public class VirtualEnvironment implements TickListener {
         List<FreeTimeWindow> nextFTWs = nodeAgent.getFreeTimeWindows(
             ftwList.get(ftwList.size() - 1).getExitWindow(), agvID);
         for (FreeTimeWindow newFTW : nextFTWs) {
+          final PlanStep planStep = new PlanStep(planFTW.getStage(), nodeAgent, newFTW);
+          if (closedSet.contains(planStep)) {
+            continue;
+          } else {
+            closedSet.add(planStep);
+          }
+          
           LinkedList<FreeTimeWindow> newListOfFTWs = new LinkedList<>(ftwList);
           newListOfFTWs.addLast(newFTW);
           getClass();
