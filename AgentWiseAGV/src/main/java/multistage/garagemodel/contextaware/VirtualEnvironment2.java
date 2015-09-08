@@ -34,7 +34,7 @@ import setting.Setting;
  *
  * @author Tung
  */
-public class VirtualEnvironment implements TickListener {
+public class VirtualEnvironment2 implements TickListener {
   
   /** The node agent list. */
   private NodeAgentList nodeAgentList;
@@ -55,7 +55,7 @@ public class VirtualEnvironment implements TickListener {
    * @param randomGenerator the random generator
    * @param setting the setting
    */
-  public VirtualEnvironment(CollisionGraphRoadModel roadModel,
+  public VirtualEnvironment2(CollisionGraphRoadModel roadModel,
       RandomGenerator randomGenerator, Setting setting) {
     this.setting = setting;
     nodeAgentList = new NodeAgentList(roadModel, setting);

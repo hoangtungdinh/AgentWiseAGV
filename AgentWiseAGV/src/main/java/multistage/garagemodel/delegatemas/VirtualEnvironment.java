@@ -10,11 +10,9 @@ import org.apache.commons.math3.random.RandomGenerator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
-import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 
-import multistage.garagemodel.GraphCreator;
 import resourceagents.EdgeAgent;
 import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
@@ -43,8 +41,6 @@ public class VirtualEnvironment implements TickListener {
   /** The path sampling. */
   private PathSampling pathSampling;
   
-  private ListenableGraph<?> graph;
-  
   /**
    * Instantiates a new virtual environment.
    *
@@ -57,8 +53,7 @@ public class VirtualEnvironment implements TickListener {
     this.setting = setting;
     nodeAgentList = new NodeAgentList(roadModel, setting);
     edgeAgentList = new EdgeAgentList(roadModel, setting);
-    this.pathSampling = new PathSampling();
-    graph = (new GraphCreator(setting)).createGraph();
+    this.pathSampling = new PathSampling(setting);
   }
   
   /**
@@ -77,7 +72,7 @@ public class VirtualEnvironment implements TickListener {
     
     // sampling the environment to get several feasible paths
     final List<Path> feasiblePaths = pathSampling.getFeasiblePaths(origin,
-        destinations, numOfPaths, garages, graph);
+        destinations, numOfPaths, garages);
     
     final List<PlanFTW> feasiblePlans = new ArrayList<>();
     

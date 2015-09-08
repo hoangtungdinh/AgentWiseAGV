@@ -9,22 +9,28 @@ import com.github.rinde.rinsim.geom.LengthData;
 import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 
+import multistage.garagemodel.GraphCreator;
+import setting.Setting;
+
 public class PathSampling {
   
-  public PathSampling() {
+  private Setting setting;
+  
+  public PathSampling(Setting setting) {
+    this.setting = setting;
   }
   
   @SuppressWarnings("unchecked")
   public List<Path> getFeasiblePaths(Point origin, List<Point> destinations,
-      int numOfPaths, List<Point> garages, ListenableGraph<?> graph) {
+      int numOfPaths, List<Point> garages) {
     // a clone graph
-//    ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
+    ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
     
-//    for (int i = 0; i < garages.size(); i++) {
-//      if (!garages.get(i).equals(destinations.get(destinations.size() - 1))) {
-//        graph.removeNode(garages.get(i));
-//      }
-//    }
+    for (int i = 0; i < garages.size(); i++) {
+      if (!garages.get(i).equals(destinations.get(destinations.size() - 1))) {
+        graph.removeNode(garages.get(i));
+      }
+    }
     
     List<Path> paths = new ArrayList<>();
     double w = -1;
