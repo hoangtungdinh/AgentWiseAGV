@@ -51,6 +51,12 @@ public class VirtualEnvironment implements TickListener {
   private Setting setting;
   
   /**
+   * shortest path lengths from all nodes to a destination the keys are
+   * destinations, the values are the map of points and shortest path lengths
+   */
+  final Map<Point, ShortestPathLengths> shortestLengthToDest;
+  
+  /**
    * Instantiates a new virtual environment.
    *
    * @param roadModel the road model
@@ -63,6 +69,7 @@ public class VirtualEnvironment implements TickListener {
     nodeAgentList = new NodeAgentList(roadModel, setting);
     edgeAgentList = new EdgeAgentList(roadModel, setting);
     this.roadModel = roadModel;
+    this.shortestLengthToDest = new HashMap<>();
   }
   
   /**
@@ -81,10 +88,11 @@ public class VirtualEnvironment implements TickListener {
     
     // shortest path lengths from all nodes to a destination
     // the keys are destinations, the values are the map of points and shortest path lengths
-    final Map<Point, ShortestPathLengths> shortestLengthToDest = new HashMap<>();
     for (Point node : destinations) {
-      shortestLengthToDest.put(node,
-          new ShortestPathLengths(shortestPathLengthsTo(node)));
+      if (!shortestLengthToDest.containsKey(node)) {
+        shortestLengthToDest.put(node,
+            new ShortestPathLengths(shortestPathLengthsTo(node)));
+      }
     }
 
  // free time window of the start node
