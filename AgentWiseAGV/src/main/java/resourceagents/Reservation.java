@@ -18,6 +18,9 @@ public class Reservation {
   
   /** The reservation interval. */
   private Range<Long> interval;
+  
+  /** True if the agv already visited this plan step. */
+  private boolean hasVisited;
 
   /**
    * Instantiates a new reservation.
@@ -30,6 +33,7 @@ public class Reservation {
     this.agvID = agvID;
     this.lifeTime = lifeTime;
     this.interval = interval;
+    this.hasVisited = false;
   }
 
   /**
@@ -66,5 +70,21 @@ public class Reservation {
    */
   public void updateLifeTime(long newLifeTime) {
     this.lifeTime = newLifeTime;
+  }
+  
+  /**
+   * Checks if the plan step has been visited.
+   *
+   * @return true, if the plan step has been visited
+   */
+  public boolean hasVisited() {
+    return hasVisited;
+  }
+  
+  /**
+   * Marks the plan step as visited
+   */
+  public void setVisited() {
+    this.hasVisited = true;
   }
 }

@@ -1,5 +1,7 @@
 package routeplan;
 
+import java.util.List;
+
 import com.github.rinde.rinsim.geom.Point;
 
 /**
@@ -16,14 +18,22 @@ public class CheckPoint {
   private long expectedTime;
   
   /**
+   * The resource. If resource is node, then it contains one point. If resource
+   * is edge, it contains two points: start-end
+   */
+  private List<Point> resource;
+  
+  /**
    * Instantiates a new check point.
    *
    * @param point the point
    * @param expectedTime the expected time
+   * @param resourceType the resource type
    */
-  public CheckPoint(Point point, long expectedTime) {
+  public CheckPoint(Point point, long expectedTime, List<Point> resource) {
     this.point = point;
     this.expectedTime = expectedTime;
+    this.resource = resource;
   }
   
   /**
@@ -42,5 +52,9 @@ public class CheckPoint {
    */
   public long getExpectedTime() {
     return expectedTime;
+  }
+
+  public List<Point> getResource() {
+    return resource;
   }
 }

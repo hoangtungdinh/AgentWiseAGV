@@ -48,7 +48,9 @@ public class ExecutablePlan {
     final long timeLeftToLeaveNode = (long) (setting.getVehicleLength() *1000 / setting.getVehicleSpeed());
     final long timeLeftToLeaveEdge = (long) (safeDistance*1000 / setting.getVehicleSpeed());
     
-    checkPoints.add(new CheckPoint(path.get(0), intervals.get(0).upperEndpoint() - timeLeftToLeaveNode));
+    final List<Point> firstResource = new ArrayList<>();
+    firstResource.add(path.get(0));
+    checkPoints.add(new CheckPoint(path.get(0), intervals.get(0).upperEndpoint() - timeLeftToLeaveNode, firstResource));
     
     CheckPoint newCheckPoint;
     
@@ -63,6 +65,10 @@ public class ExecutablePlan {
         throw new Error("Invalid map");
       }
       
+      final List<Point> edgeResource = new ArrayList<>();
+      edgeResource.add(path.get(i));
+      edgeResource.add(path.get(i + 1));
+      
       if (horizontal) {
         // if move horizontally check if move left or right
         boolean moveLeft;
@@ -74,10 +80,10 @@ public class ExecutablePlan {
         
         if (moveLeft) {
           final Point p = new Point(path.get(i + 1).x + safeDistance, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
         } else {
           final Point p = new Point(path.get(i + 1).x - safeDistance, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
         }
       } else {
         // if move vertically check if move up or move down
@@ -90,10 +96,10 @@ public class ExecutablePlan {
         
         if (moveUp) {
           final Point p = new Point(path.get(i).x, path.get(i + 1).y + safeDistance);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
         } else {
           final Point p = new Point(path.get(i).x, path.get(i + 1).y - safeDistance);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
         }
       }
       
@@ -101,9 +107,11 @@ public class ExecutablePlan {
       checkPoints.add(newCheckPoint);
       
       // add the check point of the node, which is the node itself
-      if (intervals.get(i*2 + 2).hasUpperBound() || i != path.size() - 2) {
-        checkPoints.add(new CheckPoint(path.get(i + 1), intervals.get(i*2 + 2).upperEndpoint() - timeLeftToLeaveNode));
-      }
+      final List<Point> nodeResource = new ArrayList<>();
+      nodeResource.add(path.get(i + 1));
+      checkPoints.add(new CheckPoint(path.get(i + 1),
+          intervals.get(i * 2 + 2).upperEndpoint() - timeLeftToLeaveNode,
+          nodeResource));
     }
   }
 
