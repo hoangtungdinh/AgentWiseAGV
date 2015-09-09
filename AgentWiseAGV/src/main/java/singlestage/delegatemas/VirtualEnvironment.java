@@ -71,7 +71,7 @@ public class VirtualEnvironment implements TickListener {
    * @param started the started
    * @return the plan
    */
-/*  public Plan exploreRoute(int agvID, long startTime, Point origin,
+ /* public Plan exploreRoute(int agvID, long startTime, Point origin,
       List<Point> destinations, int numOfPaths, boolean started) {
     
     // sampling the environment to get several feasible paths
@@ -392,25 +392,25 @@ public class VirtualEnvironment implements TickListener {
     final long earliestExitTime = plan.getEarliestExitTime();
     final int index = planLength / 2;
     
-    long estimatedCost = -1;
+    final List<Point> remainingPath;
+    final double remainingPathLength;
+    final long estimatedCost;
     
     if (planLength % 2 == 1) {
       // the last plan step is for a node.
-      final List<Point> remainingPath = path.subList(index, path.size() - 1);
-      final double remainingPathLength = Graphs.pathLength(remainingPath);
+      remainingPath = path.subList(index, path.size());
+      remainingPathLength = Graphs.pathLength(remainingPath);
       // if the plan stop at a node (note that the exit time is the time when
       // the vehicle is completely out of the node
       estimatedCost = earliestExitTime
           + ((long) (remainingPathLength * 1000 / setting.getVehicleSpeed()))
           - ((long) (setting.getVehicleLength() * 1000
               / setting.getVehicleSpeed()));
-      if (remainingPathLength == 0) {
-      }
     } else {
       // the last plan step is for an edge. Now we plan for the next node
       // example: plan at edge with planLength = 2, then index = 1
-      final List<Point> remainingPath = path.subList(index, path.size() - 1);
-      final double remainingPathLength = Graphs.pathLength(remainingPath);
+      remainingPath = path.subList(index, path.size());
+      remainingPathLength = Graphs.pathLength(remainingPath);
       // if the plan stop at an edge, the exit time is the time when the vehicle
       // is exactly at the central of the next node
       estimatedCost = earliestExitTime

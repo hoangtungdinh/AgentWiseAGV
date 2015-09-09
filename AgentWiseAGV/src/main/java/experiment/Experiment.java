@@ -46,11 +46,11 @@ public class Experiment {
       
       bufferedReader.close();
 
-      for (int numAGV = 1; numAGV <= 8; numAGV++) {
-        for (int i = 0; i < 5; i++) {
+      for (int numAGV = 1; numAGV <= 12; numAGV++) {
+        for (int i = 0; i < 10; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
-              .setNumOfAGVs(numAGV * 5).setSeed(seed).build();
+              .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
           futures.add(executor.submit(new ExperimentRunner(setting)));
         }
       }
@@ -69,7 +69,7 @@ public class Experiment {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("TestParExperiment.txt"));
+          new File("ResultsMultiDMAS.txt"));
       printWriterMS.println("numAGVs\tFinishedTask");
       for (ListenableFuture<Result> result : futures) {
         try {

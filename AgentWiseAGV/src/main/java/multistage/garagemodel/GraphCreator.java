@@ -40,7 +40,7 @@ public class GraphCreator {
   }
 
   public ListenableGraph<LengthData> createGraph() {
-    final int size = 12; // mean that the real map is size - 2
+    final int size = 32; // mean that the real map is size - 2
     
     final Graph<LengthData> g = new TableGraph<>();
 
