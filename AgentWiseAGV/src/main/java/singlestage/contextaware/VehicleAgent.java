@@ -133,6 +133,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         if (timeDifference <= timeLapse.getTimeLeft()) {
           timeLapse.consume(timeDifference);
           checkPoints.removeFirst();
+          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
         } else {
           // time difference is larger than time left
           timeLapse.consumeAll();

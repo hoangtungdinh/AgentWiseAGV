@@ -384,4 +384,28 @@ public class EdgeAgent implements ResourceAgent {
       }
     }
   }
+  
+  /**
+   * Gets the list of delayed agvs at the startTime
+   *
+   * @param agvID the agv id
+   * @param startTime the start time according to the plan of the 'agvID'
+   * @return the list of delayed agvs
+   */
+  public List<Integer> getListOfDelayedAGVs(int agvID, long startTime, Point startNode) {
+    // get the reservations of AGVs coming from the startNode
+    final List<Reservation> reservations = reservationMap.get(startNode);
+    
+    List<Integer> delayedAGV = new ArrayList<>();
+    
+    for (Reservation resv : reservations) {
+      // if the start point of the resv is before the start time and the resv
+      // hasn't marked as visited and the resv is of another agv
+      if (resv.getInterval().lowerEndpoint() < startTime && !resv.hasVisited()
+          && resv.getAgvID() != agvID) {
+        delayedAGV.add(resv.getAgvID());
+      }
+    }
+    return delayedAGV;
+  }
 }

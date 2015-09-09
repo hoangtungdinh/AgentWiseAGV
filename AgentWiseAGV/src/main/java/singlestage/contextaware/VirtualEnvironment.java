@@ -412,6 +412,27 @@ public class VirtualEnvironment implements TickListener {
     }
   }
   
+  /**
+   * Gets the list of delayed agvs in comparison with the plan of 'agvID' at the
+   * startTime in the resource of the next check point
+   *
+   * @param agvID the agv id
+   * @param startTime the start time according to the plan of the 'agvID'
+   * @return the list of delayed agvs
+   */
+  public List<Integer> getListOfDelayedAGVs(int agvID, long startTime, CheckPoint nextCheckPoint) {
+    final List<Point> resource = nextCheckPoint.getResource();
+    if (resource.size() == 1) {
+      // if the resource is a node 
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      return nodeAgent.getListOfDelayedAGVs(agvID, startTime);
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      return edgeAgent.getListOfDelayedAGVs(agvID, startTime, resource.get(0));
+    }
+  }
+  
   @Override
   public void tick(TimeLapse timeLapse) {
     
