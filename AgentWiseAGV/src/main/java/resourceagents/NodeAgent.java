@@ -195,5 +195,18 @@ public class NodeAgent implements ResourceAgent {
     return node;
   }
   
-  
+  /**
+   * Sets the reservation of agvID that contains time as visited.
+   *
+   * @param agvID the agv id
+   * @param time the time
+   */
+  public void setVisited(int agvID, long time) {
+    for (Reservation resv : reservations) {
+      if (resv.getAgvID() == agvID && resv.getInterval().contains(time)) {
+        resv.setVisited();
+        return;
+      }
+    }
+  }
 }

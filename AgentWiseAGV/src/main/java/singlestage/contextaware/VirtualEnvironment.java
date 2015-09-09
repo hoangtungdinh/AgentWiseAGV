@@ -26,6 +26,7 @@ import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
+import routeplan.CheckPoint;
 import routeplan.Plan;
 import routeplan.contextaware.PlanFTW;
 import routeplan.contextaware.PlanStep;
@@ -390,6 +391,25 @@ public class VirtualEnvironment implements TickListener {
     }
     
     return key;
+  }
+  
+  /**
+   * set a plan step (a reservation) as visited.
+   *
+   * @param agvID the agv id
+   * @param nextCheckPoint the next check point
+   */
+  public void setVisited(int agvID, CheckPoint nextCheckPoint) {
+    final List<Point> resource = nextCheckPoint.getResource();
+    if (resource.size() == 1) {
+      // if the resource is a node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      nodeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime());
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      edgeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime(), resource.get(0));
+    }
   }
   
   @Override

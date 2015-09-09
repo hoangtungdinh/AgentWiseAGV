@@ -26,7 +26,7 @@ public class EdgeAgent implements ResourceAgent {
   
   /**
    * The reservation map. There are always two reservation lists in the map,
-   * corresponding to two entrances.
+   * corresponding to two entrances. They key is the start point of the edge.
    */
   private Map<Point, List<Reservation>> reservationMap;
   
@@ -366,5 +366,22 @@ public class EdgeAgent implements ResourceAgent {
     return node2;
   }
   
-  
+  /**
+   * Sets the reservation of 'agvID' that contains 'time' as visited.
+   *
+   * @param agvID the agv id
+   * @param time the time
+   * @param startNode the start node
+   */
+  public void setVisited(int agvID, long time, Point startNode) {
+    // get reservations of AGVs coming from startNode
+    final List<Reservation> reservations = reservationMap.get(startNode);
+    
+    for (Reservation resv : reservations) {
+      if (resv.getAgvID() == agvID && resv.getInterval().contains(time)) {
+        resv.setVisited();
+        return;
+      }
+    }
+  }
 }

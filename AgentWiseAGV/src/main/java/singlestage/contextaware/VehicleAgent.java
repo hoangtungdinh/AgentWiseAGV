@@ -114,6 +114,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     if (timeLapse.getStartTime() == startTime) {
       roadModel.get().addObjectAt(this, origin);
+      virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
     }
     
     if (!roadModel.get().containsObject(this)) {
@@ -138,6 +139,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         }
       } else {
         checkPoints.removeFirst();
+        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
       }
     }
 
