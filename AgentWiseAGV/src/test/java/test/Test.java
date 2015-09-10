@@ -8,7 +8,7 @@ public class Test {
   public static void main(String[] args) {
     System.out.println("start");
     final Setting setting = new Setting.SettingBuilder()
-        .setNumOfAGVs(10).setSeed(2469298).build();
+        .setNumOfAGVs(10).setSeed(1249843).build();
     final singlestage.contextaware.AGVSystem agvSystem = new AGVSystem(setting, true);
     agvSystem.run();
     System.out.println("done");

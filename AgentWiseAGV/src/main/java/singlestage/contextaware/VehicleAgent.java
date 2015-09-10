@@ -116,7 +116,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     // vehicle at the origin
     if (timeLapse.getStartTime() >= startTime) {
       if (!roadModel.get().containsObject(this)) {
-        if (isSafeToMove() && !roadModel.get().isOccupied(checkPoints.getFirst().getPoint())) {
+        if (isSafeToMove(true) && !roadModel.get().isOccupied(checkPoints.getFirst().getPoint())) {
           roadModel.get().addObjectAt(this, origin);
           virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
         }
@@ -162,7 +162,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         if (timeDifference <= timeLapse.getTimeLeft()) {
           // consume the amount of time left to start time
           timeLapse.consume(timeDifference);
-          if (isSafeToMove()) {
+          if (isSafeToMove(false)) {
             // if there is no higher priority delayed AGVs
             checkPoints.removeFirst();
 //            virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
@@ -175,7 +175,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         }
       } else {
         // if the start time passed
-        if (isSafeToMove()) {
+        if (isSafeToMove(false)) {
           // if it is safe to move then move
           checkPoints.removeFirst();
 //          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
@@ -196,9 +196,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    *
    * @return true, if there is no delayed agv that hasn't entered the resource
    */
-  public boolean isSafeToMove() {
-    return virtualEnvironment.getListOfDelayedAGVs(agvID,
-        checkPoints.getFirst().getExpectedTime(), checkPoints.get(1)).isEmpty();
+  public boolean isSafeToMove(boolean isFirstCheckPoint) {
+    if (isFirstCheckPoint) {
+      return virtualEnvironment.getListOfDelayedAGVs(agvID,
+          startTime, checkPoints.getFirst()).isEmpty();
+    } else {
+      return virtualEnvironment.getListOfDelayedAGVs(agvID,
+          checkPoints.getFirst().getExpectedTime(), checkPoints.get(1)).isEmpty();
+    }
   }
   
   public double round(double input) {
