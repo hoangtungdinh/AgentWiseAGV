@@ -1,15 +1,15 @@
 package test;
 
-import multistage.garagemodel.contextaware.AGVSystem;
 import setting.Setting;
+import singlestage.contextaware.AGVSystem;
 
 public class Test {
 
   public static void main(String[] args) {
     System.out.println("start");
     final Setting setting = new Setting.SettingBuilder()
-        .setNumOfAGVs(5).setSeed(8496955).build();
-    final multistage.garagemodel.contextaware.AGVSystem agvSystem = new AGVSystem(setting, false);
+        .setNumOfAGVs(10).setSeed(2469298).build();
+    final singlestage.contextaware.AGVSystem agvSystem = new AGVSystem(setting, true);
     agvSystem.run();
     System.out.println("done");
   }

@@ -9,7 +9,7 @@ import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.ui.View;
-import com.github.rinde.rinsim.ui.renderers.AGVRenderer2;
+import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 
 import setting.Setting;
@@ -49,7 +49,7 @@ public final class AGVSystem {
               .withMargin(setting.getVehicleLength())
               .withNodes()
               .withNodeOccupancy())
-          .with(AGVRenderer2.builder()
+          .with(AGVRenderer.builder()
               .withDifferentColorsForVehicles()
               .withVehicleCreationNumber()
               .withVehicleOrigin());

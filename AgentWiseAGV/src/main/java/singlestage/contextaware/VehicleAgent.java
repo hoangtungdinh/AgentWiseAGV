@@ -106,15 +106,25 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     executablePlan = new ExecutablePlan(plan, setting);
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-    virtualEnvironment.makeReservation(agvID, plan, 0, plan.getArrivalTime());
+    virtualEnvironment.makeReservation(agvID, plan, 0, Long.MAX_VALUE - 100000);
   }
 
   @Override
   public void tick(TimeLapse timeLapse) {
+
+    // add the agv to the model if the start time has passed and no delayed
+    // vehicle at the origin
+    if (timeLapse.getStartTime() >= startTime) {
+      if (!roadModel.get().containsObject(this)) {
+        if (isSafeToMove() && !roadModel.get().isOccupied(checkPoints.getFirst().getPoint())) {
+          roadModel.get().addObjectAt(this, origin);
+          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+        }
+      }
+    }
     
-    if (timeLapse.getStartTime() == startTime) {
-      roadModel.get().addObjectAt(this, origin);
-      virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+    if (agvID == 4 && timeLapse.getStartTime() < 50000) {
+      return;
     }
     
     if (!roadModel.get().containsObject(this)) {
@@ -127,31 +137,68 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     if (!checkPoints.isEmpty()
         && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+      // if the AGV is at exactly the check point
+      
+      // check if check point is the destination then update result and return
+      if (roundedPos.equals(destination)) {
+        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+        result.updateResult(startTime, timeLapse.getTime());
+        sim.unregister(this);
+        return;
+      }
+      
+      // if the check point is a node then announce to both the node and the next edge that it has visited
+      if (checkPoints.getFirst().getResource().size() == 1) {
+        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+        virtualEnvironment.setVisited(agvID, checkPoints.get(1));
+      }
+      
       if (timeLapse.getStartTime() < checkPoints.getFirst().getExpectedTime()) {
+        // if it hasn't been the start time yet
+        // the amount of time left to the start time
         final long timeDifference = checkPoints.getFirst().getExpectedTime()
             - timeLapse.getStartTime();
+        // if the amount of time left to the start time is smaller than or equal to the time left of this tick
         if (timeDifference <= timeLapse.getTimeLeft()) {
+          // consume the amount of time left to start time
           timeLapse.consume(timeDifference);
-          checkPoints.removeFirst();
-          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+          if (isSafeToMove()) {
+            // if there is no higher priority delayed AGVs
+            checkPoints.removeFirst();
+//            virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+          } else {
+            timeLapse.consumeAll();
+          }
         } else {
           // time difference is larger than time left
           timeLapse.consumeAll();
         }
       } else {
-        checkPoints.removeFirst();
-        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+        // if the start time passed
+        if (isSafeToMove()) {
+          // if it is safe to move then move
+          checkPoints.removeFirst();
+//          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+        } else {
+          // if it is not safe, then wait
+          timeLapse.consumeAll();
+        }
       }
     }
-
+    
     if (timeLapse.hasTimeLeft()) {
       roadModel.get().followPath(this, path, timeLapse);
     }
-
-    if (roadModel.get().getPosition(this).equals(destination)) {
-      result.updateResult(startTime, timeLapse.getTime());
-      sim.unregister(this);
-    }
+  }
+  
+  /**
+   * Checks if is safe to move to the next resource.
+   *
+   * @return true, if there is no delayed agv that hasn't entered the resource
+   */
+  public boolean isSafeToMove() {
+    return virtualEnvironment.getListOfDelayedAGVs(agvID,
+        checkPoints.getFirst().getExpectedTime(), checkPoints.get(1)).isEmpty();
   }
   
   public double round(double input) {
