@@ -1,6 +1,8 @@
 package singlestage.delegatemas;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.measure.unit.SI;
 
@@ -94,6 +96,8 @@ public final class AGVSystem {
           "Cannot get the road model from the simulator");
     }
     
+    final Map<Integer, VehicleAgent> vehicleAgents = new HashMap<>();
+    
     VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel,
         sim.getRandomGenerator(), setting);
     sim.addTickListener(virtualEnvironment);
@@ -107,8 +111,10 @@ public final class AGVSystem {
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
-      sim.register(new VehicleAgent(odList.get(i), virtualEnvironment, i, sim,
-          setting, result));
+      final VehicleAgent vehicleAgent = new VehicleAgent(odList.get(i), virtualEnvironment, i, sim,
+          setting, result);
+      sim.register(vehicleAgent);
+      vehicleAgents.put(i, vehicleAgent);
     }
 
     sim.start();
