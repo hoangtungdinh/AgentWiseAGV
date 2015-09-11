@@ -50,7 +50,9 @@ public class ExecutablePlan {
     
     final List<Point> firstResource = new ArrayList<>();
     firstResource.add(path.get(0));
-    checkPoints.add(new CheckPoint(path.get(0), intervals.get(0).upperEndpoint() - timeLeftToLeaveNode, firstResource));
+    checkPoints.add(new CheckPoint(path.get(0),
+        intervals.get(0).upperEndpoint() - timeLeftToLeaveNode, firstResource,
+        ResourceType.NODE));
     
     CheckPoint newCheckPoint;
     
@@ -80,10 +82,10 @@ public class ExecutablePlan {
         
         if (moveLeft) {
           final Point p = new Point(path.get(i + 1).x + safeDistance, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         } else {
           final Point p = new Point(path.get(i + 1).x - safeDistance, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         }
       } else {
         // if move vertically check if move up or move down
@@ -96,10 +98,10 @@ public class ExecutablePlan {
         
         if (moveUp) {
           final Point p = new Point(path.get(i).x, path.get(i + 1).y + safeDistance);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         } else {
           final Point p = new Point(path.get(i).x, path.get(i + 1).y - safeDistance);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource);
+          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         }
       }
       
@@ -111,7 +113,7 @@ public class ExecutablePlan {
       nodeResource.add(path.get(i + 1));
       checkPoints.add(new CheckPoint(path.get(i + 1),
           intervals.get(i * 2 + 2).upperEndpoint() - timeLeftToLeaveNode,
-          nodeResource));
+          nodeResource, ResourceType.NODE));
     }
   }
 

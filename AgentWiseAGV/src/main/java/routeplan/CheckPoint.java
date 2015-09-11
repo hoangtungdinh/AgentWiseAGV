@@ -17,6 +17,8 @@ public class CheckPoint {
   /** The expected time. */
   private long expectedTime;
   
+  private ResourceType resourceType;
+  
   /**
    * The resource. If resource is node, then it contains one point. If resource
    * is edge, it contains two points: start-end
@@ -30,10 +32,11 @@ public class CheckPoint {
    * @param expectedTime the expected time
    * @param resourceType the resource type
    */
-  public CheckPoint(Point point, long expectedTime, List<Point> resource) {
+  public CheckPoint(Point point, long expectedTime, List<Point> resource, ResourceType resourceType) {
     this.point = point;
     this.expectedTime = expectedTime;
     this.resource = resource;
+    this.resourceType = resourceType;
   }
   
   /**
@@ -57,4 +60,10 @@ public class CheckPoint {
   public List<Point> getResource() {
     return resource;
   }
+
+  public ResourceType getResourceType() {
+    return resourceType;
+  }
+  
+  
 }
