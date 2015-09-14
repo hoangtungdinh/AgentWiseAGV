@@ -281,10 +281,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    *
    * @param currentTime the current time
    */
-  public void refresh(long currentTime) {
-    virtualEnvironment.makeReservation(agvID, currentPlan, currentTime,
+  public boolean refresh(long currentTime) {
+    final boolean success = virtualEnvironment.refreshReservation(agvID,
+        currentPlan, currentTime,
         currentTime + setting.getEvaporationDuration());
     nextRefreshTime = currentTime + setting.getRefreshDuration();
+    if (!success) {
+      System.out.println(success);
+    }
+    return success;
   }
 
   @Override

@@ -253,6 +253,49 @@ public class VirtualEnvironment implements TickListener {
         intervals.get(intervals.size() - 1));
   }
   
+  /**
+   * Refresh reservation.
+   *
+   * @param agvID the agv id
+   * @param plan the plan
+   * @param currentTime the current time
+   * @param lifeTime the life time
+   * @return true, if successful
+   */
+  public boolean refreshReservation(int agvID, Plan plan, long currentTime, long lifeTime) {
+    List<Point> path = plan.getPath();
+    List<Range<Long>> intervals = plan.getIntervals();
+    for (int i = 0; i < path.size() - 1; i++) {
+      if (intervals.get(i * 2 + 1).upperEndpoint() < currentTime) {
+        continue;
+      }
+      
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i));
+      final boolean successNode = nodeAgent.refreshReservation(agvID, lifeTime, intervals.get(i * 2));
+      if (!successNode) {
+        return false;
+      }
+      
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(path.get(i),
+          path.get(i + 1));
+      final boolean successEdge = edgeAgent.refreshReservation(path.get(i), path.get(i + 1), intervals.get(i * 2 + 1), lifeTime,
+          agvID);
+      if (!successEdge) {
+        return false;
+      }
+    }
+    
+    final NodeAgent lastNodeAgent = nodeAgentList
+        .getNodeAgent(path.get(path.size() - 1));
+    final boolean success = lastNodeAgent.refreshReservation(agvID, lifeTime,
+        intervals.get(intervals.size() - 1));
+    if (success) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
   public long computeCost(PlanFTW plan) {
     final LinkedList<FreeTimeWindow> currentFTWs = plan.getFreeTimeWindows();
     final List<Point> path = plan.getPath();

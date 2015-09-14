@@ -152,6 +152,10 @@ public class NodeAgent implements ResourceAgent {
    * @return true, if successful refreshing
    */
   public boolean refreshReservation(int agvID, long lifeTime, Range<Long> interval) {
+    final long lowerEndPoint = interval.lowerEndpoint();
+    final long upperEndPoint = interval.upperEndpoint();
+    final Range<Long> newInterval = Range.open(lowerEndPoint, upperEndPoint);
+    
     Iterator<Reservation> iter = reservations.iterator();
     // go through all existing reservations
     while (iter.hasNext()) {
@@ -161,7 +165,7 @@ public class NodeAgent implements ResourceAgent {
           && reservation.getLifeTime() != lifeTime) {
         // remove the reservations of the 'agvID'
         iter.remove();
-      } else if (reservation.getInterval().isConnected(interval)) {
+      } else if (reservation.getInterval().isConnected(newInterval)) {
         // if there is another reservation that is overlapping with the current
         // plan, then refreshing fails, return false
         return false;
@@ -169,9 +173,7 @@ public class NodeAgent implements ResourceAgent {
     }
     
     // if there is no overlapping reservations, then refresh by adding new reservation
-    final long lowerEndPoint = interval.lowerEndpoint();
-    final long upperEndPoint = interval.upperEndpoint();
-    reservations.add(new Reservation(agvID, lifeTime, Range.open(lowerEndPoint, upperEndPoint)));
+    reservations.add(new Reservation(agvID, lifeTime, newInterval));
     return true;
   }
   

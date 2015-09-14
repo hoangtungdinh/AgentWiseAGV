@@ -349,13 +349,18 @@ public class EdgeAgent implements ResourceAgent {
    */
   public boolean refreshReservation(Point startPoint, Point endPoint,
       Range<Long> interval, long lifeTime, int agvID) {
+    
+    final long lowerEndPoint = interval.lowerEndpoint();
+    final long upperEndPoint = interval.upperEndpoint();
+    final Range<Long> newInterval = Range.open(lowerEndPoint, upperEndPoint);
+    
     // check if the reservation is overlapped with any reservation from the
     // opposite direction
     final List<Reservation> resvFromOppositeDirection = reservationMap
         .get(endPoint);
     for (Reservation resv : resvFromOppositeDirection) {
       if (resv.getAgvID() != agvID
-          && resv.getInterval().isConnected(interval)) {
+          && resv.getInterval().isConnected(newInterval)) {
         return false;
       }
     }
@@ -366,13 +371,13 @@ public class EdgeAgent implements ResourceAgent {
         .get(startPoint);
     for (Reservation resv : resvFromTheSameDirection) {
       if (resv.getAgvID() != agvID
-          && isOverlapping(resv.getInterval(), interval)) {
+          && isOverlapping(resv.getInterval(), newInterval)) {
         return false;
       }
     }
 
     // if there is no overlap then add reservation
-    addReservation(startPoint, interval, lifeTime, agvID);
+    addReservation(startPoint, newInterval, lifeTime, agvID);
     return true;
   }
   
