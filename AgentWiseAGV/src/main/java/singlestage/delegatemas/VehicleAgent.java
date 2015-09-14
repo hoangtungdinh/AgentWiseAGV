@@ -71,7 +71,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   /** The result. */
   private Result result;
-  
+
   /**
    * Instantiates a new vehicle agent.
    *

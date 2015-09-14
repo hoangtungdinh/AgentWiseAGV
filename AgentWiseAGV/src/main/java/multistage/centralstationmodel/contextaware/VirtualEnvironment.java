@@ -121,7 +121,6 @@ public class VirtualEnvironment implements TickListener {
 
     PlanFTW finalPlan = null;
 
-    // TODO we still need a closed list here. It does not affect the result but
     // will improve the simulation speed.
 
     while (!planQueue.isEmpty()) {

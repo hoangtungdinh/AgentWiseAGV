@@ -1,10 +1,8 @@
 package resourceagents;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
@@ -26,12 +24,6 @@ public class NodeAgent implements ResourceAgent {
  /** The node that the agent associated. */
  private Point node;
 
-  /**
-   * The shortest path length. It stores the shortest path length between the
-   * associated node and other nodes.
-   */
-  private Map<Point, Double> shortestPathLength;
-  
   /** The setting. */
   private Setting setting;
   
@@ -43,7 +35,6 @@ public class NodeAgent implements ResourceAgent {
    */
   public NodeAgent(Point node, Setting setting) {
     reservations = new ArrayList<>();
-    shortestPathLength = new HashMap<>();
     this.node = node;
     this.setting = setting;
   }
@@ -56,10 +47,6 @@ public class NodeAgent implements ResourceAgent {
    * @return the free time windows
    */
   public List<FreeTimeWindow> getFreeTimeWindows(Range<Long> possibleEntryWindow, int agvID) {
-    
-//    if (agvID == 7 && node.equals(new Point(40d, 32d))) {
-//      System.out.println("hello");
-//    }
     
     // actual entry window (take into account the length of vehicles)
     Range<Long> realPossibleEntryWindow;
@@ -157,6 +144,38 @@ public class NodeAgent implements ResourceAgent {
   }
   
   /**
+   * Refresh reservation.
+   *
+   * @param agvID the agv id
+   * @param lifeTime the life time
+   * @param interval the interval
+   * @return true, if successful refreshing
+   */
+  public boolean refreshReservation(int agvID, long lifeTime, Range<Long> interval) {
+    Iterator<Reservation> iter = reservations.iterator();
+    // go through all existing reservations
+    while (iter.hasNext()) {
+      Reservation reservation = iter.next();
+      
+      if (reservation.getAgvID() == agvID
+          && reservation.getLifeTime() != lifeTime) {
+        // remove the reservations of the 'agvID'
+        iter.remove();
+      } else if (reservation.getInterval().isConnected(interval)) {
+        // if there is another reservation that is overlapping with the current
+        // plan, then refreshing fails, return false
+        return false;
+      }
+    }
+    
+    // if there is no overlapping reservations, then refresh by adding new reservation
+    final long lowerEndPoint = interval.lowerEndpoint();
+    final long upperEndPoint = interval.upperEndpoint();
+    reservations.add(new Reservation(agvID, lifeTime, Range.open(lowerEndPoint, upperEndPoint)));
+    return true;
+  }
+  
+  /**
    * Removes the out dated reservation.
    *
    * @param currentTime the current time
@@ -171,26 +190,6 @@ public class NodeAgent implements ResourceAgent {
     }
   }
   
-  /**
-   * Sets the path length.
-   *
-   * @param point the point
-   * @param length the length from the current node to the "point"
-   */
-  public void setPathLength(Point point, double length) {
-    shortestPathLength.put(point, length);
-  }
-  
-  /**
-   * Gets the path length.
-   *
-   * @param point the point
-   * @return the path length from the current node to the "point"
-   */
-  public double getPathLength(Point point) {
-    return shortestPathLength.get(point);
-  }
-
   public Point getNode() {
     return node;
   }

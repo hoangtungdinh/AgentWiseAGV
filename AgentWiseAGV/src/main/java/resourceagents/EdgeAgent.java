@@ -8,8 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
@@ -88,7 +86,6 @@ public class EdgeAgent implements ResourceAgent {
    * @param agvID the agv id
    * @return the free time windows
    */
-  @Nullable
   public List<FreeTimeWindow> getFreeTimeWindows(Point startPoint,
       Point endPoint, Range<Long> possibleEntryWindow, int agvID) {
     
@@ -338,6 +335,72 @@ public class EdgeAgent implements ResourceAgent {
     final long upperEndPoint = interval.upperEndpoint();
     reservationMap.get(startPoint)
         .add(new Reservation(agvID, lifeTime, Range.open(lowerEndPoint, upperEndPoint)));
+  }
+  
+  /**
+   * Refresh reservation.
+   *
+   * @param startPoint the start point
+   * @param endPoint the end point
+   * @param interval the interval
+   * @param lifeTime the life time
+   * @param agvID the agv id
+   * @return true, if successful
+   */
+  public boolean refreshReservation(Point startPoint, Point endPoint,
+      Range<Long> interval, long lifeTime, int agvID) {
+    // check if the reservation is overlapped with any reservation from the
+    // opposite direction
+    final List<Reservation> resvFromOppositeDirection = reservationMap
+        .get(endPoint);
+    for (Reservation resv : resvFromOppositeDirection) {
+      if (resv.getAgvID() != agvID
+          && resv.getInterval().isConnected(interval)) {
+        return false;
+      }
+    }
+
+    // check if the reservation is overlapped with any reservation from the same
+    // direction
+    final List<Reservation> resvFromTheSameDirection = reservationMap
+        .get(startPoint);
+    for (Reservation resv : resvFromTheSameDirection) {
+      if (resv.getAgvID() != agvID
+          && isOverlapping(resv.getInterval(), interval)) {
+        return false;
+      }
+    }
+
+    // if there is no overlap then add reservation
+    addReservation(startPoint, interval, lifeTime, agvID);
+    return true;
+  }
+  
+  /**
+   * Checks if two reservations of two agvs from the same direction is overlapping
+   *
+   * @param firstRange the range of the first agv
+   * @param secondRange the range of the second agv
+   * @return true, if is overlapping
+   */
+  public boolean isOverlapping(Range<Long> firstRange, Range<Long> secondRange) {
+    final long minDifferentTime = (long) (setting.getVehicleLength() * 1000
+        / setting.getVehicleSpeed());
+    
+    final long start1 = firstRange.lowerEndpoint();
+    final long start2 = secondRange.lowerEndpoint();
+    final long end1 = firstRange.upperEndpoint();
+    final long end2 = secondRange.upperEndpoint();
+    
+    if (start1 <= start2 - minDifferentTime
+        && end1 <= end2 - minDifferentTime) {
+      return false;
+    } else if (start1 >= start2 + minDifferentTime
+        && end1 >= end2 + minDifferentTime) {
+      return false;
+    } else {
+      return true;
+    }
   }
   
   /**

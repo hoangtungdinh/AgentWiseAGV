@@ -216,7 +216,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    * @return true, if there is no delayed agv that hasn't entered the resource
    */
   public boolean isSafeToMove(boolean isFirstCheckPoint) {
-    // TODO need the fix the capacity of the edge
     if (isFirstCheckPoint) {
       return virtualEnvironment.getListOfDelayedAGVs(agvID,
           startTime, checkPoints.getFirst()).isEmpty();
