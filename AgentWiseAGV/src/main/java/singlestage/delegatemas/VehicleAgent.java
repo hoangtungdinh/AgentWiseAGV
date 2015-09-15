@@ -172,7 +172,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     Point currentPos = roadModel.get().getPosition(this);
     Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
-    // if explore
+    // if explore, only explore at checkpoint
     if (isGoingToExplore && roundedPos.equals(checkPoints.getFirst().getPoint())) {
       // get the next check point
       final CheckPoint nextCheckPoint = checkPoints.getFirst();
