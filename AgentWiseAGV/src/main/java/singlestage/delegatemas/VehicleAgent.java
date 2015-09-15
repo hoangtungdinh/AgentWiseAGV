@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.MovingRoadUser;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadUser;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
@@ -395,6 +397,29 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         currentTime + setting.getEvaporationDuration());
     nextRefreshTime = currentTime + setting.getRefreshDuration();
     return success;
+  }
+  
+  /**
+   * Gets the number of agvs on an edge, exclusive
+   *
+   * @param from the from
+   * @param to the to
+   * @return the num of ag vs on edge
+   */
+  public int getNumOfAGVsOnEdge(Point from, Point to) {
+    final Set<RoadUser> agvsOnEdge = roadModel.get().getRoadUsersOn(from, to);
+    
+    int numAGVsOnEdge = agvsOnEdge.size();
+    
+    if (roadModel.get().getRoadUsersOnNode(from).size() != 0) {
+      numAGVsOnEdge--;
+    }
+    
+    if (roadModel.get().getRoadUsersOnNode(to).size() != 0) {
+      numAGVsOnEdge--;
+    }
+    
+    return numAGVsOnEdge;
   }
 
   @Override
