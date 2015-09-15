@@ -18,16 +18,21 @@ public class Plan {
   
   /** The intervals. */
   private LinkedList<Range<Long>> intervals;
-
+  
+  /** True if it is the plan for freezing agv. */
+  private boolean isPlanForFreezingAGV;
+  
   /**
    * Instantiates a new plan.
    *
    * @param path the path
    * @param intervals the intervals
    */
-  public Plan(List<Point> path, List<Range<Long>> intervals) {
+  public Plan(List<Point> path, List<Range<Long>> intervals,
+      boolean isPlanForFreezingAGV) {
     this.path = new LinkedList<>(path);
     this.intervals = new LinkedList<>(intervals);
+    this.isPlanForFreezingAGV = isPlanForFreezingAGV;
   }
 
   /**
@@ -78,5 +83,9 @@ public class Plan {
     path.addFirst(lastNode);
     intervals.addFirst(edgeInterval);
     intervals.addFirst(nodeInterval);
+  }
+
+  public boolean isPlanForFreezingAGV() {
+    return isPlanForFreezingAGV;
   }
 }

@@ -200,7 +200,7 @@ public class VirtualEnvironment implements TickListener {
                       / setting.getVehicleSpeed()))));
     }
     
-    Plan plan = new Plan(bestPlan.getPath(), intervals);
+    Plan plan = new Plan(bestPlan.getPath(), intervals, false);
     
     return plan;
   }

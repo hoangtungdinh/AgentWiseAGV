@@ -219,7 +219,7 @@ public class VirtualEnvironment implements TickListener {
                       / setting.getVehicleSpeed()))));
     }
     
-    Plan plan = new Plan(bestPlan.getPath(), intervals);
+    Plan plan = new Plan(bestPlan.getPath(), intervals, false);
     
     return plan;
   }
@@ -289,11 +289,7 @@ public class VirtualEnvironment implements TickListener {
         .getNodeAgent(path.get(path.size() - 1));
     final boolean success = lastNodeAgent.refreshReservation(agvID, lifeTime,
         intervals.get(intervals.size() - 1));
-    if (success) {
-      return true;
-    } else {
-      return false;
-    }
+    return success;
   }
   
   public long computeCost(PlanFTW plan) {

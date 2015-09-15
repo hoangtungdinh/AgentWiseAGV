@@ -16,11 +16,13 @@ public class Setting {
   private long switchingThreshold;
   private int numOfAlterRoutes;
   private int numOfDestsForEachAGV;
+  private long expectedFreezingDuration;
   
   public Setting(double vehicleLength, double vehicleSpeed, int numOfAGVs,
       long endTime, int speedUp, long seed, int numOfDestinations,
       long evaporationDuration, long refreshDuration, long explorationDuration,
-      long switchingThreshold, int numOfAlterRoutes, int numOfDestsForEachAGV) {
+      long switchingThreshold, int numOfAlterRoutes, int numOfDestsForEachAGV,
+      long expectedFreezingDuration) {
     this.vehicleLength = vehicleLength;
     this.vehicleSpeed = vehicleSpeed;
     this.numOfAGVs = numOfAGVs;
@@ -34,6 +36,7 @@ public class Setting {
     this.switchingThreshold = switchingThreshold;
     this.numOfAlterRoutes = numOfAlterRoutes;
     this.numOfDestsForEachAGV = numOfDestsForEachAGV;
+    this.expectedFreezingDuration = expectedFreezingDuration;
   }
 
   public double getVehicleLength() {
@@ -87,6 +90,10 @@ public class Setting {
   public int getNumOfDestsForEachAGV() {
     return numOfDestsForEachAGV;
   }
+  
+  public long getExpectedFreezingDuration() {
+    return expectedFreezingDuration;
+  }
 
   public static class SettingBuilder {
     private double vehicleLength = 2d;
@@ -103,6 +110,7 @@ public class Setting {
     private long switchingThreshold = 8000;
     private int numOfAlterRoutes = 10;
     private int numOfDestsForEachAGV = 3;
+    private long expectedFreezingDuration = 1000000000;
     
     public SettingBuilder() {
 
@@ -172,12 +180,17 @@ public class Setting {
       this.numOfDestsForEachAGV = numOfDestsForEachAGV;
       return this;
     }
+    
+    public SettingBuilder setExpectedFreezingDuration(long expectedFreezingDuration) {
+      this.expectedFreezingDuration = expectedFreezingDuration;
+      return this;
+    }
 
     public Setting build() {
       return new Setting(vehicleLength, vehicleSpeed, numOfAGVs, endTime,
           speedUp, seed, numOfDestinations, evaporationDuration,
           refreshDuration, explorationDuration, switchingThreshold,
-          numOfAlterRoutes, numOfDestsForEachAGV);
+          numOfAlterRoutes, numOfDestsForEachAGV, expectedFreezingDuration);
     }
   }
   
