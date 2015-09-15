@@ -88,7 +88,7 @@ public class ExperimentSingleDelegateMAS {
       printWriterPC.println("numAGVs\tPlanCost");
       for (ListenableFuture<Result> result : futures) {
         try {
-          printWriterMS.println(result.get().getSetting().getNumOfAGVs() + "\t"
+          printWriterPC.println(result.get().getSetting().getNumOfAGVs() + "\t"
               + result.get().getJointPlanCost());
         } catch (InterruptedException e) {
           e.printStackTrace();
