@@ -1,4 +1,4 @@
-package singlestage.delegatemas;
+package singlestage.contextaware;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +12,7 @@ import setting.Setting;
 import singlestage.result.Result;
 import singlestage.result.Sample;
 
-public class ExperimentDMasSingle {
+public class SequentialExperimentCA {
 
   public static void main(String[] args) {
     LinkedList<Long> seeds = new LinkedList<>();
@@ -33,7 +33,7 @@ public class ExperimentDMasSingle {
           System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i + "\tSeed: " + seed);
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
-          final singlestage.delegatemas.AGVSystem agvSystem = new AGVSystem(setting, false);
+          final singlestage.contextaware.AGVSystem agvSystem = new AGVSystem(setting, false);
           final Result result = agvSystem.run();
           sample.addResult(result);
         }
@@ -49,7 +49,7 @@ public class ExperimentDMasSingle {
   
   public static void print(List<Sample> samples) {
     try {
-      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsDMAS_makespan.txt"));
+      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsCA_makespan.txt"));
       printWriterMS.println("numAGVs\tmakespan");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();
@@ -59,7 +59,7 @@ public class ExperimentDMasSingle {
       }
       printWriterMS.close();
       
-      PrintWriter printWriterPC = new PrintWriter(new File("src/main/resources/ResultsDMAS_plancost.txt"));
+      PrintWriter printWriterPC = new PrintWriter(new File("src/main/resources/ResultsCA_plancost.txt"));
       printWriterPC.println("numAGVs\tPlanCost");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();
