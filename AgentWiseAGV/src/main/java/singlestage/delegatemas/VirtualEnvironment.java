@@ -71,7 +71,7 @@ public class VirtualEnvironment implements TickListener {
    * @param started the started
    * @return the plan
    */
-  public Plan exploreRoute(int agvID, long startTime, Point origin,
+  public Plan exploreRoute(int agvID, Range<Long> startTime, Point origin,
       List<Point> destinations, int numOfPaths, boolean started) {
     
     // sampling the environment to get several feasible paths
@@ -83,60 +83,27 @@ public class VirtualEnvironment implements TickListener {
     
     for (Path path : feasiblePaths) {
       final List<Point> candPath = path.getPath();
-
+      
       // free time window of the start node
       final List<FreeTimeWindow> firstFreeTimeWindows = nodeAgentList
-          .getNodeAgent(candPath.get(0))
-          .getFreeTimeWindows(Range.atLeast(startTime), agvID);
-      
-      if (started) {
-        // if the AGV already started
-        FreeTimeWindow startFTW = null;
-        
-        // there should be only one free time window that contains the startTime
-        final long realStartTime = startTime - ((long) (setting.getVehicleLength()*1000 / setting.getVehicleSpeed()));
-        for (FreeTimeWindow ftw : firstFreeTimeWindows) {
-          if (ftw.getEntryWindow().contains(realStartTime)
-              || ftw.getEntryWindow().lowerEndpoint() == realStartTime) {
-            startFTW = ftw;
-            break;
-          }
-        }
-        
-        // if no possible free time window then next candidate path
-        if (startFTW == null) {
-          continue;
-        }
+          .getNodeAgent(candPath.get(0)).getFreeTimeWindows(startTime, agvID);
+
+      for (FreeTimeWindow startFTW : firstFreeTimeWindows) {
+        // for each possible start free time window, create a plan step and
+        // add it to the queue
+        final LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
+        firstFTW.addLast(startFTW);
         
         final PlanStep planStep = new PlanStep(candPath, 0, startFTW);
         closedSet.add(planStep);
+
+        final PlanFTW firstPlanFTW = new PlanFTW(firstFTW, candPath);
         
-        LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
-        firstFTW.addLast(startFTW);
-        
-        final PlanFTW planFTW = new PlanFTW(firstFTW, candPath);
-        long estimatedCost = computeCost(planFTW);
+        long estimatedCost = computeCost(firstPlanFTW);
         while (planQueue.containsKey(estimatedCost)) {
           estimatedCost++;
         }
-        planQueue.put(estimatedCost, planFTW);
-      } else {
-        // if the AGV hasn't entered the map yet
-        for (FreeTimeWindow startFTW : firstFreeTimeWindows) {
-          final LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
-          firstFTW.addLast(startFTW);
-          
-          final PlanStep planStep = new PlanStep(candPath, 0, startFTW);
-          closedSet.add(planStep);
-
-          final PlanFTW firstPlanFTW = new PlanFTW(firstFTW, candPath);
-          
-          long estimatedCost = computeCost(firstPlanFTW);
-          while (planQueue.containsKey(estimatedCost)) {
-            estimatedCost++;
-          }
-          planQueue.put(estimatedCost, firstPlanFTW);
-        }
+        planQueue.put(estimatedCost, firstPlanFTW);
       }
     }
     
