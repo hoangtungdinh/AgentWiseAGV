@@ -338,7 +338,9 @@ public class VirtualEnvironment implements TickListener {
       }
     }
     
-    throw new IllegalStateException("No reservation contains the current time!");
+    // this line can happen when the agvs have not entered the map yet. In multi
+    // stage, it should be removed and we should throw an exception here.
+    return 0;
   }
   
   @Override

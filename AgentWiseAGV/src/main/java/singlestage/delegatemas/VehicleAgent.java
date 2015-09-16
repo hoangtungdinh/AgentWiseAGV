@@ -342,16 +342,22 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   }
   
   public void notifyDelay(Plan newPlan, long currentTime) {
-    currentPlan = newPlan;
-    executablePlan = new ExecutablePlan(currentPlan, setting);
-    checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-    
-    while (checkPoints.getFirst().getExpectedTime() < currentTime) {
-      checkPoints.removeFirst();
+    if (currentTime < startTime) {
+      // case when the agv hasn't entered the map
+      nextDestination(currentTime);
+    } else {
+      // case when the agv entered the map
+      currentPlan = newPlan;
+      executablePlan = new ExecutablePlan(currentPlan, setting);
+      checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
+      
+      while (checkPoints.getFirst().getExpectedTime() < currentTime) {
+        checkPoints.removeFirst();
+      }
+      
+      refresh(currentTime);
+      nextExplorationTime = currentTime;
     }
-    
-    refresh(currentTime);
-    nextExplorationTime = currentTime;
   }
   
   public boolean hasCompleted() {
