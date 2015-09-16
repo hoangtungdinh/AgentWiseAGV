@@ -45,6 +45,9 @@ public class VirtualEnvironment implements TickListener {
   /** The path sampling. */
   private PathSampling pathSampling;
   
+  /** The agv list. */
+  private List<VehicleAgent> agvList;
+  
   /**
    * Instantiates a new virtual environment.
    *
@@ -53,18 +56,20 @@ public class VirtualEnvironment implements TickListener {
    * @param setting the setting
    */
   public VirtualEnvironment(CollisionGraphRoadModel roadModel,
-      RandomGenerator randomGenerator, Setting setting) {
+      RandomGenerator randomGenerator, Setting setting,
+      List<VehicleAgent> agvList) {
     this.setting = setting;
     nodeAgentList = new NodeAgentList(roadModel, setting);
     edgeAgentList = new EdgeAgentList(roadModel, setting);
     this.pathSampling = new PathSampling(setting);
+    this.agvList = agvList;
   }
   
   /**
    * Explore route.
    *
    * @param agvID the agv id
-   * @param startTime the start time
+   * @param startTime the possible start time
    * @param origin the origin
    * @param destinations the destinations
    * @param numOfPaths the num of paths
@@ -220,45 +225,6 @@ public class VirtualEnvironment implements TickListener {
         intervals.get(intervals.size() - 1));
   }
   
-  /**
-   * Refresh reservation.
-   *
-   * @param agvID the agv id
-   * @param plan the plan
-   * @param currentTime the current time
-   * @param lifeTime the life time
-   * @return true, if successful
-   */
-  public boolean refreshReservation(int agvID, Plan plan, long currentTime, long lifeTime) {
-    List<Point> path = plan.getPath();
-    List<Range<Long>> intervals = plan.getIntervals();
-    for (int i = 0; i < path.size() - 1; i++) {
-      if (intervals.get(i * 2 + 1).upperEndpoint() < currentTime) {
-        continue;
-      }
-      
-      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i));
-      final boolean successNode = nodeAgent.refreshReservation(agvID, lifeTime, intervals.get(i * 2));
-      if (!successNode) {
-        return false;
-      }
-      
-      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(path.get(i),
-          path.get(i + 1));
-      final boolean successEdge = edgeAgent.refreshReservation(path.get(i), path.get(i + 1), intervals.get(i * 2 + 1), lifeTime,
-          agvID);
-      if (!successEdge) {
-        return false;
-      }
-    }
-    
-    final NodeAgent lastNodeAgent = nodeAgentList
-        .getNodeAgent(path.get(path.size() - 1));
-    final boolean success = lastNodeAgent.refreshReservation(agvID, lifeTime,
-        intervals.get(intervals.size() - 1));
-    return success;
-  }
-  
   public long computeCost(PlanFTW plan) {
     final LinkedList<FreeTimeWindow> currentFTWs = plan.getFreeTimeWindows();
     final List<Point> path = plan.getPath();
@@ -292,6 +258,87 @@ public class VirtualEnvironment implements TickListener {
     }
     
     return estimatedCost;
+  }
+  
+  /**
+   * Propagate delay.
+   * The currentPlan must start from the node that the AGV is freezing.
+   *
+   * @param agvID the agv id
+   * @param currentPlan the current plan
+   */
+  public void propagateDelay(int agvID, long currentTime) {
+    // first remove all reservation
+    nodeAgentList.removeAllReservations();
+    edgeAgentList.removeAllReservations();
+    
+    // we will modify the plan of all agvs when one is delayed
+    for (VehicleAgent agv : agvList) {
+      // if the agv has reached the destination then ignore
+      if (agv.hasCompleted()) {
+        continue;
+      }
+      
+      final long timeToReplan;
+      if (agv.getID() < agvID) {
+        timeToReplan = currentTime + 100;
+      } else {
+        timeToReplan = currentTime;
+      }
+      
+      // first we detect the current plan step
+      final Plan currentPlan = agv.getCurrentPlan();
+      final List<Range<Long>> reservedIntervals = currentPlan.getIntervals();
+      final int idxOfCurrentResv = getIndexOfCurrentResv(reservedIntervals, timeToReplan);
+      final LinkedList<Range<Long>> newReservations = new LinkedList<>();
+      
+      // add all reservations until the reservation at current time
+      for (int i = 0; i < idxOfCurrentResv; i++) {
+        newReservations.addLast(reservedIntervals.get(i));
+      }
+      
+      // modify the reservation at the current time then add it to the new reservation
+      final Range<Long> currentReservation = reservedIntervals.get(idxOfCurrentResv);
+      final long newLowerEndPoint = currentReservation.lowerEndpoint();
+      final long newUpperEndPoint = currentReservation.upperEndpoint() + setting.getExpectedFreezingDuration();
+      newReservations.addLast(Range.open(newLowerEndPoint, newUpperEndPoint));
+      
+      // modify the reservation of all future reservations
+      for (int i = idxOfCurrentResv + 1; i < reservedIntervals.size(); i++) {
+        final Range<Long> oldReservation = reservedIntervals.get(i);
+        final long updatedLowerEndPoint = oldReservation.lowerEndpoint() + setting.getExpectedFreezingDuration();
+        final long updatedUpperEndPoint = oldReservation.upperEndpoint() + setting.getExpectedFreezingDuration();
+        newReservations.addLast(Range.open(updatedLowerEndPoint, updatedUpperEndPoint));
+      }
+      
+      // create new plan for the agv
+      final Plan newPlan = new Plan(currentPlan.getPath(), newReservations, false);
+      
+      // notify the agv about the new plan
+      agv.notifyDelay(newPlan, timeToReplan);
+    }
+  }
+  
+  public int getIndexOfCurrentResv(List<Range<Long>> reservedIntervals, long currentTime) {
+    int index = 0;
+    // for each reservation
+    for (Range<Long> interval : reservedIntervals) {
+      // detect the first reservation that contains currentTime
+      if (interval.contains(currentTime)) {
+        if (reservedIntervals.get(index + 1).contains(currentTime)) {
+          // when currentTime is in two consecutive intervals, mean that the agv
+          // is on two resources (edges, node or node, edges). In this case, we
+          // only consider the second resource.
+          return index + 1;
+        } else {
+          return index;
+        }
+      } else {
+        index++;
+      }
+    }
+    
+    throw new IllegalStateException("No reservation contains the current time!");
   }
   
   @Override

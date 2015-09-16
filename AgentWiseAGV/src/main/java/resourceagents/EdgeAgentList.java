@@ -72,4 +72,10 @@ public class EdgeAgentList {
       edgeAgent.removeOutdatedReservations(currentTime);
     }
   }
+  
+  public void removeAllReservations() {
+    for (EdgeAgent edgeAgent : edgeAgentList) {
+      edgeAgent.removeAllReservations();
+    }
+  }
 }

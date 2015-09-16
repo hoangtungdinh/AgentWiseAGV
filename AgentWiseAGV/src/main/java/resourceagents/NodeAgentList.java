@@ -62,4 +62,10 @@ public class NodeAgentList {
       nodeAgent.removeOutDatedReservation(currentTime);
     }
   }
+  
+  public void removeAllReservations() {
+    for (NodeAgent nodeAgent : nodeAgentList) {
+      nodeAgent.removeAllReservations();
+    }
+  }
 }

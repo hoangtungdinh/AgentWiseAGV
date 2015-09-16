@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.MovingRoadUser;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
-import com.github.rinde.rinsim.core.model.road.RoadUser;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
@@ -20,7 +18,6 @@ import com.google.common.collect.Range;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
-import routeplan.ResourceType;
 import setting.Setting;
 import singlestage.destinationgenerator.OriginDestination;
 import singlestage.result.Result;
@@ -54,9 +51,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The check points. */
   private LinkedList<CheckPoint> checkPoints;
   
-  /** The expected arrival time. */
-  private long expectedArrivalTime;
-  
   /** The next refresh time. */
   private long nextRefreshTime;
   
@@ -75,17 +69,19 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The result. */
   private Result result;
   
-  /** True if the agv is freezing. */
-  private boolean isFreezing;
+  private boolean hasCompleted;
   
   /**
-   * True if the agv is going to explore routes. Note that the agv is only
-   * explore route at the check point. If it is time to explore but the agv has
-   * not reached the checkpoint yet, it will wait until it reaches the
-   * checkpoint and then explore
+   * True if the agv is going to explore route. Note that agv only explores
+   * route at the checkpoint.
    */
   private boolean isGoingToExplore;
-
+  
+  /** True if this agv is freezing. */
+  private boolean isFreezing;
+  
+  private boolean propagatedDelay;
+  
   /**
    * Instantiates a new vehicle agent.
    *
@@ -109,8 +105,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     nextDestination(0);
     startTime = checkPoints.getFirst().getExpectedTime();
     this.result = result;
-    this.isFreezing = false;
     this.isGoingToExplore = false;
+    this.hasCompleted = false;
+    this.propagatedDelay = false;
   }
 
   @Override
@@ -135,7 +132,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
     virtualEnvironment.makeReservation(agvID, plan, startTime, startTime + setting.getEvaporationDuration());
-    expectedArrivalTime = plan.getArrivalTime();
     nextExplorationTime = startTime + setting.getExplorationDuration();
     nextRefreshTime = startTime + setting.getRefreshDuration();
   }
@@ -145,14 +141,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     final long currentTime = timeLapse.getStartTime();
     
-    if (currentTime > 5000 && currentTime < 50000 && agvID == 5) {
-      isFreezing = true;
-    } else {
-      isFreezing = false;
-    }
-    
     if (currentPlan != null && currentPlan.getIntervals().size() > 1
-        && currentPlan.getIntervals().get(1).upperEndpoint() <= currentTime) {
+        && currentPlan.getIntervals().get(1).upperEndpoint() < currentTime) {
       currentPlan.removeOldSteps();
     }
     
@@ -162,21 +152,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     if (!roadModel.get().containsObject(this)) {
       
-      final boolean refreshSuccess;
-      if (currentTime == nextRefreshTime) {
-        // refresh, if refresh is not success then explore (by setting the
-        // nextExplorationTime as currentTime)
-        refreshSuccess = refresh(currentTime);
-        if (!refreshSuccess) {
-          nextExplorationTime = currentTime;
-        }
-      } else {
-        refreshSuccess = true;
-      }
-      
+      startTime = checkPoints.getFirst().getExpectedTime();
+
       if (currentTime == nextExplorationTime) {
         final long startTimeOfExploration = timeLapse.getEndTime();
-        boolean changePlan = explore(Range.atLeast(startTimeOfExploration), origin, setting.getNumOfAlterRoutes(), false, refreshSuccess);
+        boolean changePlan = explore(Range.atLeast(startTimeOfExploration), origin, setting.getNumOfAlterRoutes(), false);
         nextExplorationTime = currentTime + setting.getExplorationDuration();
         if (changePlan) {
           startTime = checkPoints.getFirst().getExpectedTime();
@@ -185,56 +165,35 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         }
       }
 
+      if (currentTime == nextRefreshTime) {
+        refresh(currentTime);
+      }
       return;
     }
     
-    // the current position of the agv
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
-    // if the agv is freezing
-    if (isFreezing) {
-      // if the agv is at a node then freeze it
-      if (currentPos.equals(checkPoints.getFirst().getPoint())
-          && checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
-        if (!currentPlan.isPlanForFreezingAGV()) {
-          final List<Point> currentPath = currentPlan.getPath();
-          final List<Range<Long>> currentIntervals = currentPlan.getIntervals();
-          
-          // compute the new intervals for freezing agv
-          final LinkedList<Range<Long>> newIntervals = new LinkedList<>();
-          for (Range<Long> interval : currentIntervals) {
-            final long start = interval.lowerEndpoint() + setting.getExpectedFreezingDuration();
-            final long end = interval.upperEndpoint() + setting.getExpectedFreezingDuration();
-            if (newIntervals.isEmpty()) {
-              newIntervals.addLast(Range.open(currentTime, end));
-            } else {
-              newIntervals.addLast(Range.open(start, end));
-            }
-          }
-          currentPlan = new Plan(currentPath, newIntervals, true);
-          virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
-          nextRefreshTime = currentTime + setting.getRefreshDuration();
-        } else {
-          if (currentTime == nextRefreshTime) {
-            virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
-            nextRefreshTime = currentTime + setting.getRefreshDuration();
-          }
-        }
-        return;
+    if (agvID == 5 && currentTime > 5000 && currentTime < 30000) {
+      isFreezing = true;
+    } else {
+      if (isFreezing) {
+        isFreezing = false;
+        propagatedDelay = false;
+        nextExplorationTime = currentTime;
       }
     }
     
-    final boolean refreshSuccess;
-    if (currentTime == nextRefreshTime) {
-      // refresh, if refresh is not success then explore (by setting the
-      // nextExplorationTime as currentTime)
-      refreshSuccess = refresh(currentTime);
-      if (!refreshSuccess) {
-        nextExplorationTime = currentTime;
+    if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+      if (!propagatedDelay) {
+        virtualEnvironment.propagateDelay(agvID, currentTime);
+        propagatedDelay = true;
+      } else {
+        if (currentTime == nextRefreshTime) {
+          refresh(currentTime);
+        }
       }
-    } else {
-      refreshSuccess = true;
+      return;
     }
     
     if (currentTime == nextExplorationTime) {
@@ -242,19 +201,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       isGoingToExplore = true;
     }
     
-    // if explore
-    if (isGoingToExplore
-        && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+    // if explore, only explore at checkpoint
+    if (isGoingToExplore && roundedPos.equals(checkPoints.getFirst().getPoint())) {
       // get the next check point
       final CheckPoint nextCheckPoint = checkPoints.getFirst();
       // get the next point of the path, we will explore from this point
       final Point startPoint = path.peek();
-      if (startPoint.equals(nextCheckPoint.getPoint())) {
+      if (startPoint.equals(roundedPos)) {
         // if the next check point is a node, then just explore
-        System.out.println(agvID);
-        boolean changePlan = explore(
-            Range.closed(currentTime, nextCheckPoint.getExpectedTime()),
-            startPoint, setting.getNumOfAlterRoutes(), true, refreshSuccess);
+        boolean changePlan = explore(Range.closed(currentTime, nextCheckPoint.getExpectedTime()), startPoint, setting.getNumOfAlterRoutes(), true);
         isGoingToExplore = false;
         if (changePlan) {
           virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
@@ -268,6 +223,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         // if the check point is on an edge, then start explore from the end
         // node of that edge
         final Point lastNode = currentPlan.getPath().get(0);
+        // the last node and edge interval before exploration
         final Range<Long> nodeInterval = currentPlan.getIntervals().get(0);
         final Range<Long> edgeInterval = currentPlan.getIntervals().get(1);
         final long timeToEnterNodeFromEdgeCheckPoint = (long) ((setting
@@ -278,8 +234,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             + timeToEnterNodeFromEdgeCheckPoint;
         boolean changePlan = explore(
             Range.closed(earliestStartTime, latestStartTime),
-            checkPoints.get(1).getPoint(), setting.getNumOfAlterRoutes(), true,
-            refreshSuccess);
+            checkPoints.get(1).getPoint(), setting.getNumOfAlterRoutes(), true);
         isGoingToExplore = false;
         if (changePlan) {
           // if the AGV change the plan, add the check point on the edge to
@@ -288,11 +243,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           final long currentCheckPointTime = currentPlan.getIntervals().get(0)
               .lowerEndpoint()
               - ((long) (0.1 * 1000 / setting.getVehicleSpeed()));
-
           checkPoints.addFirst(new CheckPoint(nextCheckPoint.getPoint(),
               currentCheckPointTime, nextCheckPoint.getResource(),
               nextCheckPoint.getResourceType()));
-          
           // add two last plan step before exploration to the plan. Note that
           // the interval of the edge may change
           final long timeToLeaveEdgeFromCheckPoint = (long) ((setting
@@ -300,12 +253,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           currentPlan.addLastNode(lastNode, nodeInterval,
               Range.open(edgeInterval.lowerEndpoint(),
                   currentCheckPointTime + timeToLeaveEdgeFromCheckPoint));
-          
           virtualEnvironment.makeReservation(agvID, currentPlan, currentTime,
               currentTime + setting.getEvaporationDuration());
           nextRefreshTime = currentTime + setting.getRefreshDuration();
         }
       }
+    }
+
+    if (currentTime == nextRefreshTime) {
+      refresh(currentTime);
     }
 
     // IDEA: check the position. If right before it leaves an edge or a node,
@@ -340,6 +296,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     if (roadModel.get().getPosition(this).equals(destination)) {
+      this.hasCompleted = true;
       result.updateResult(startTime, timeLapse.getTime());
       sim.unregister(this);
     }
@@ -356,34 +313,53 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    * @param startNode the start node
    * @param numberOfRoutes the number of routes
    * @param started the started
-   * @param refreshSuccess true if the last refresh is successful
    * @return true, if change the current plan
    */
-  public boolean explore(Range<Long> startTime, Point startNode, int numberOfRoutes,
-      boolean started, boolean refreshSuccess) {
+  public boolean explore(Range<Long> startTime, Point startNode, int numberOfRoutes, boolean started) {
     List<Point> dest = new ArrayList<>();
     dest.add(destination);
-    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode,
-        dest, numberOfRoutes, started);
-
+    Plan plan = virtualEnvironment.exploreRoute(agvID, startTime, startNode, dest, numberOfRoutes, started);
+    
     if (started && plan == null) {
       return false;
     }
-
-    if (!refreshSuccess || expectedArrivalTime - plan.getArrivalTime() > setting
-        .getSwitchingThreshold()) {
+    
+    final long expectedArrivalTime = currentPlan.getArrivalTime();
+    
+    if (expectedArrivalTime - plan.getArrivalTime() > setting.getSwitchingThreshold()) {
       executablePlan = new ExecutablePlan(plan, setting);
       currentPlan = plan;
       path = new LinkedList<>(executablePlan.getPath());
       checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-      expectedArrivalTime = plan.getArrivalTime();
-      // virtualEnvironment.makeReservation(agvID, plan, startTime, startTime +
-      // setting.getEvaporationDuration());
-      // nextRefreshTime = startTime + setting.getRefreshDuration();
       return true;
     } else {
       return false;
     }
+  }
+  
+  public Plan getCurrentPlan() {
+    return currentPlan;
+  }
+  
+  public void notifyDelay(Plan newPlan, long currentTime) {
+    currentPlan = newPlan;
+    executablePlan = new ExecutablePlan(currentPlan, setting);
+    checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
+    
+    while (checkPoints.getFirst().getExpectedTime() < currentTime) {
+      checkPoints.removeFirst();
+    }
+    
+    refresh(currentTime);
+    nextExplorationTime = currentTime;
+  }
+  
+  public boolean hasCompleted() {
+    return hasCompleted;
+  }
+  
+  public int getID() {
+    return agvID;
   }
   
   /**
@@ -391,35 +367,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    *
    * @param currentTime the current time
    */
-  public boolean refresh(long currentTime) {
-    final boolean success = virtualEnvironment.refreshReservation(agvID,
-        currentPlan, currentTime,
+  public void refresh(long currentTime) {
+    virtualEnvironment.makeReservation(agvID, currentPlan, currentTime,
         currentTime + setting.getEvaporationDuration());
     nextRefreshTime = currentTime + setting.getRefreshDuration();
-    return success;
-  }
-  
-  /**
-   * Gets the number of agvs on an edge, exclusive
-   *
-   * @param from the from
-   * @param to the to
-   * @return the num of ag vs on edge
-   */
-  public int getNumOfAGVsOnEdge(Point from, Point to) {
-    final Set<RoadUser> agvsOnEdge = roadModel.get().getRoadUsersOn(from, to);
-    
-    int numAGVsOnEdge = agvsOnEdge.size();
-    
-    if (roadModel.get().getRoadUsersOnNode(from).size() != 0) {
-      numAGVsOnEdge--;
-    }
-    
-    if (roadModel.get().getRoadUsersOnNode(to).size() != 0) {
-      numAGVsOnEdge--;
-    }
-    
-    return numAGVsOnEdge;
   }
 
   @Override

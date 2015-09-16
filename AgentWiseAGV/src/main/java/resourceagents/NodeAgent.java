@@ -230,4 +230,8 @@ public class NodeAgent implements ResourceAgent {
     }
     return delayedAGV;
   }
+  
+  public void removeAllReservations() {
+    reservations.clear();
+  }
 }

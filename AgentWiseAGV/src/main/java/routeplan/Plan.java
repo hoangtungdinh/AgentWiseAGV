@@ -28,6 +28,7 @@ public class Plan {
    * @param path the path
    * @param intervals the intervals
    */
+  // TODO remove the parameter isPlanForFreezingAGV
   public Plan(List<Point> path, List<Range<Long>> intervals,
       boolean isPlanForFreezingAGV) {
     this.path = new LinkedList<>(path);

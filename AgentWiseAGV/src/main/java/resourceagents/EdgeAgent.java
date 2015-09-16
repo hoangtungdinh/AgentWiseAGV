@@ -476,4 +476,9 @@ public class EdgeAgent implements ResourceAgent {
     }
     return delayedAGV;
   }
+  
+  public void removeAllReservations() {
+    reservationMap.get(node1).clear();
+    reservationMap.get(node2).clear();
+  }
 }
