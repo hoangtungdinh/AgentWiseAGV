@@ -137,6 +137,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     startTime = checkPoints.getFirst().getExpectedTime();
     virtualEnvironment.makeReservation(agvID, plan, currentTime, currentTime + setting.getEvaporationDuration());
     nextExplorationTime = currentTime + setting.getExplorationDuration();
+    isGoingToExplore = false;
     nextRefreshTime = currentTime + setting.getRefreshDuration();
   }
 
@@ -357,7 +358,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       }
       
       refresh(currentTime);
-      nextExplorationTime = currentTime;
+      nextExplorationTime = currentTime + 100;
     }
   }
   
