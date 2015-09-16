@@ -110,7 +110,7 @@ public class Setting {
     private long switchingThreshold = 8000;
     private int numOfAlterRoutes = 10;
     private int numOfDestsForEachAGV = 3;
-    private long expectedFreezingDuration = 1000000000;
+    private long expectedFreezingDuration = 30000;
     
     public SettingBuilder() {
 
