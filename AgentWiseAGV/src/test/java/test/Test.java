@@ -7,7 +7,7 @@ public class Test {
 
   public static void main(String[] args) {
     final Setting setting = new Setting.SettingBuilder()
-        .setNumOfAGVs(10).setSeed(6876384).build();
+        .setNumOfAGVs(10).setSeed(8828422).build();
     final singlestage.delegatemas.AGVSystem agvSystem = new AGVSystem(setting, true);
     agvSystem.run();
   }

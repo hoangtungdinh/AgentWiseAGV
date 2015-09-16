@@ -279,17 +279,10 @@ public class VirtualEnvironment implements TickListener {
         continue;
       }
       
-      final long timeToReplan;
-      if (agv.getID() < agvID) {
-        timeToReplan = currentTime + 100;
-      } else {
-        timeToReplan = currentTime;
-      }
-      
       // first we detect the current plan step
       final Plan currentPlan = agv.getCurrentPlan();
       final List<Range<Long>> reservedIntervals = currentPlan.getIntervals();
-      final int idxOfCurrentResv = getIndexOfCurrentResv(reservedIntervals, timeToReplan);
+      final int idxOfCurrentResv = getIndexOfCurrentResv(reservedIntervals, currentTime);
       final LinkedList<Range<Long>> newReservations = new LinkedList<>();
       
       // add all reservations until the reservation at current time
@@ -315,7 +308,7 @@ public class VirtualEnvironment implements TickListener {
       final Plan newPlan = new Plan(currentPlan.getPath(), newReservations, false);
       
       // notify the agv about the new plan
-      agv.notifyDelay(newPlan, timeToReplan);
+      agv.notifyDelay(newPlan, currentTime);
     }
   }
   
@@ -329,6 +322,7 @@ public class VirtualEnvironment implements TickListener {
           // when currentTime is in two consecutive intervals, mean that the agv
           // is on two resources (edges, node or node, edges). In this case, we
           // only consider the second resource.
+          // the second condition mean that when the agv is exactly at the node and then is going to move to edge
           return index + 1;
         } else {
           return index;

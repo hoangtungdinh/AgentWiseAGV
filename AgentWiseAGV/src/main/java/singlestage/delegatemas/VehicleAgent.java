@@ -82,6 +82,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private boolean propagatedDelay;
   
+  private boolean planAgain;
+  
   /**
    * Instantiates a new vehicle agent.
    *
@@ -108,6 +110,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.isGoingToExplore = false;
     this.hasCompleted = false;
     this.propagatedDelay = false;
+    this.planAgain = false;
   }
 
   @Override
@@ -120,26 +123,32 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     return setting.getVehicleSpeed();
   }
 
-  void nextDestination(long startTime) {
+  void nextDestination(long currentTime) {
     List<Point> dest = new ArrayList<>();
     dest.add(destination);
 
-    Plan plan = virtualEnvironment.exploreRoute(agvID, Range.atLeast(startTime), origin, dest,
+    Plan plan = virtualEnvironment.exploreRoute(agvID, Range.atLeast(currentTime), origin, dest,
         setting.getNumOfAlterRoutes(), false);
     
     executablePlan = new ExecutablePlan(plan, setting);
     currentPlan = plan;
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-    virtualEnvironment.makeReservation(agvID, plan, startTime, startTime + setting.getEvaporationDuration());
-    nextExplorationTime = startTime + setting.getExplorationDuration();
-    nextRefreshTime = startTime + setting.getRefreshDuration();
+    startTime = checkPoints.getFirst().getExpectedTime();
+    virtualEnvironment.makeReservation(agvID, plan, currentTime, currentTime + setting.getEvaporationDuration());
+    nextExplorationTime = currentTime + setting.getExplorationDuration();
+    nextRefreshTime = currentTime + setting.getRefreshDuration();
   }
 
   @Override
   public void tick(TimeLapse timeLapse) {
     
     final long currentTime = timeLapse.getStartTime();
+    
+    if (planAgain) {
+      nextDestination(currentTime);
+      planAgain = false;
+    }
     
     if (currentPlan != null && currentPlan.getIntervals().size() > 1
         && currentPlan.getIntervals().get(1).upperEndpoint() < currentTime) {
@@ -185,14 +194,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint())) {
-      if (!propagatedDelay) {
-        virtualEnvironment.propagateDelay(agvID, currentTime);
-        propagatedDelay = true;
-      } else {
-        if (currentTime == nextRefreshTime) {
-          refresh(currentTime);
-        }
-      }
       return;
     }
     
@@ -344,7 +345,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   public void notifyDelay(Plan newPlan, long currentTime) {
     if (currentTime < startTime) {
       // case when the agv hasn't entered the map
-      nextDestination(currentTime);
+      planAgain = true;
     } else {
       // case when the agv entered the map
       currentPlan = newPlan;
@@ -380,6 +381,26 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   }
 
   @Override
-  public void afterTick(TimeLapse timeLapse) {}
+  public void afterTick(TimeLapse timeLapse) {
+    if (!roadModel.get().containsObject(this)) {
+      return;
+    }
+    
+    final Point currentPos = roadModel.get().getPosition(this);
+    final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
+    
+    final long currentTime = timeLapse.getEndTime();
+    
+    if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+      if (!propagatedDelay) {
+        virtualEnvironment.propagateDelay(agvID, currentTime);
+        propagatedDelay = true;
+      } else {
+        if (currentTime == nextRefreshTime) {
+          refresh(currentTime);
+        }
+      }
+    }
+  }
 
 }
