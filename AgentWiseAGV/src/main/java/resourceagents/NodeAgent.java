@@ -234,4 +234,23 @@ public class NodeAgent implements ResourceAgent {
   public void removeAllReservations() {
     reservations.clear();
   }
+  
+  public List<Reservation> getReservations() {
+    return reservations;
+  }
+  
+  /**
+   * Removes the reservations of several AGVs.
+   *
+   * @param agvList the agv list
+   */
+  public void removeReservationsOf(List<Integer> agvList) {
+    Iterator<Reservation> iter = reservations.iterator();
+    while (iter.hasNext()) {
+      Reservation reservation = iter.next();
+      if (agvList.contains(reservation.getAgvID())) {
+        iter.remove();
+      }
+    }
+  }
 }

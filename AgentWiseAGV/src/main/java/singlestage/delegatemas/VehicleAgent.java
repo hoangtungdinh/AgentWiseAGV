@@ -184,13 +184,27 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
-    if (agvID == 5 && currentTime > 5000 && currentTime < 30000) {
-      isFreezing = true;
-    } else {
-      if (isFreezing) {
-        isFreezing = false;
-        propagatedDelay = false;
-        nextExplorationTime = currentTime;
+    if (agvID == 5) {
+      if (currentTime > 5000 && currentTime < 100000) {
+        isFreezing = true;
+      } else {
+        if (isFreezing) {
+          isFreezing = false;
+          propagatedDelay = false;
+          nextExplorationTime = currentTime;
+        }
+      }
+    }
+    
+    if (agvID == 7) {
+      if (currentTime > 20000 && currentTime < 110000) {
+        isFreezing = true;
+      } else {
+        if (isFreezing) {
+          isFreezing = false;
+          propagatedDelay = false;
+          nextExplorationTime = currentTime;
+        }
       }
     }
     
@@ -359,6 +373,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       
       refresh(currentTime);
       nextExplorationTime = currentTime + 100;
+      isGoingToExplore = false;
     }
   }
   

@@ -68,4 +68,10 @@ public class NodeAgentList {
       nodeAgent.removeAllReservations();
     }
   }
+  
+  public void removeReservationsOf(List<Integer> agvList) {
+    for (NodeAgent nodeAgent : nodeAgentList) {
+      nodeAgent.removeReservationsOf(agvList);
+    }
+  }
 }

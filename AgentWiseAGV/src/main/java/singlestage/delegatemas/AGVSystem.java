@@ -45,7 +45,7 @@ public final class AGVSystem {
       View.Builder viewBuilder = View.builder()
 //          .withAutoPlay()
           .withSpeedUp(setting.getSpeedUp())
-          .withAutoClose()
+//          .withAutoClose()
           .with(WarehouseRenderer.builder()
               .withMargin(setting.getVehicleLength())
               .withNodes()

@@ -481,4 +481,26 @@ public class EdgeAgent implements ResourceAgent {
     reservationMap.get(node1).clear();
     reservationMap.get(node2).clear();
   }
+  
+  public List<Reservation> getReservations(Point startPoint) {
+    return reservationMap.get(startPoint);
+  }
+  
+  /**
+   * Removes the reservations of several AGVs.
+   *
+   * @param agvList the agv list
+   */
+  public void removeReservationsOf(List<Integer> agvList) {
+    for (Map.Entry<Point, List<Reservation>> entry : reservationMap.entrySet()) {
+      List<Reservation> reservationList = entry.getValue();
+      Iterator<Reservation> iter = reservationList.iterator();
+      while (iter.hasNext()) {
+        Reservation reservation = iter.next();
+        if (agvList.contains(reservation.getAgvID())) {
+          iter.remove();
+        }
+      }
+    }
+  }
 }

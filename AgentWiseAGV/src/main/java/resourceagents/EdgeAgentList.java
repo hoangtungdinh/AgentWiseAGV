@@ -78,4 +78,10 @@ public class EdgeAgentList {
       edgeAgent.removeAllReservations();
     }
   }
+  
+  public void removeReservationsOf(List<Integer> agvList) {
+    for (EdgeAgent edgeAgent : edgeAgentList) {
+      edgeAgent.removeReservationsOf(agvList);
+    }
+  }
 }

@@ -1,5 +1,6 @@
 package singlestage.delegatemas;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,6 +22,7 @@ import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
+import resourceagents.Reservation;
 import routeplan.Plan;
 import routeplan.delegatemas.PlanFTW;
 import routeplan.delegatemas.PlanStep;
@@ -268,12 +270,15 @@ public class VirtualEnvironment implements TickListener {
    * @param currentPlan the current plan
    */
   public void propagateDelay(int agvID, long currentTime) {
-    // first remove all reservation
-    nodeAgentList.removeAllReservations();
-    edgeAgentList.removeAllReservations();
+    
+    final List<Integer> affectedAGVs = getAffectedAGVs(agvID, currentTime);
+    nodeAgentList.removeReservationsOf(affectedAGVs);
+    edgeAgentList.removeReservationsOf(affectedAGVs);
     
     // we will modify the plan of all agvs when one is delayed
-    for (VehicleAgent agv : agvList) {
+    for (Integer affectedAGV : affectedAGVs) {
+      final VehicleAgent agv = agvList.get(affectedAGV);
+      
       // if the agv has reached the destination then ignore
       if (agv.hasCompleted()) {
         continue;
@@ -335,6 +340,64 @@ public class VirtualEnvironment implements TickListener {
     // this line can happen when the agvs have not entered the map yet. In multi
     // stage, it should be removed and we should throw an exception here.
     return 0;
+  }
+  
+  /**
+   * Gets all the affected agvs.
+   *
+   * @param agvID the agv id
+   * @param currentTime the current time
+   * @return the affected ag vs
+   */
+  public List<Integer> getAffectedAGVs(int agvID, long currentTime) {
+    final LinkedList<Integer> affectedAGVs = new LinkedList<>();
+    final List<Integer> investigatedAGVs = new ArrayList<>();
+    
+    affectedAGVs.add(agvID);
+    
+    while (!affectedAGVs.isEmpty()) {
+
+      final int currentAGV = affectedAGVs.removeFirst();
+      
+      if (investigatedAGVs.contains(currentAGV)) {
+        continue;
+      } else {
+        investigatedAGVs.add(currentAGV);
+      }
+      
+      final List<Point> path = agvList.get(currentAGV).getCurrentPlan().getPath();
+      final List<Range<Long>> intervals = agvList.get(currentAGV).getCurrentPlan()
+          .getIntervals();
+
+      final int currentIndex = getIndexOfCurrentResv(intervals, currentTime);
+
+      for (int i = currentIndex; i < intervals.size(); i++) {
+        final List<Reservation> reservations;
+        
+        if (i % 2 == 0) {
+          // node
+          final NodeAgent nodeAgent = nodeAgentList
+              .getNodeAgent(path.get(i / 2));
+          reservations = nodeAgent.getReservations();
+        } else {
+          // edge
+          final EdgeAgent edgeAgent = edgeAgentList
+              .getEdgeAgent(path.get(i / 2), path.get(i / 2 + 1));
+          reservations = edgeAgent.getReservations(path.get(i / 2));
+        }
+        
+        final Range<Long> delayedInterval = intervals.get(i);
+        final long startTimeOfDelayedInterval = delayedInterval.lowerEndpoint();
+
+        for (Reservation resv : reservations) {
+          if (resv.getInterval().lowerEndpoint() > startTimeOfDelayedInterval) {
+            affectedAGVs.add(resv.getAgvID());
+          }
+        }
+      }
+    }
+    
+    return investigatedAGVs;
   }
   
   @Override

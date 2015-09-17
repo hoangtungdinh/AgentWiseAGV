@@ -127,18 +127,27 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       }
     }
     
-    if ((agvID == 4 || agvID == 5 || agvID == 6) && timeLapse.getStartTime() < 50000) {
+    if (!roadModel.get().containsObject(this)) {
       return;
     }
     
-    if (!roadModel.get().containsObject(this)) {
+    final Point currentPos = roadModel.get().getPosition(this);
+    final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
+    
+    if (agvID == 5 && timeLapse.getStartTime() < 100000
+        && timeLapse.getStartTime() > 5000
+        && checkPoints.getFirst().getPoint().equals(roundedPos)) {
+      return;
+    }
+    
+    if (agvID == 7 && timeLapse.getStartTime() < 110000
+        && timeLapse.getStartTime() > 20000
+        && checkPoints.getFirst().getPoint().equals(roundedPos)) {
       return;
     }
     
     // IDEA: check the position. If right before it leaves an edge or a node,
     // it still have to wait, then consume time
-    Point currentPos = roadModel.get().getPosition(this);
-    Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     if (!checkPoints.isEmpty()
         && roundedPos.equals(checkPoints.getFirst().getPoint())) {
       // if the AGV is at exactly the check point
