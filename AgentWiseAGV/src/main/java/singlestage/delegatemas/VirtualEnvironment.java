@@ -299,14 +299,14 @@ public class VirtualEnvironment implements TickListener {
       final Range<Long> currentReservation = reservedIntervals.get(idxOfCurrentResv);
       final long newLowerEndPoint = currentReservation.lowerEndpoint();
       final long newUpperEndPoint = currentReservation.upperEndpoint() + setting.getExpectedFreezingDuration();
-      newReservations.addLast(Range.open(newLowerEndPoint, newUpperEndPoint));
+      newReservations.addLast(Range.closed(newLowerEndPoint, newUpperEndPoint));
       
       // modify the reservation of all future reservations
       for (int i = idxOfCurrentResv + 1; i < reservedIntervals.size(); i++) {
         final Range<Long> oldReservation = reservedIntervals.get(i);
         final long updatedLowerEndPoint = oldReservation.lowerEndpoint() + setting.getExpectedFreezingDuration();
         final long updatedUpperEndPoint = oldReservation.upperEndpoint() + setting.getExpectedFreezingDuration();
-        newReservations.addLast(Range.open(updatedLowerEndPoint, updatedUpperEndPoint));
+        newReservations.addLast(Range.closed(updatedLowerEndPoint, updatedUpperEndPoint));
       }
       
       // create new plan for the agv

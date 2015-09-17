@@ -267,7 +267,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           final long timeToLeaveEdgeFromCheckPoint = (long) ((setting
               .getVehicleLength() + 0.1) * 1000 / setting.getVehicleSpeed());
           currentPlan.addLastNode(lastNode, nodeInterval,
-              Range.open(edgeInterval.lowerEndpoint(),
+              Range.closed(edgeInterval.lowerEndpoint(),
                   currentCheckPointTime + timeToLeaveEdgeFromCheckPoint));
           virtualEnvironment.makeReservation(agvID, currentPlan, currentTime,
               currentTime + setting.getEvaporationDuration());
