@@ -23,13 +23,20 @@ public class PathSampling {
   @SuppressWarnings("unchecked")
   public List<Path> getFeasiblePaths(Point origin, List<Point> destinations,
       int numOfPaths) {
+    
+    final List<Path> paths = new ArrayList<>();
+    
+    if (destinations.size() == 1 && origin.equals(destinations.get(0))) {
+      List<Point> theOnlyPath = new ArrayList<>();
+      theOnlyPath.add(origin);
+      paths.add(new Path(theOnlyPath));
+      return paths;
+    }
+    
     // a clone graph
-    ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
+    final ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
     
-    List<Path> paths = new ArrayList<>();
-    double w = -1;
-    
-    for (int i = 0; i < numOfPaths; i++) {
+    while (paths.size() < numOfPaths) {
       List<Point> candidatePath = new ArrayList<>();
 
       for (int dest = 0; dest < destinations.size(); dest++) {
@@ -46,14 +53,13 @@ public class PathSampling {
         }
       }
 
-      paths.add(new Path(candidatePath));
+      final Path newPath = new Path(candidatePath);
       
-      if (w == -1) {
-//        w = 2 * Graphs.pathLength(candidatePath);
-        w = 2 * 8;
+      if (!paths.contains(newPath)) {
+        paths.add(newPath);
       }
       
-      final double deltaW = Math.pow(0.5, i) * w;
+      final double deltaW = 8;
       
       for (int pathIndex = 0; pathIndex < candidatePath.size()
           - 1; pathIndex++) {

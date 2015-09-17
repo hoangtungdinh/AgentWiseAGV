@@ -39,4 +39,20 @@ public class Path {
   public List<Point> getPath() {
     return path;
   }
+  
+  @Override
+  public boolean equals(Object other) {
+    if (other == null) {
+      return false;
+    }
+    if (other == this) {
+      return true;
+    }
+    // allows comparison with subclasses
+    if (!(other instanceof Path)) {
+      return false;
+    }
+    final Path otherPath = (Path) other;
+    return this.path.equals(otherPath.getPath());
+  }
 }
