@@ -18,6 +18,7 @@ import com.google.common.collect.Range;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
+import routeplan.ResourceType;
 import setting.Setting;
 import singlestage.destinationgenerator.OriginDestination;
 import singlestage.result.Result;
@@ -222,20 +223,19 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       // get the next check point
       final CheckPoint nextCheckPoint = checkPoints.getFirst();
       // get the next point of the path, we will explore from this point
-      final Point startPoint = path.peek();
-      if (startPoint.equals(roundedPos)) {
+      if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
         // if the next check point is a node, then just explore
-        boolean changePlan = explore(Range.closed(currentTime, nextCheckPoint.getExpectedTime()), startPoint, setting.getNumOfAlterRoutes(), true);
+        boolean changePlan = explore(Range.closed(currentTime, nextCheckPoint.getExpectedTime()), roundedPos, setting.getNumOfAlterRoutes(), true);
         isGoingToExplore = false;
         if (changePlan) {
           virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, currentTime + setting.getEvaporationDuration());
           nextRefreshTime = currentTime + setting.getRefreshDuration();
         }
       } else {
-        if (!startPoint.equals(checkPoints.get(1).getPoint())) {
-          // this one cannot happen
-          throw new Error("Some problems here!");
-        }
+//        if (!startPoint.equals(checkPoints.get(1).getPoint())) {
+//          // this one cannot happen
+//          throw new IllegalStateException("Some problems here");
+//        }
         // if the check point is on an edge, then start explore from the end
         // node of that edge
         final Point lastNode = currentPlan.getPath().get(0);
@@ -295,9 +295,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         } else if (timeDifference == timeLapse.getTimeLeft()) {
           timeLapse.consume(timeDifference);
           checkPoints.removeFirst();
-          if (currentPos.x % 1 == 0 && currentPos.y % 1 == 0) {
-            path.remove();
-          }
         } else {
           // time difference is larger than time left
           timeLapse.consumeAll();
@@ -412,7 +409,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         virtualEnvironment.propagateDelay(agvID, currentTime);
         propagatedDelay = true;
       } else {
-        if (currentTime == nextRefreshTime) {
+        if (currentTime == nextRefreshTime - 100) {
           refresh(currentTime);
         }
       }

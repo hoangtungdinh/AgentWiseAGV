@@ -325,9 +325,19 @@ public class VirtualEnvironment implements TickListener {
       if (interval.contains(currentTime)) {
         if (reservedIntervals.get(index + 1).contains(currentTime)) {
           // when currentTime is in two consecutive intervals, mean that the agv
-          // is on two resources (edges, node or node, edges). In this case, we
-          // only consider the second resource.
-          // the second condition mean that when the agv is exactly at the node and then is going to move to edge
+          // is on two resources (edges, node or node, edges).
+          
+          // first, we consider the case that the agv is at exactly a node and
+          // is going to move to edge, then the current time is of the interval
+          // at a node and is also the start time of the next interval
+          if (index % 2 == 0 && reservedIntervals.get(index + 1).lowerEndpoint() == currentTime) {
+            // the first condition says that the index is of a node, the second
+            // condition is about the start time of edge
+            // in this case, we return index, mean that the interval of the node
+            return index;
+          }
+          
+          // for all other case, we only consider the interval of the second resource
           return index + 1;
         } else {
           return index;
