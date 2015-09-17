@@ -134,7 +134,7 @@ public class EdgeAgent implements ResourceAgent {
       // leaves the edge and enter the node that the current AGV is staying. It
       // is impossible since if the current AGV can stay at the current node, no
       // other AGV can enter this node during that time.
-      throw new Error("More than one entry window for edge!");
+      throw new IllegalStateException("More than one entry window for edge!");
     }
     
     Range<Long> optimisticEntryWindow = entryWindows.span();
@@ -147,9 +147,34 @@ public class EdgeAgent implements ResourceAgent {
     List<Reservation> overlappingReservations = new ArrayList<>();
     for (Reservation resv : reservationsFromSameDirection) {
       if (resv.getInterval().contains(startTime) && resv.getAgvID() != agvID) {
-        overlappingReservations.add(resv);
+        // if there are two overlapping reservations with the same start points,
+        // then remove the one with lower lifeTime (it is an invalid reservation)
+        boolean detectInvalidReservation = false;
+        
+        for (Reservation addedResv : overlappingReservations) {
+          final long addedResvStartTime = addedResv.getInterval().lowerEndpoint();
+          final long resvStartTime = resv.getInterval().lowerEndpoint();
+          if (addedResvStartTime == resvStartTime) {
+            detectInvalidReservation = true;
+            
+            if (addedResv.getLifeTime() > resv.getLifeTime()) {
+              break;
+            } else if (addedResv.getLifeTime() == resv.getLifeTime()) {
+              throw new IllegalStateException("It cannot happen");
+            } else {
+              overlappingReservations.remove(addedResv);
+              overlappingReservations.add(resv);
+              break;
+            }
+          }
+        }
+        
+        if (!detectInvalidReservation) {
+          overlappingReservations.add(resv);
+        }
       }
     }
+    
     
     // if the edge is already full, we have to calculate the start time
     // note that, because the capacity of the node is only 1, it means that
@@ -320,6 +345,7 @@ public class EdgeAgent implements ResourceAgent {
   public void addReservation(Point startPoint, Range<Long> interval,
       long lifeTime, int agvID) {
     // remove all old reservations
+    // TODO remove invalid reservation here
     for (Map.Entry<Point, List<Reservation>> entry : reservationMap.entrySet()) {
       List<Reservation> reservationList = entry.getValue();
       Iterator<Reservation> iter = reservationList.iterator();
