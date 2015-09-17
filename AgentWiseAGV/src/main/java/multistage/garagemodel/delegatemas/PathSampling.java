@@ -37,10 +37,21 @@ public class PathSampling {
     // a clone graph
     final ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
     
-    // if origin is the entrace to the garage
+    // if origin is the entrance of the garage
     if (destinations.size() == 1) {
       final List<Point> theOnlyPath = Graphs.shortestPathEuclideanDistance(graph,
           origin, destinations.get(0));
+      if (theOnlyPath.size() == 2) {
+        paths.add(new Path(theOnlyPath));
+        return paths;
+      }
+    }
+    
+    // if the origin is the entrance of the garage and the last destination
+    // (beside the garage) is also the entrance of the garage
+    if (destinations.size() == 2 && origin.equals(destinations.get(0))) {
+      final List<Point> theOnlyPath = Graphs.shortestPathEuclideanDistance(graph,
+          origin, destinations.get(1));
       if (theOnlyPath.size() == 2) {
         paths.add(new Path(theOnlyPath));
         return paths;
