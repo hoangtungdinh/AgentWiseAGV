@@ -3,6 +3,8 @@ package singlestage.delegatemas;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.random.RandomGenerator;
+
 import com.github.rinde.rinsim.geom.Graph;
 import com.github.rinde.rinsim.geom.Graphs;
 import com.github.rinde.rinsim.geom.LengthData;
@@ -16,13 +18,18 @@ public class PathSampling {
   
   private Setting setting;
   
-  public PathSampling(Setting setting) {
+  private RandomGenerator randomGenerator;
+  
+  public PathSampling(Setting setting, RandomGenerator randomGenerator) {
     this.setting = setting;
+    this.randomGenerator = randomGenerator;
   }
   
   @SuppressWarnings("unchecked")
   public List<Path> getFeasiblePaths(Point origin, List<Point> destinations,
       int numOfPaths) {
+    
+    final double threshold = randomGenerator.nextDouble();
     
     final List<Path> paths = new ArrayList<>();
     
@@ -36,7 +43,10 @@ public class PathSampling {
     // a clone graph
     final ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
     
-    while (paths.size() < numOfPaths) {
+    int count = 0;
+    
+    while (paths.size() < numOfPaths && count < 1000) {
+      count++;
       List<Point> candidatePath = new ArrayList<>();
 
       for (int dest = 0; dest < destinations.size(); dest++) {
@@ -59,17 +69,19 @@ public class PathSampling {
         paths.add(newPath);
       }
       
-      final double deltaW = 8;
+      final double deltaW = 1000;
       
       for (int pathIndex = 0; pathIndex < candidatePath.size()
           - 1; pathIndex++) {
-        final double currentLength = graph
-            .getConnection(candidatePath.get(pathIndex),
-                candidatePath.get(pathIndex + 1))
-            .getLength();
-        ((Graph<LengthData>) graph).setConnectionData(
-            candidatePath.get(pathIndex), candidatePath.get(pathIndex + 1),
-            LengthData.create(currentLength + deltaW));
+        if (randomGenerator.nextDouble() < threshold) {
+          final double currentLength = graph
+              .getConnection(candidatePath.get(pathIndex),
+                  candidatePath.get(pathIndex + 1))
+              .getLength();
+          ((Graph<LengthData>) graph).setConnectionData(
+              candidatePath.get(pathIndex), candidatePath.get(pathIndex + 1),
+              LengthData.create(currentLength + deltaW));
+        }
       }
     }
     

@@ -57,7 +57,7 @@ public class VirtualEnvironment implements TickListener {
     this.setting = setting;
     nodeAgentList = new NodeAgentList(roadModel, setting);
     edgeAgentList = new EdgeAgentList(roadModel, setting);
-    this.pathSampling = new PathSampling(setting);
+    this.pathSampling = new PathSampling(setting, randomGenerator);
   }
   
   /**
