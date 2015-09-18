@@ -303,8 +303,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             // if is currently at a node
             final long timeToLeaveNodeFromCheckPoint = (long) (setting
                 .getVehicleLength()* 1000 / setting.getVehicleSpeed());
-            final Range<Long> newFirstInterval = Range.closed(
-                currentPlan.getIntervals().get(0).lowerEndpoint(),
+            final Range<Long> newFirstInterval = Range.closed(currentTime,
                 currentTime + timeToLeaveNodeFromCheckPoint);
             final long newLowerEndPoint = currentTime;
             final long newUpperEndPoint = currentPlan.getIntervals().get(1)
