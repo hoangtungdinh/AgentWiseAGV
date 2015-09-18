@@ -1,13 +1,16 @@
 package singlestage.delegatemas;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 
+import experiment.Experiment;
 import setting.Setting;
 import singlestage.result.Result;
 import singlestage.result.Sample;
@@ -18,11 +21,20 @@ public class ExperimentDMasSingle {
     LinkedList<Long> seeds = new LinkedList<>();
     
     try {
-      Scanner fileScanner = new Scanner(new File("src/main/resources/seeds.txt"));
-      while (fileScanner.hasNextLine()) {
-        seeds.add(fileScanner.nextLong());
+      InputStream inputStream = Experiment.class
+          .getResourceAsStream("seeds.txt");
+      BufferedReader bufferedReader = new BufferedReader(
+          new InputStreamReader(inputStream));
+      
+      String line = bufferedReader.readLine();
+      
+      while(line != null && !line.isEmpty()) {
+        long seed = Long.parseLong(line);
+        seeds.add(seed);
+        line = bufferedReader.readLine();
       }
-      fileScanner.close();
+      
+      bufferedReader.close();
       
       List<Sample> samples = new ArrayList<>();
       
@@ -41,7 +53,7 @@ public class ExperimentDMasSingle {
       }
       
       print(samples);
-    } catch (FileNotFoundException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
     System.out.println("DONE!");

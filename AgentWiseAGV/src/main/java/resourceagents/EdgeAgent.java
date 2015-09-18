@@ -147,31 +147,7 @@ public class EdgeAgent implements ResourceAgent {
     List<Reservation> overlappingReservations = new ArrayList<>();
     for (Reservation resv : reservationsFromSameDirection) {
       if (resv.getInterval().contains(startTime) && resv.getAgvID() != agvID) {
-        // if there are two overlapping reservations with the same start points,
-        // then remove the one with lower lifeTime (it is an invalid reservation)
-        boolean detectInvalidReservation = false;
-        
-        for (Reservation addedResv : overlappingReservations) {
-          final long addedResvStartTime = addedResv.getInterval().lowerEndpoint();
-          final long resvStartTime = resv.getInterval().lowerEndpoint();
-          if (addedResvStartTime == resvStartTime) {
-            detectInvalidReservation = true;
-            
-            if (addedResv.getLifeTime() > resv.getLifeTime()) {
-              break;
-            } else if (addedResv.getLifeTime() == resv.getLifeTime()) {
-              throw new IllegalStateException("It cannot happen");
-            } else {
-              overlappingReservations.remove(addedResv);
-              overlappingReservations.add(resv);
-              break;
-            }
-          }
-        }
-        
-        if (!detectInvalidReservation) {
-          overlappingReservations.add(resv);
-        }
+        overlappingReservations.add(resv);
       }
     }
     
@@ -345,15 +321,26 @@ public class EdgeAgent implements ResourceAgent {
   public void addReservation(Point startPoint, Range<Long> interval,
       long lifeTime, int agvID) {
     // remove all old reservations
-    // TODO remove invalid reservation here
-    for (Map.Entry<Point, List<Reservation>> entry : reservationMap.entrySet()) {
+    for (Map.Entry<Point, List<Reservation>> entry : reservationMap
+        .entrySet()) {
       List<Reservation> reservationList = entry.getValue();
       Iterator<Reservation> iter = reservationList.iterator();
       while (iter.hasNext()) {
         Reservation reservation = iter.next();
         if (reservation.getAgvID() == agvID
             && reservation.getLifeTime() != lifeTime) {
+          // The condition mean that we remove the old reservation of the
+          // agvID at this resource
           iter.remove();
+        } else {
+          final long currentStartTime = interval.lowerEndpoint();
+          final long existingStartTime = reservation.getInterval().lowerEndpoint();
+          if (currentStartTime == existingStartTime) {
+            // the condition mean that we detect an invalid reservation
+            // (due to intention changing) of another agv and remove that
+            // reservation
+            iter.remove();
+          }
         }
       }
     }

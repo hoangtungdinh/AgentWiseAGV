@@ -36,7 +36,12 @@ public class PathSampling {
     // a clone graph
     final ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
     
-    while (paths.size() < numOfPaths) {
+    // sometimes, we cannot find enough number of different path. If after 1000
+    // runs we still cannot found enough number of paths then return
+    int count = 0;
+    
+    while (paths.size() < numOfPaths && count < 1000) {
+      count++;
       List<Point> candidatePath = new ArrayList<>();
 
       for (int dest = 0; dest < destinations.size(); dest++) {
@@ -72,6 +77,8 @@ public class PathSampling {
             LengthData.create(currentLength + deltaW));
       }
     }
+    
+//    System.out.println(paths.size());
     
     return paths;
   }

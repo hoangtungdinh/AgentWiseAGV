@@ -209,7 +209,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       }
     }
     
-    if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+    if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint()) && propagatedDelay) {
       return;
     }
     
