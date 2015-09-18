@@ -167,7 +167,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     if (!roadModel.get().containsObject(this)) {
       
       startTime = checkPoints.getFirst().getExpectedTime();
-
+      
       if (currentTime == nextExplorationTime) {
         final long startTimeOfExploration = timeLapse.getEndTime();
         boolean changePlan = explore(Range.atLeast(startTimeOfExploration), origin, setting.getNumOfAlterRoutes(), false);
@@ -182,6 +182,22 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (currentTime == nextRefreshTime) {
         refresh(currentTime);
       }
+      
+      if (noHigherPriorityAGVs(startTime,
+          checkPoints.getFirst().getResource()) && nextResourceIsFree(checkPoints.getFirst())) {
+        final long newLowerEndPoint = currentTime;
+        final long newUpperEndPoint = currentPlan.getIntervals().get(0)
+            .upperEndpoint();
+        final Range<Long> newInterval = Range.closed(newLowerEndPoint,
+            newUpperEndPoint);
+        currentPlan.modifyFirstInterval(newInterval);
+        virtualEnvironment.modifyReservation(agvID,
+            checkPoints.getFirst().getResource(), newInterval);
+        startTime = currentTime;
+        roadModel.get().addObjectAt(this, origin);
+        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+      }
+      
       return;
     }
     
@@ -437,7 +453,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   }
   
   /**
-   * Checks if there is no higher priority agvs that have not entered the resource (count from the timePoint)
+   * Checks if there is no higher priority agvs that have not entered the resource (count from the timePoint downward)
    *
    * @param timePoint the time point
    * @param resource the resource
