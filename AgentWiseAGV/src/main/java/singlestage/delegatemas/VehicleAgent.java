@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.MovingRoadUser;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadUser;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
@@ -153,7 +155,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     if (currentPlan != null && currentPlan.getIntervals().size() > 1
-        && currentPlan.getIntervals().get(1).upperEndpoint() < currentTime) {
+        && currentPlan.getIntervals().get(1).upperEndpoint() <= currentTime) {
       currentPlan.removeOldSteps();
     }
     
@@ -295,11 +297,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       
       if (currentTime < checkPoints.getFirst().getExpectedTime()) {
         if (noHigherPriorityAGVs(checkPoints.getFirst().getExpectedTime(),
-            checkPoints.get(1).getResource())) {
+            checkPoints.get(1).getResource()) && nextResourceIsFree(checkPoints.get(1))) {
           // TODO modifyReservation (of the next resource)
           if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
             // if is currently at a node
-            final Range<Long> newFirstInterval = Range.closed(-1L, 0L);
+            final long timeToLeaveNodeFromCheckPoint = (long) (setting
+                .getVehicleLength()* 1000 / setting.getVehicleSpeed());
+            final Range<Long> newFirstInterval = Range.closed(
+                currentPlan.getIntervals().get(0).lowerEndpoint(),
+                currentTime + timeToLeaveNodeFromCheckPoint);
             final long newLowerEndPoint = currentTime;
             final long newUpperEndPoint = currentPlan.getIntervals().get(1)
                 .upperEndpoint();
@@ -441,6 +447,42 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   public boolean noHigherPriorityAGVs(long timePoint, List<Point> resource) {
     return virtualEnvironment
         .getListOfHigherPriorityAGVs(agvID, timePoint, resource).isEmpty();
+  }
+  
+  public boolean nextResourceIsFree(CheckPoint nextCheckPoint) {
+    if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
+      final Point nextNode = nextCheckPoint.getResource().get(0);
+      return !roadModel.get().isOccupied(nextNode);
+    } else {
+      if (getNumOfAGVsOnEdge(nextCheckPoint.getResource().get(0), nextCheckPoint.getResource().get(1)) < 2) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+  
+  /**
+   * Gets the number of agvs on an edge, exclusive
+   *
+   * @param from the from
+   * @param to the to
+   * @return the num of ag vs on edge
+   */
+  public int getNumOfAGVsOnEdge(Point from, Point to) {
+    final Set<RoadUser> agvsOnEdge = roadModel.get().getRoadUsersOn(from, to);
+    
+    int numAGVsOnEdge = agvsOnEdge.size();
+    
+    if (roadModel.get().getRoadUsersOnNode(from).size() != 0) {
+      numAGVsOnEdge--;
+    }
+    
+    if (roadModel.get().getRoadUsersOnNode(to).size() != 0) {
+      numAGVsOnEdge--;
+    }
+    
+    return numAGVsOnEdge;
   }
 
   @Override

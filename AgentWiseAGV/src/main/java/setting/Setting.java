@@ -108,7 +108,7 @@ public class Setting {
     private long refreshDuration = 8000;
     private long explorationDuration = 8000;
     private long switchingThreshold = 0;
-    private int numOfAlterRoutes = 20;
+    private int numOfAlterRoutes = 10;
     private int numOfDestsForEachAGV = 3;
     private long expectedFreezingDuration = 9999999999L;
     
