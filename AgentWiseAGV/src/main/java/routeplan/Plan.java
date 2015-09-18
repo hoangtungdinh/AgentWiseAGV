@@ -89,4 +89,16 @@ public class Plan {
   public boolean isPlanForFreezingAGV() {
     return isPlanForFreezingAGV;
   }
+  
+  public void modifyFirstInterval(Range<Long> newFirstInterval) {
+    intervals.removeFirst();
+    intervals.addFirst(newFirstInterval);
+  }
+  
+  public void modifyFirstAndSecondIntervals(Range<Long> newFirstInterval, Range<Long> newSecondInterval) {
+    intervals.removeFirst();
+    intervals.removeFirst();
+    intervals.addFirst(newSecondInterval);
+    intervals.addFirst(newFirstInterval);
+  }
 }

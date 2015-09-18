@@ -87,4 +87,8 @@ public class Reservation {
   public void setVisited() {
     this.hasVisited = true;
   }
+  
+  public void setNewInterval(Range<Long> newInterval) {
+    this.interval = newInterval;
+  }
 }

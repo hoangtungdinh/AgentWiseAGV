@@ -351,6 +351,31 @@ public class EdgeAgent implements ResourceAgent {
   }
   
   /**
+   * Modify a reservation of agvID. Note that we only change the startTime of
+   * the reservation, so the endTime is always still the same
+   *
+   * @param agvID the agv id
+   * @param startPoint the start point
+   * @param interval the interval
+   */
+  public void modifyReservation(int agvID, Point startPoint, Range<Long> interval) {
+    final long startTime = interval.lowerEndpoint();
+    final long endTime = interval.upperEndpoint();
+    
+    final List<Reservation> reservations = reservationMap.get(startPoint);
+    
+    for (Reservation reservation : reservations) {
+      final long existingEndTime = reservation.getInterval().upperEndpoint();
+      if (reservation.getAgvID() == agvID
+          && existingEndTime == endTime) {
+        final Range<Long> newInterval = Range.open(startTime, endTime);
+        reservation.setNewInterval(newInterval);
+        return;
+      }
+    }
+  }
+  
+  /**
    * Refresh reservation.
    *
    * @param startPoint the start point

@@ -23,7 +23,9 @@ import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
 import resourceagents.Reservation;
+import routeplan.CheckPoint;
 import routeplan.Plan;
+import routeplan.ResourceType;
 import routeplan.delegatemas.PlanFTW;
 import routeplan.delegatemas.PlanStep;
 import setting.Setting;
@@ -408,6 +410,57 @@ public class VirtualEnvironment implements TickListener {
     }
     
     return investigatedAGVs;
+  }
+  
+  /**
+   * set a plan step (a reservation) as visited.
+   *
+   * @param agvID the agv id
+   * @param nextCheckPoint the next check point
+   */
+  public void setVisited(int agvID, CheckPoint nextCheckPoint) {
+    final List<Point> resource = nextCheckPoint.getResource();
+    if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
+      // if the resource is a node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      nodeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime());
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      edgeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime(), resource.get(0));
+    }
+  }
+  
+  /**
+   * Gets the list of higher priority agvs that have not entered the resource (count from the startTime)
+   *
+   * @param agvID the agv id
+   * @param startTime the start time according to the plan of the 'agvID'
+   * @param resource the resource
+   * @return the list of delayed agvs
+   */
+  public List<Integer> getListOfHigherPriorityAGVs(int agvID, long startTime, List<Point> resource) {
+    if (resource.size() == 1) {
+      // if the resource is a node 
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      return nodeAgent.getListOfDelayedAGVs(agvID, startTime);
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      return edgeAgent.getListOfDelayedAGVs(agvID, startTime, resource.get(0));
+    }
+  }
+  
+  public void modifyReservation(int agvID, List<Point> resource, Range<Long> interval) {
+    if (resource.size() == 1) {
+      // if the resource is a node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      nodeAgent.modifyReservation(agvID, interval);
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      edgeAgent.modifyReservation(agvID, resource.get(0), interval);
+    }
   }
   
   @Override

@@ -28,6 +28,7 @@ import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
 import routeplan.CheckPoint;
 import routeplan.Plan;
+import routeplan.ResourceType;
 import routeplan.contextaware.PlanFTW;
 import routeplan.contextaware.PlanStep;
 import setting.Setting;
@@ -401,7 +402,7 @@ public class VirtualEnvironment implements TickListener {
    */
   public void setVisited(int agvID, CheckPoint nextCheckPoint) {
     final List<Point> resource = nextCheckPoint.getResource();
-    if (resource.size() == 1) {
+    if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
       // if the resource is a node
       final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
       nodeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime());
