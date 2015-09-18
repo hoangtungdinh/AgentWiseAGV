@@ -63,7 +63,7 @@ public class VirtualEnvironment implements TickListener {
     this.setting = setting;
     nodeAgentList = new NodeAgentList(roadModel, setting);
     edgeAgentList = new EdgeAgentList(roadModel, setting);
-    this.pathSampling = new PathSampling(setting);
+    this.pathSampling = new PathSampling(setting, randomGenerator);
     this.agvList = agvList;
   }
   
@@ -419,5 +419,8 @@ public class VirtualEnvironment implements TickListener {
   public void afterTick(TimeLapse timeLapse) {
     nodeAgentList.removeOutDatedReservation(timeLapse.getEndTime());
     edgeAgentList.removeOutdatedReservations(timeLapse.getEndTime());
+    if (timeLapse.getEndTime() > 500000) {
+      throw new IllegalStateException("Gridlock happens!!!");
+    }
   }
 }

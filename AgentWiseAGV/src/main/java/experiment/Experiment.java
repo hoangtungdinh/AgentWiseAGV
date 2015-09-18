@@ -1,23 +1,19 @@
 package experiment;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import multistage.result.Result;
 import setting.Setting;
+import singlestage.result.Result;
 
 public class Experiment {
 
@@ -46,8 +42,8 @@ public class Experiment {
       
       bufferedReader.close();
 
-      for (int numAGV = 1; numAGV <= 12; numAGV++) {
-        for (int i = 0; i < 10; i++) {
+      for (int numAGV = 1; numAGV <= 10; numAGV++) {
+        for (int i = 0; i < 100; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
@@ -57,7 +53,7 @@ public class Experiment {
       
       executor.shutdown();
       
-      print(futures);
+//      print(futures);
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -66,25 +62,25 @@ public class Experiment {
     System.out.println("DONE!");
   }
   
-  public static void print(List<ListenableFuture<Result>> futures) {
-    try {
-      PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsMultiDMAS.txt"));
-      printWriterMS.println("numAGVs\tFinishedTask");
-      for (ListenableFuture<Result> result : futures) {
-        try {
-          printWriterMS.println(result.get().getSetting().getNumOfAGVs() + "\t"
-              + result.get().getNumOfReachedDestinations());
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (ExecutionException e) {
-          e.printStackTrace();
-        }
-      }
-      printWriterMS.close();
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }
-  }
+//  public static void print(List<ListenableFuture<Result>> futures) {
+//    try {
+//      PrintWriter printWriterMS = new PrintWriter(
+//          new File("ResultsMultiDMAS.txt"));
+//      printWriterMS.println("numAGVs\tFinishedTask");
+//      for (ListenableFuture<Result> result : futures) {
+//        try {
+//          printWriterMS.println(result.get().getSetting().getNumOfAGVs() + "\t"
+//              + result.get().getNumOfReachedDestinations());
+//        } catch (InterruptedException e) {
+//          e.printStackTrace();
+//        } catch (ExecutionException e) {
+//          e.printStackTrace();
+//        }
+//      }
+//      printWriterMS.close();
+//    } catch (FileNotFoundException e) {
+//      e.printStackTrace();
+//    }
+//  }
 
 }
