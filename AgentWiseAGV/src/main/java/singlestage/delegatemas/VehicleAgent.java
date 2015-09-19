@@ -28,8 +28,6 @@ import singlestage.result.Result;
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
   
-  private List<VehicleAgent> agvList;
-  
   /** The road model. */
   private Optional<CollisionGraphRoadModel> roadModel;
   
@@ -117,7 +115,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.hasCompleted = false;
     this.propagatedDelay = false;
     this.planAgain = false;
-    this.agvList = agvList;
   }
 
   @Override
@@ -199,9 +196,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         startTime = currentTime;
         roadModel.get().addObjectAt(this, origin);
         virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
-      } else {
-        return;
       }
+      return;
     }
     
     final Point currentPos = roadModel.get().getPosition(this);
@@ -307,6 +303,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
         virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
         virtualEnvironment.setVisited(agvID, checkPoints.get(1));
+      } else {
+     // if the check point is at an edge, then announce that it has visited the
+        // node. It is to prevent that set visited becomes false again during
+        // refreshing
+        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
       }
       
       if (currentTime < checkPoints.getFirst().getExpectedTime()) {
