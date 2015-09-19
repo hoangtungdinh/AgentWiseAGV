@@ -80,10 +80,16 @@ public class Plan {
    * @param currentTime the current time
    * @param timeToLeaveEdge the time to leave edge
    */
+  // TODO remove this method after modifying multistage
   public void addLastNode(Point lastNode, Range<Long> nodeInterval, Range<Long> edgeInterval) {
     path.addFirst(lastNode);
     intervals.addFirst(edgeInterval);
     intervals.addFirst(nodeInterval);
+  }
+  
+  public void addPreviousEdgeStep(Point previousNode, Range<Long> edgeInterval) {
+    path.addFirst(previousNode);
+    intervals.addFirst(edgeInterval);
   }
 
   public boolean isPlanForFreezingAGV() {
@@ -100,5 +106,19 @@ public class Plan {
     intervals.removeFirst();
     intervals.addFirst(newSecondInterval);
     intervals.addFirst(newFirstInterval);
+  }
+  
+  /**
+   * Removes the first step of the plan
+   */
+  public void removeFirstStep() {
+    if (intervals.size() % 2 == 1) {
+      // if the first step is for a node
+      intervals.removeFirst();
+    } else {
+      // if the first step is for an edge
+      intervals.removeFirst();
+      path.removeFirst();
+    }
   }
 }

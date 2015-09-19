@@ -149,14 +149,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     final long currentTime = timeLapse.getStartTime();
     
+    if (!currentPlan.getIntervals().isEmpty() && currentTime >= currentPlan.getIntervals().get(0).upperEndpoint()) {
+      currentPlan.removeFirstStep();
+    }
+    
     if (planAgain) {
       nextDestination(currentTime);
       planAgain = false;
-    }
-    
-    if (currentPlan != null && currentPlan.getIntervals().size() > 1
-        && currentPlan.getIntervals().get(1).upperEndpoint() <= currentTime) {
-      currentPlan.removeOldSteps();
     }
     
     if (currentTime == startTime) {
@@ -251,16 +250,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           nextRefreshTime = currentTime + setting.getRefreshDuration();
         }
       } else {
-//        if (!startPoint.equals(checkPoints.get(1).getPoint())) {
-//          // this one cannot happen
-//          throw new IllegalStateException("Some problems here");
-//        }
         // if the check point is on an edge, then start explore from the end
         // node of that edge
         final Point lastNode = currentPlan.getPath().get(0);
         // the last node and edge interval before exploration
-        final Range<Long> nodeInterval = currentPlan.getIntervals().get(0);
-        final Range<Long> edgeInterval = currentPlan.getIntervals().get(1);
+        final Range<Long> edgeInterval = currentPlan.getIntervals().get(0);
         final long timeToEnterNodeFromEdgeCheckPoint = (long) ((setting
             .getVehicleLength() + 0.1) * 1000 / setting.getVehicleSpeed());
         final long earliestStartTime = currentTime
@@ -285,7 +279,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           // the interval of the edge may change
           final long timeToLeaveEdgeFromCheckPoint = (long) ((setting
               .getVehicleLength() + 0.1) * 1000 / setting.getVehicleSpeed());
-          currentPlan.addLastNode(lastNode, nodeInterval,
+          currentPlan.addPreviousEdgeStep(lastNode,
               Range.closed(edgeInterval.lowerEndpoint(),
                   currentCheckPointTime + timeToLeaveEdgeFromCheckPoint));
           virtualEnvironment.makeReservation(agvID, currentPlan, currentTime,
@@ -314,7 +308,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (currentTime < checkPoints.getFirst().getExpectedTime()) {
         if (noHigherPriorityAGVs(checkPoints.getFirst().getExpectedTime(),
             checkPoints.get(1).getResource()) && nextResourceIsFree(checkPoints.get(1))) {
-          // TODO modifyReservation (of the next resource)
+          // remove the first step of the plan
           if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
             // if is currently at a node
             final long timeToLeaveNodeFromCheckPoint = (long) (setting
@@ -329,18 +323,26 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             currentPlan.modifyFirstAndSecondIntervals(newFirstInterval,
                 newSecondInterval);
             virtualEnvironment.modifyReservation(agvID,
+                checkPoints.get(0).getResource(), newFirstInterval);
+            virtualEnvironment.modifyReservation(agvID,
                 checkPoints.get(1).getResource(), newSecondInterval);
           } else {
             // if is currently at an edge
-            currentPlan.removeOldSteps();
+            final long timeToLeaveEdgeFromCheckPoint = (long) ((setting
+                .getVehicleLength() + 0.1)* 1000 / setting.getVehicleSpeed());
+            final Range<Long> newFirstInterval = Range.closed(currentTime,
+                currentTime + timeToLeaveEdgeFromCheckPoint);
             final long newLowerEndPoint = currentTime;
-            final long newUpperEndPoint = currentPlan.getIntervals().get(0)
+            final long newUpperEndPoint = currentPlan.getIntervals().get(1)
                 .upperEndpoint();
-            final Range<Long> newInterval = Range.closed(newLowerEndPoint,
+            final Range<Long> newSecondInterval = Range.closed(newLowerEndPoint,
                 newUpperEndPoint);
-            currentPlan.modifyFirstInterval(newInterval);
+            currentPlan.modifyFirstAndSecondIntervals(newFirstInterval,
+                newSecondInterval);
             virtualEnvironment.modifyReservation(agvID,
-                checkPoints.get(1).getResource(), newInterval);
+                checkPoints.get(0).getResource(), newFirstInterval);
+            virtualEnvironment.modifyReservation(agvID,
+                checkPoints.get(1).getResource(), newSecondInterval);
           }
           checkPoints.removeFirst();
         } else {

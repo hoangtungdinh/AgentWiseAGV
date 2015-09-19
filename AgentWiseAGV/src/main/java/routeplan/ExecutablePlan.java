@@ -1,6 +1,7 @@
 package routeplan;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.github.rinde.rinsim.geom.Point;
@@ -19,7 +20,7 @@ public class ExecutablePlan {
   private List<Point> path;
   
   /** The intervals. */
-  private List<Range<Long>> intervals;
+  private LinkedList<Range<Long>> intervals;
   
   /** The check points. */
   private List<CheckPoint> checkPoints;
@@ -34,7 +35,7 @@ public class ExecutablePlan {
    */
   public ExecutablePlan(Plan plan, Setting setting) {
     this.path = plan.getPath();
-    this.intervals = plan.getIntervals();
+    this.intervals = new LinkedList<>(plan.getIntervals());
     this.checkPoints = new ArrayList<>();
     this.setting = setting;
     calculateCheckPoints();
@@ -48,11 +49,15 @@ public class ExecutablePlan {
     final long timeLeftToLeaveNode = (long) (setting.getVehicleLength() *1000 / setting.getVehicleSpeed());
     final long timeLeftToLeaveEdge = (long) (safeDistance*1000 / setting.getVehicleSpeed());
     
-    final List<Point> firstResource = new ArrayList<>();
-    firstResource.add(path.get(0));
-    checkPoints.add(new CheckPoint(path.get(0),
-        intervals.get(0).upperEndpoint() - timeLeftToLeaveNode, firstResource,
-        ResourceType.NODE));
+    // if start from a node, then add the first node check point
+    if (intervals.size() % 2 == 1) {
+      final List<Point> firstResource = new ArrayList<>();
+      firstResource.add(path.get(0));
+      checkPoints.add(new CheckPoint(path.get(0),
+          intervals.getFirst().upperEndpoint() - timeLeftToLeaveNode, firstResource,
+          ResourceType.NODE));
+      intervals.removeFirst();
+    }
     
     CheckPoint newCheckPoint;
     
@@ -82,10 +87,10 @@ public class ExecutablePlan {
         
         if (moveLeft) {
           final Point p = new Point(path.get(i + 1).x + safeDistance, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
+          newCheckPoint = new CheckPoint(p, intervals.getFirst().upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         } else {
           final Point p = new Point(path.get(i + 1).x - safeDistance, path.get(i).y);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
+          newCheckPoint = new CheckPoint(p, intervals.getFirst().upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         }
       } else {
         // if move vertically check if move up or move down
@@ -98,22 +103,27 @@ public class ExecutablePlan {
         
         if (moveUp) {
           final Point p = new Point(path.get(i).x, path.get(i + 1).y + safeDistance);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
+          newCheckPoint = new CheckPoint(p, intervals.getFirst().upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         } else {
           final Point p = new Point(path.get(i).x, path.get(i + 1).y - safeDistance);
-          newCheckPoint = new CheckPoint(p, intervals.get(i*2 + 1).upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
+          newCheckPoint = new CheckPoint(p, intervals.getFirst().upperEndpoint() - timeLeftToLeaveEdge, edgeResource, ResourceType.EDGE);
         }
       }
       
       // add the new check point of the edge
       checkPoints.add(newCheckPoint);
+      intervals.removeFirst();
       
       // add the check point of the node, which is the node itself
-      final List<Point> nodeResource = new ArrayList<>();
-      nodeResource.add(path.get(i + 1));
-      checkPoints.add(new CheckPoint(path.get(i + 1),
-          intervals.get(i * 2 + 2).upperEndpoint() - timeLeftToLeaveNode,
-          nodeResource, ResourceType.NODE));
+      // note that the plan always ends at a node, and that node does not have a check point
+      if (!intervals.isEmpty()) {
+        final List<Point> nodeResource = new ArrayList<>();
+        nodeResource.add(path.get(i + 1));
+        checkPoints.add(new CheckPoint(path.get(i + 1),
+            intervals.getFirst().upperEndpoint() - timeLeftToLeaveNode,
+            nodeResource, ResourceType.NODE));
+        intervals.removeFirst();
+      }
     }
   }
 

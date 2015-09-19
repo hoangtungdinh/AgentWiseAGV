@@ -209,24 +209,34 @@ public class VirtualEnvironment implements TickListener {
    */
   public void makeReservation(int agvID, Plan plan, long currentTime, long lifeTime) {
     List<Point> path = plan.getPath();
-    List<Range<Long>> intervals = plan.getIntervals();
+    LinkedList<Range<Long>> intervals = new LinkedList<>(plan.getIntervals());
+    
+    if (intervals.size() % 2 == 1) {
+      // if the plan start from a node
+      if (intervals.getFirst().upperEndpoint() > currentTime) {
+        // if the interval is not out-dated
+        final NodeAgent firstNodeAgent = nodeAgentList
+            .getNodeAgent(path.get(0));
+        firstNodeAgent.addReservation(agvID, lifeTime, intervals.get(0));
+      }
+      intervals.removeFirst();
+    }
+    
     for (int i = 0; i < path.size() - 1; i++) {
-      if (intervals.get(i * 2 + 1).upperEndpoint() < currentTime) {
+      if (intervals.get(1).upperEndpoint() < currentTime) {
         continue;
       }
       
-      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i));
-      nodeAgent.addReservation(agvID, lifeTime, intervals.get(i * 2));
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(path.get(i),
           path.get(i + 1));
-      edgeAgent.addReservation(path.get(i), intervals.get(i * 2 + 1), lifeTime,
+      edgeAgent.addReservation(path.get(i), intervals.getFirst(), lifeTime,
           agvID);
+      intervals.removeFirst();
+      
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i + 1));
+      nodeAgent.addReservation(agvID, lifeTime, intervals.getFirst());
+      intervals.removeFirst();
     }
-    
-    final NodeAgent lastNodeAgent = nodeAgentList
-        .getNodeAgent(path.get(path.size() - 1));
-    lastNodeAgent.addReservation(agvID, lifeTime,
-        intervals.get(intervals.size() - 1));
   }
   
   public long computeCost(PlanFTW plan) {
@@ -325,16 +335,20 @@ public class VirtualEnvironment implements TickListener {
     for (Range<Long> interval : reservedIntervals) {
       // detect the first reservation that contains currentTime
       if (interval.contains(currentTime)) {
-        if (reservedIntervals.get(index + 1).contains(currentTime)) {
+        if (reservedIntervals.size() > index + 1 && reservedIntervals.get(index + 1).contains(currentTime)) {
           // when currentTime is in two consecutive intervals, mean that the agv
           // is on two resources (edges, node or node, edges).
           
           // first, we consider the case that the agv is at exactly a node and
           // is going to move to edge, then the current time is of the interval
           // at a node and is also the start time of the next interval
-          if (index % 2 == 0 && reservedIntervals.get(index + 1).lowerEndpoint() == currentTime) {
-            // the first condition says that the index is of a node, the second
-            // condition is about the start time of edge
+          if ((index + reservedIntervals.size()) % 2 == 1 && reservedIntervals
+              .get(index + 1).lowerEndpoint() == currentTime) {
+            // the first condition says that the index is of a node. If the
+            // reservedIntervals starts from a node, then size is odd and index
+            // is even. If the reservedIntervals start from an edge, then size
+            // is even and index is odd. The second condition is about the start
+            // time of edge
             // in this case, we return index, mean that the interval of the node
             return index;
           }
