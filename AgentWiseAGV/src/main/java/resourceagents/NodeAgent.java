@@ -9,6 +9,7 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
+import routeplan.RangeEndPoint;
 import setting.Setting;
 
 /**
@@ -150,17 +151,29 @@ public class NodeAgent implements ResourceAgent {
    * @param agvID the agv id
    * @param interval the interval
    */
-  public void modifyReservation(int agvID, Range<Long> interval) {
+  public void modifyReservation(int agvID, Range<Long> interval, RangeEndPoint modifiedEndPoint) {
     final long startTime = interval.lowerEndpoint();
     final long endTime = interval.upperEndpoint();
     
     for (Reservation reservation : reservations) {
-      final long existingEndTime = reservation.getInterval().upperEndpoint();
-      if (reservation.getAgvID() == agvID
-          && existingEndTime == endTime) {
-        final Range<Long> newInterval = Range.open(startTime, endTime);
-        reservation.setNewInterval(newInterval);
-        return;
+      if (modifiedEndPoint == RangeEndPoint.LOWER) {
+        // if we modify the lower end point, then we check if the upper end points are similar
+        final long existingEndTime = reservation.getInterval().upperEndpoint();
+        if (reservation.getAgvID() == agvID
+            && existingEndTime == endTime) {
+          final Range<Long> newInterval = Range.open(startTime, endTime);
+          reservation.setNewInterval(newInterval);
+          return;
+        }
+      } else {
+        // if we modify the upper end point, then we check if the lower end points are similar
+        final long existingStartTime = reservation.getInterval().lowerEndpoint();
+        if (reservation.getAgvID() == agvID
+            && existingStartTime == startTime) {
+          final Range<Long> newInterval = Range.open(startTime, endTime);
+          reservation.setNewInterval(newInterval);
+          return;
+        }
       }
     }
   }
@@ -271,6 +284,16 @@ public class NodeAgent implements ResourceAgent {
     while (iter.hasNext()) {
       Reservation reservation = iter.next();
       if (agvList.contains(reservation.getAgvID())) {
+        iter.remove();
+      }
+    }
+  }
+  
+  public void removeReservationOfOneAGV(int agvID) {
+    Iterator<Reservation> iter = reservations.iterator();
+    while (iter.hasNext()) {
+      Reservation reservation = iter.next();
+      if (reservation.getAgvID() == agvID) {
         iter.remove();
       }
     }

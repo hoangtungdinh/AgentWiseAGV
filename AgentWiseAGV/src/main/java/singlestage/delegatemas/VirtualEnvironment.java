@@ -25,6 +25,7 @@ import resourceagents.NodeAgentList;
 import resourceagents.Reservation;
 import routeplan.CheckPoint;
 import routeplan.Plan;
+import routeplan.RangeEndPoint;
 import routeplan.ResourceType;
 import routeplan.delegatemas.PlanFTW;
 import routeplan.delegatemas.PlanStep;
@@ -465,15 +466,35 @@ public class VirtualEnvironment implements TickListener {
     }
   }
   
-  public void modifyReservation(int agvID, List<Point> resource, Range<Long> interval) {
+  public void modifyReservation(int agvID, List<Point> resource, Range<Long> interval, RangeEndPoint modifiedEndPoint) {
     if (resource.size() == 1) {
       // if the resource is a node
       final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
-      nodeAgent.modifyReservation(agvID, interval);
+      nodeAgent.modifyReservation(agvID, interval, modifiedEndPoint);
     } else {
       // if the resource is an edge
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
-      edgeAgent.modifyReservation(agvID, resource.get(0), interval);
+      edgeAgent.modifyReservation(agvID, resource.get(0), interval, modifiedEndPoint);
+    }
+  }
+  
+  
+  
+  /**
+   * Removes all the reservations of agvID at resource
+   *
+   * @param agvID the agv id
+   * @param resource the resource
+   */
+  public void removeReservations(int agvID, List<Point> resource) {
+    if (resource.size() == 1) {
+      // if the resource is a node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      nodeAgent.removeReservationOfOneAGV(agvID);
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      edgeAgent.removeReservationOfOneAGV(agvID);
     }
   }
   

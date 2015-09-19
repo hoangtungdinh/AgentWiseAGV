@@ -20,12 +20,15 @@ import com.google.common.collect.Range;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
+import routeplan.RangeEndPoint;
 import routeplan.ResourceType;
 import setting.Setting;
 import singlestage.destinationgenerator.OriginDestination;
 import singlestage.result.Result;
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
+  
+  private List<VehicleAgent> agvList;
   
   /** The road model. */
   private Optional<CollisionGraphRoadModel> roadModel;
@@ -98,7 +101,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    * @param result the result
    */
   public VehicleAgent(OriginDestination originDestination, VirtualEnvironment virtualEnvironment,
-      int agvID, Simulator sim, Setting setting, Result result) {
+      int agvID, Simulator sim, Setting setting, Result result, List<VehicleAgent> agvList) {
     roadModel = Optional.absent();
     path = new LinkedList<>();
     this.origin = originDestination.getOrigin();
@@ -114,6 +117,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.hasCompleted = false;
     this.propagatedDelay = false;
     this.planAgain = false;
+    this.agvList = agvList;
   }
 
   @Override
@@ -149,7 +153,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     final long currentTime = timeLapse.getStartTime();
     
-    if (!currentPlan.getIntervals().isEmpty() && currentTime >= currentPlan.getIntervals().get(0).upperEndpoint()) {
+    if (!currentPlan.getIntervals().isEmpty() && timeLapse.getEndTime() >= currentPlan.getIntervals().get(0).upperEndpoint()) {
       currentPlan.removeFirstStep();
     }
     
@@ -191,13 +195,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             newUpperEndPoint);
         currentPlan.modifyFirstInterval(newInterval);
         virtualEnvironment.modifyReservation(agvID,
-            checkPoints.getFirst().getResource(), newInterval);
+            checkPoints.getFirst().getResource(), newInterval, RangeEndPoint.LOWER);
         startTime = currentTime;
         roadModel.get().addObjectAt(this, origin);
         virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+      } else {
+        return;
       }
-      
-      return;
     }
     
     final Point currentPos = roadModel.get().getPosition(this);
@@ -313,7 +317,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             // if is currently at a node
             final long timeToLeaveNodeFromCheckPoint = (long) (setting
                 .getVehicleLength()* 1000 / setting.getVehicleSpeed());
-            final Range<Long> newFirstInterval = Range.closed(currentTime,
+            final Range<Long> newFirstInterval = Range.closed(currentPlan.getIntervals().get(0).lowerEndpoint(),
                 currentTime + timeToLeaveNodeFromCheckPoint);
             final long newLowerEndPoint = currentTime;
             final long newUpperEndPoint = currentPlan.getIntervals().get(1)
@@ -323,16 +327,18 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             currentPlan.modifyFirstAndSecondIntervals(newFirstInterval,
                 newSecondInterval);
             virtualEnvironment.modifyReservation(agvID,
-                checkPoints.get(0).getResource(), newFirstInterval);
+                checkPoints.get(0).getResource(), newFirstInterval, RangeEndPoint.UPPER);
             virtualEnvironment.modifyReservation(agvID,
-                checkPoints.get(1).getResource(), newSecondInterval);
+                checkPoints.get(1).getResource(), newSecondInterval, RangeEndPoint.LOWER);
           } else {
             // if is currently at an edge
             final long timeToLeaveEdgeFromCheckPoint = (long) ((setting
                 .getVehicleLength() + 0.1)* 1000 / setting.getVehicleSpeed());
-            final Range<Long> newFirstInterval = Range.closed(currentTime,
+            final Range<Long> newFirstInterval = Range.closed(currentPlan.getIntervals().get(0).lowerEndpoint(),
                 currentTime + timeToLeaveEdgeFromCheckPoint);
-            final long newLowerEndPoint = currentTime;
+            
+            final long timeLeftToEnterNodeFromEdgeCheckPoint = (long) (0.1 * 1000 / setting.getVehicleSpeed());
+            final long newLowerEndPoint = currentTime + timeLeftToEnterNodeFromEdgeCheckPoint;
             final long newUpperEndPoint = currentPlan.getIntervals().get(1)
                 .upperEndpoint();
             final Range<Long> newSecondInterval = Range.closed(newLowerEndPoint,
@@ -340,9 +346,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             currentPlan.modifyFirstAndSecondIntervals(newFirstInterval,
                 newSecondInterval);
             virtualEnvironment.modifyReservation(agvID,
-                checkPoints.get(0).getResource(), newFirstInterval);
+                checkPoints.get(0).getResource(), newFirstInterval, RangeEndPoint.UPPER);
             virtualEnvironment.modifyReservation(agvID,
-                checkPoints.get(1).getResource(), newSecondInterval);
+                checkPoints.get(1).getResource(), newSecondInterval, RangeEndPoint.LOWER);
           }
           checkPoints.removeFirst();
         } else {
@@ -369,9 +375,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     if (roadModel.get().getPosition(this).equals(destination)) {
-      virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+//      virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
       this.hasCompleted = true;
       result.updateResult(startTime, timeLapse.getTime());
+      virtualEnvironment.modifyReservation(agvID,
+          checkPoints.getFirst().getResource(), Range.closed(currentPlan.getIntervals().get(0).lowerEndpoint(), currentTime), RangeEndPoint.UPPER);
       sim.unregister(this);
     }
   }
