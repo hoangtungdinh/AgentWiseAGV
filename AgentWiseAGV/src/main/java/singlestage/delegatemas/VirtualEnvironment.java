@@ -478,8 +478,6 @@ public class VirtualEnvironment implements TickListener {
     }
   }
   
-  
-  
   /**
    * Removes all the reservations of agvID at resource
    *

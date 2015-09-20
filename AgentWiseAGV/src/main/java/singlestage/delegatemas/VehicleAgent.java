@@ -154,6 +154,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       currentPlan.removeFirstStep();
     }
     
+    // this code is only executed when the agv hasn't entered the map
     if (planAgain) {
       nextDestination(currentTime);
       planAgain = false;
@@ -304,9 +305,9 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
         virtualEnvironment.setVisited(agvID, checkPoints.get(1));
       } else {
-     // if the check point is at an edge, then announce that it has visited the
-        // node. It is to prevent that set visited becomes false again during
-        // refreshing
+        // if the check point is at an edge, then announce that it has visited
+        // the edge. It is to prevent that set visited becomes false again
+        // during refreshing
         virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
       }
       
@@ -446,10 +447,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   public boolean hasCompleted() {
     return hasCompleted;
-  }
-  
-  public int getID() {
-    return agvID;
   }
   
   /**

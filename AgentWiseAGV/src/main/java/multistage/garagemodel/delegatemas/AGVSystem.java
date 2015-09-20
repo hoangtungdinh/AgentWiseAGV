@@ -1,5 +1,6 @@
 package multistage.garagemodel.delegatemas;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.measure.unit.SI;
@@ -93,8 +94,10 @@ public final class AGVSystem {
           "Cannot get the road model from the simulator");
     }
     
+    final List<VehicleAgent> agvList = new ArrayList<>();
+    
     VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel,
-        sim.getRandomGenerator(), setting);
+        sim.getRandomGenerator(), setting, agvList);
     sim.addTickListener(virtualEnvironment);
     
     List<Point> garageList = graph.getGarages();
@@ -116,6 +119,7 @@ public final class AGVSystem {
       final VehicleAgent vehicleAgent = new VehicleAgent(destinations, virtualEnvironment, i,
           garageList, setting, result);
       sim.register(vehicleAgent);
+      agvList.add(vehicleAgent);
     }
 
     sim.start();
