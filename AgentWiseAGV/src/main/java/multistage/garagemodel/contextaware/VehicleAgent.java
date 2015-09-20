@@ -3,10 +3,12 @@ package multistage.garagemodel.contextaware;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
 import com.github.rinde.rinsim.core.model.road.MovingRoadUser;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadUser;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
@@ -18,6 +20,7 @@ import multistage.result.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
+import routeplan.ResourceType;
 import setting.Setting;
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
@@ -122,28 +125,80 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       nextDestination(timeLapse.getEndTime());
     }
     
+    final Point currentPos = roadModel.get().getPosition(this);
+    final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
+    
+    if (agvID == 5 && timeLapse.getStartTime() < 100000
+        && timeLapse.getStartTime() > 5000
+        && checkPoints.getFirst().getPoint().equals(roundedPos)) {
+      return;
+    }
+    
+    if (agvID == 7 && timeLapse.getStartTime() < 110000
+        && timeLapse.getStartTime() > 20000
+        && checkPoints.getFirst().getPoint().equals(roundedPos)) {
+      return;
+    }
+    
     if (state == State.ACTIVE) {
       // IDEA: check the position. If right before it leaves an edge or a node,
       // it still have to wait, then consume time
-      Point currentPos = roadModel.get().getPosition(this);
-      Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
       if (!checkPoints.isEmpty()
           && roundedPos.equals(checkPoints.getFirst().getPoint())) {
-        // System.out.println(roadModel.get().getPosition(this));
-        // sim.stop();
-        if (timeLapse.getStartTime() < checkPoints.getFirst()
-            .getExpectedTime()) {
+        // if the AGV is at exactly the check point
+
+        // if the check point is a node then announce to both the node and the
+        // next edge that it has visited
+        if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
+          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+          virtualEnvironment.setVisited(agvID, checkPoints.get(1));
+        }
+
+     // check if it is time to move according to the plan
+        if (timeLapse.getStartTime() < checkPoints.getFirst().getExpectedTime()) {
+          // if it hasn't been the start time yet
+          // the amount of time left to the start time
           final long timeDifference = checkPoints.getFirst().getExpectedTime()
               - timeLapse.getStartTime();
+          // if the amount of time left to the start time is smaller than or equal to the time left of this tick
           if (timeDifference <= timeLapse.getTimeLeft()) {
+            // consume the amount of time left to start time
             timeLapse.consume(timeDifference);
-            checkPoints.removeFirst();
+            if (isSafeToMove(false)) {
+              // if there is no higher priority delayed AGVs
+              checkPoints.removeFirst();
+            } else {
+              timeLapse.consumeAll();
+            }
           } else {
             // time difference is larger than time left
             timeLapse.consumeAll();
           }
         } else {
-          checkPoints.removeFirst();
+          // if the start time passed
+          if (isSafeToMove(false)) {
+            // if it is safe to move, mean that there is no delayed agv left
+            if (checkPoints.getFirst().getResourceType() == ResourceType.EDGE) {
+              // if the check point is an edge then move when next node is free
+              if (!roadModel.get().isOccupied(checkPoints.getFirst().getResource().get(1))) {
+                checkPoints.removeFirst();
+              } else {
+                timeLapse.consumeAll();
+              }
+            } else {
+              // if the check point is a node then move when the capacity of the next edge is not full
+              final CheckPoint checkPoint = checkPoints.get(1);
+              if (getNumOfAGVsOnEdge(checkPoint.getResource().get(0), checkPoint.getResource().get(1)) < 2) {
+                checkPoints.removeFirst();
+              } else {
+                timeLapse.consumeAll();
+              }
+            }
+            
+          } else {
+            // if it is not safe, then wait
+            timeLapse.consumeAll();
+          }
         }
       }
 
@@ -165,6 +220,39 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   public double round(double input) {
     return (Math.round(input * 10) / 10d);
+  }
+  
+  /**
+   * Checks if is safe to move to the next resource.
+   *
+   * @return true, if there is no delayed agv that hasn't entered the resource
+   */
+  public boolean isSafeToMove(boolean isFirstCheckPoint) {
+    return virtualEnvironment.getListOfDelayedAGVs(agvID,
+        checkPoints.getFirst().getExpectedTime(), checkPoints.get(1)).isEmpty();
+  }
+  
+  /**
+   * Gets the number of agvs on an edge, exclusive
+   *
+   * @param from the from
+   * @param to the to
+   * @return the num of ag vs on edge
+   */
+  public int getNumOfAGVsOnEdge(Point from, Point to) {
+    final Set<RoadUser> agvsOnEdge = roadModel.get().getRoadUsersOn(from, to);
+    
+    int numAGVsOnEdge = agvsOnEdge.size();
+    
+    if (roadModel.get().getRoadUsersOnNode(from).size() != 0) {
+      numAGVsOnEdge--;
+    }
+    
+    if (roadModel.get().getRoadUsersOnNode(to).size() != 0) {
+      numAGVsOnEdge--;
+    }
+    
+    return numAGVsOnEdge;
   }
   
   @Override
