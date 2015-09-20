@@ -99,7 +99,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    * @param result the result
    */
   public VehicleAgent(OriginDestination originDestination, VirtualEnvironment virtualEnvironment,
-      int agvID, Simulator sim, Setting setting, Result result, List<VehicleAgent> agvList) {
+      int agvID, Simulator sim, Setting setting, Result result) {
     roadModel = Optional.absent();
     path = new LinkedList<>();
     this.origin = originDestination.getOrigin();

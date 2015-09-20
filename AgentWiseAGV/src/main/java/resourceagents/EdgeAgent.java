@@ -164,14 +164,17 @@ public class EdgeAgent implements ResourceAgent {
     // compute the capacity at the start time
     long startTime = optimisticEntryWindow.lowerEndpoint();
     List<Reservation> overlappingReservations = new ArrayList<>();
-    for (Reservation resv : reservationsFromSameDirection) {
+    
+    Iterator<Reservation> iter = reservationsFromSameDirection.iterator();
+    while (iter.hasNext()) {
+      final Reservation resv = iter.next();
       final long resvStartTime = resv.getInterval().lowerEndpoint();
-      if (resv.getInterval().contains(startTime) && resv.getAgvID() != agvID
-          && !rangeWithoutReservation.contains(resvStartTime)) {
+      if (rangeWithoutReservation.contains(resvStartTime) && resv.getAgvID() != agvID) {
+        iter.remove();
+      } else if (resv.getInterval().contains(startTime) && resv.getAgvID() != agvID) {
         overlappingReservations.add(resv);
       }
     }
-    
     
     // if the edge is already full, we have to calculate the start time
     // note that, because the capacity of the node is only 1, it means that
@@ -217,10 +220,8 @@ public class EdgeAgent implements ResourceAgent {
     final long minDifferentTime = (long) (setting.getVehicleLength() * 1000
         / setting.getVehicleSpeed());
     for (Reservation reservation : reservationsFromSameDirection) {
-      final long existingStartTime = reservation.getInterval().lowerEndpoint();
       // ignore reservation of the same agv and unused reservation
-      if (reservation.getAgvID() == agvID
-          || rangeWithoutReservation.contains(existingStartTime)) {
+      if (reservation.getAgvID() == agvID) {
         continue;
       }
       final long reservedEntryTime = reservation.getInterval().lowerEndpoint();
@@ -265,10 +266,8 @@ public class EdgeAgent implements ResourceAgent {
     //                              |--------------------     
     List<Reservation> overlappingAtUpperEndPoint = new ArrayList<>();
     for (Reservation resv : reservationsFromSameDirection) {
-      final long existingStartTime = resv.getInterval().lowerEndpoint();
       if (resv.getInterval().contains(upperEndExitWindow)
-          && resv.getAgvID() != agvID
-          && !rangeWithoutReservation.contains(existingStartTime)) {
+          && resv.getAgvID() != agvID) {
         overlappingAtUpperEndPoint.add(resv);
       }
     }
@@ -295,10 +294,8 @@ public class EdgeAgent implements ResourceAgent {
     // we check the latest reservation after us that overlap with the updated end point t
     long latestEntryTimeOfOtherAGVs = -1;
     for (Reservation resv : reservationsFromSameDirection) {
-      final long resvStartTime = resv.getInterval().lowerEndpoint();
       if (resv.getInterval().contains(upperEndExitWindow)
-          && resv.getAgvID() != agvID
-          && !rangeWithoutReservation.contains(resvStartTime)) {
+          && resv.getAgvID() != agvID) {
         if (resv.getInterval().lowerEndpoint() > latestEntryTimeOfOtherAGVs) {
           latestEntryTimeOfOtherAGVs = resv.getInterval().lowerEndpoint();
         }
@@ -308,10 +305,8 @@ public class EdgeAgent implements ResourceAgent {
     // check capacity at the entry time of the latest AGV
     List<Reservation> overlappingAtLatestEntryTime = new ArrayList<>();
     for (Reservation resv : reservationsFromSameDirection) {
-      final long resvStartTime = resv.getInterval().lowerEndpoint();
       if (resv.getInterval().contains(latestEntryTimeOfOtherAGVs)
-          && resv.getAgvID() != agvID
-          && !rangeWithoutReservation.contains(resvStartTime)) {
+          && resv.getAgvID() != agvID) {
         overlappingAtLatestEntryTime.add(resv);
       }
     }
