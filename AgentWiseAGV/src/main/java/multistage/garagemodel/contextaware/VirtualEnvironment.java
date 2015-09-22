@@ -26,9 +26,10 @@ import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
+import resourceagents.Reservation;
 import routeplan.CheckPoint;
 import routeplan.Plan;
-import routeplan.ResourceType;
+import routeplan.RangeEndPoint;
 import routeplan.contextaware.PlanFTW;
 import routeplan.contextaware.PlanStep;
 import setting.Setting;
@@ -52,6 +53,9 @@ public class VirtualEnvironment implements TickListener {
   /** The setting. */
   private Setting setting;
   
+  /** The agv list. */
+  private List<VehicleAgent> agvList;
+  
   /**
    * shortest path lengths from all nodes to a destination the keys are
    * destinations, the values are the map of points and shortest path lengths
@@ -66,12 +70,13 @@ public class VirtualEnvironment implements TickListener {
    * @param setting the setting
    */
   public VirtualEnvironment(CollisionGraphRoadModel roadModel,
-      RandomGenerator randomGenerator, Setting setting) {
+      RandomGenerator randomGenerator, Setting setting, List<VehicleAgent> agvList) {
     this.setting = setting;
     nodeAgentList = new NodeAgentList(roadModel, setting);
     edgeAgentList = new EdgeAgentList(roadModel, setting);
     this.roadModel = roadModel;
     this.shortestLengthToDest = new HashMap<>();
+    this.agvList = agvList;
   }
   
   /**
@@ -84,9 +89,8 @@ public class VirtualEnvironment implements TickListener {
    * @param stationExits the station exits
    * @return the plan
    */
-  public Plan exploreRoute(int agvID, long startTime, Point origin,
+  public Plan exploreRoute(int agvID, Range<Long> startTime, Point origin,
       List<Point> destinations, List<Point> garageList) {
-    // TODO remove startTime, all start at 0 
     
     // shortest path lengths from all nodes to a destination
     // the keys are destinations, the values are the map of points and shortest path lengths
@@ -97,55 +101,43 @@ public class VirtualEnvironment implements TickListener {
       }
     }
 
- // free time window of the start node
+    // free time window of the start node
     final List<FreeTimeWindow> firstFreeTimeWindows = nodeAgentList
-        .getNodeAgent(origin)
-        .getFreeTimeWindows(Range.atLeast(startTime), agvID);
-
-    FreeTimeWindow startFTW = null;
-
-    // there should be only one free time window that contains the startTime
-    final long realStartTime = startTime - ((long) (setting.getVehicleLength()
-        * 1000 / setting.getVehicleSpeed()));
-    for (FreeTimeWindow ftw : firstFreeTimeWindows) {
-      if (ftw.getEntryWindow().contains(realStartTime)
-          || ftw.getEntryWindow().lowerEndpoint() == realStartTime) {
-        startFTW = ftw;
-        break;
-      }
-    }
-
-    // if no possible free time window then it is an error
-    if (startFTW == null) {
-      throw new Error("No free time window for the first node!");
-    }
-
-    List<Point> firstPath = new ArrayList<>();
-    firstPath.add(origin);
-    LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
-    firstFTW.addLast(startFTW);
-
-    PlanFTW firstPlanFTW = new PlanFTW(firstFTW, firstPath, 0, destinations);
-
+        .getNodeAgent(origin).getFreeTimeWindows(startTime, agvID);
+    
     final SortedMap<Long, PlanFTW> planQueue = new TreeMap<>();
-    planQueue.put(computeCost(firstPlanFTW, shortestLengthToDest, destinations),
-        firstPlanFTW);
+    final Set<PlanStep> closedSet = new LinkedHashSet<>();
+    
+    if (firstFreeTimeWindows.size() > 1) {
+      throw new IllegalStateException("More than one first free time window");
+    }
+    
+    for (FreeTimeWindow startFTW : firstFreeTimeWindows) {
+      final List<Point> firstPath = new ArrayList<>();
+      firstPath.add(origin);
+      final LinkedList<FreeTimeWindow> firstFTW = new LinkedList<>();
+      firstFTW.addLast(startFTW);
+
+      final PlanFTW firstPlanFTW = new PlanFTW(firstFTW, firstPath, 0,
+          destinations);
+
+      planQueue.put(
+          computeCost(firstPlanFTW, shortestLengthToDest, destinations),
+          firstPlanFTW);
+
+      final PlanStep planStep = new PlanStep(firstPlanFTW.getStage(),
+          nodeAgentList.getNodeAgent(origin), startFTW);
+      closedSet.add(planStep);
+    }
 
     PlanFTW finalPlan = null;
 
-    final Set<PlanStep> closedSet = new LinkedHashSet<>();
-
     while (!planQueue.isEmpty()) {
-//      if (planQueue.size() % 10000 == 0) {
-//        System.out.println(planQueue.size());
-//      }
       // select and remove the first plan in the queue
       final PlanFTW planFTW = planQueue.remove(planQueue.firstKey());
       
       final List<Point> path = planFTW.getPath();
       final List<FreeTimeWindow> ftwList = planFTW.getFreeTimeWindows();
-      
-//      System.out.println(planQueue.size());
       
       if ((planFTW.getStage() == destinations.size())
           && path.get(path.size() - 1)
@@ -328,24 +320,34 @@ public class VirtualEnvironment implements TickListener {
    */
   public void makeReservation(int agvID, Plan plan, long currentTime, long lifeTime) {
     List<Point> path = plan.getPath();
-    List<Range<Long>> intervals = plan.getIntervals();
+    LinkedList<Range<Long>> intervals = new LinkedList<>(plan.getIntervals());
+    
+    if (intervals.size() % 2 == 1) {
+      // if the plan start from a node
+      if (intervals.getFirst().upperEndpoint() > currentTime) {
+        // if the interval is not out-dated
+        final NodeAgent firstNodeAgent = nodeAgentList
+            .getNodeAgent(path.get(0));
+        firstNodeAgent.addReservation(agvID, lifeTime, intervals.get(0));
+      }
+      intervals.removeFirst();
+    }
+    
     for (int i = 0; i < path.size() - 1; i++) {
-      if (intervals.get(i * 2 + 1).upperEndpoint() < currentTime) {
+      if (intervals.get(1).upperEndpoint() < currentTime) {
         continue;
       }
       
-      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i));
-      nodeAgent.addReservation(agvID, lifeTime, intervals.get(i * 2));
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(path.get(i),
           path.get(i + 1));
-      edgeAgent.addReservation(path.get(i), intervals.get(i * 2 + 1), lifeTime,
+      edgeAgent.addReservation(path.get(i), intervals.getFirst(), lifeTime,
           agvID);
+      intervals.removeFirst();
+      
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(path.get(i + 1));
+      nodeAgent.addReservation(agvID, lifeTime, intervals.getFirst());
+      intervals.removeFirst();
     }
-    
-    final NodeAgent lastNodeAgent = nodeAgentList
-        .getNodeAgent(path.get(path.size() - 1));
-    lastNodeAgent.addReservation(agvID, lifeTime,
-        intervals.get(intervals.size() - 1));
   }
   
   /**
@@ -416,16 +418,19 @@ public class VirtualEnvironment implements TickListener {
    * @param agvID the agv id
    * @param nextCheckPoint the next check point
    */
-  public void setVisited(int agvID, CheckPoint nextCheckPoint) {
-    final List<Point> resource = nextCheckPoint.getResource();
-    if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
+  public void setVisited(int agvID, List<Point> resource, long endTime) {
+    if (resource.size() == 1) {
       // if the resource is a node
       final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
-      nodeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime());
+      nodeAgent.setVisited(agvID, endTime);
     } else {
       // if the resource is an edge
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
-      edgeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime(), resource.get(0));
+      edgeAgent.setVisited(agvID, endTime, resource.get(0));
+    }
+    
+    if (resource.size() < 1 && resource.size() > 2) {
+      throw new IllegalStateException("Invalid resource list");
     }
   }
   
@@ -448,6 +453,185 @@ public class VirtualEnvironment implements TickListener {
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
       return edgeAgent.getListOfDelayedAGVs(agvID, startTime, resource.get(0));
     }
+  }
+  
+  public void modifyReservation(int agvID, List<Point> resource, Range<Long> interval, RangeEndPoint modifiedEndPoint) {
+    if (resource.size() == 1) {
+      // if the resource is a node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      nodeAgent.modifyReservation(agvID, interval, modifiedEndPoint);
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      edgeAgent.modifyReservation(agvID, resource.get(0), interval, modifiedEndPoint);
+    }
+  }
+  
+  /**
+   * Gets the list of higher priority agvs that have not entered the resource (count from the startTime)
+   *
+   * @param agvID the agv id
+   * @param startTime the start time according to the plan of the 'agvID'
+   * @param resource the resource
+   * @return the list of delayed agvs
+   */
+  public List<Integer> getListOfHigherPriorityAGVs(int agvID, long startTime, List<Point> resource) {
+    if (resource.size() == 1) {
+      // if the resource is a node 
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      return nodeAgent.getListOfDelayedAGVs(agvID, startTime);
+    } else {
+      // if the resource is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      return edgeAgent.getListOfDelayedAGVs(agvID, startTime, resource.get(0));
+    }
+  }
+  
+  /**
+   * Propagate delay.
+   * The currentPlan must start from the node that the AGV is freezing.
+   *
+   * @param agvID the agv id
+   * @param currentPlan the current plan
+   */
+  public void propagateDelay(int agvID, long currentTime) {
+    
+    final List<Integer> affectedAGVs = getAffectedAGVs(agvID, currentTime);
+    nodeAgentList.removeReservationsOf(affectedAGVs);
+    edgeAgentList.removeReservationsOf(affectedAGVs);
+    
+    // we will modify the plan of all agvs when one is delayed
+    for (Integer affectedAGV : affectedAGVs) {
+      final VehicleAgent agv = agvList.get(affectedAGV);
+      
+      // first we detect the current plan step
+      final Plan currentPlan = agv.getCurrentPlan();
+      final List<Range<Long>> reservedIntervals = currentPlan.getIntervals();
+      final int idxOfCurrentResv = getIndexOfCurrentResv(reservedIntervals, currentTime);
+      final LinkedList<Range<Long>> newReservations = new LinkedList<>();
+      
+      // add all reservations until the reservation at current time
+      for (int i = 0; i < idxOfCurrentResv; i++) {
+        newReservations.addLast(reservedIntervals.get(i));
+      }
+      
+      // modify the reservation at the current time then add it to the new reservation
+      final Range<Long> currentReservation = reservedIntervals.get(idxOfCurrentResv);
+      final long newLowerEndPoint = currentReservation.lowerEndpoint();
+      final long newUpperEndPoint = currentReservation.upperEndpoint() + setting.getExpectedFreezingDuration();
+      newReservations.addLast(Range.closed(newLowerEndPoint, newUpperEndPoint));
+      
+      // modify the reservation of all future reservations
+      for (int i = idxOfCurrentResv + 1; i < reservedIntervals.size(); i++) {
+        final Range<Long> oldReservation = reservedIntervals.get(i);
+        final long updatedLowerEndPoint = oldReservation.lowerEndpoint() + setting.getExpectedFreezingDuration();
+        final long updatedUpperEndPoint = oldReservation.upperEndpoint() + setting.getExpectedFreezingDuration();
+        newReservations.addLast(Range.closed(updatedLowerEndPoint, updatedUpperEndPoint));
+      }
+      
+      // create new plan for the agv
+      final Plan newPlan = new Plan(currentPlan.getPath(), newReservations, false);
+      
+      // notify the agv about the new plan
+      agv.notifyDelay(newPlan, currentTime);
+    }
+  }
+  
+  public int getIndexOfCurrentResv(List<Range<Long>> reservedIntervals, long currentTime) {
+    int index = 0;
+    // for each reservation
+    for (Range<Long> interval : reservedIntervals) {
+      // detect the first reservation that contains currentTime
+      if (interval.contains(currentTime)) {
+        if (reservedIntervals.size() > index + 1 && reservedIntervals.get(index + 1).contains(currentTime)) {
+          // when currentTime is in two consecutive intervals, mean that the agv
+          // is on two resources (edges, node or node, edges).
+          
+          // first, we consider the case that the agv is at exactly a node and
+          // is going to move to edge, then the current time is of the interval
+          // at a node and is also the start time of the next interval
+          if ((index + reservedIntervals.size()) % 2 == 1 && reservedIntervals
+              .get(index + 1).lowerEndpoint() == currentTime) {
+            // the first condition says that the index is of a node. If the
+            // reservedIntervals starts from a node, then size is odd and index
+            // is even. If the reservedIntervals start from an edge, then size
+            // is even and index is odd. The second condition is about the start
+            // time of edge
+            // in this case, we return index, mean that the interval of the node
+            return index;
+          }
+          
+          // for all other case, we only consider the interval of the second resource
+          return index + 1;
+        } else {
+          return index;
+        }
+      } else {
+        index++;
+      }
+    }
+    
+    // this line can happen when the agvs have not entered the map yet. In multi
+    // stage, it should be removed and we should throw an exception here.
+    return 0;
+  }
+  
+  /**
+   * Gets all the affected agvs.
+   *
+   * @param agvID the agv id
+   * @param currentTime the current time
+   * @return the affected ag vs
+   */
+  public List<Integer> getAffectedAGVs(int agvID, long currentTime) {
+    final LinkedList<Integer> affectedAGVs = new LinkedList<>();
+    final List<Integer> investigatedAGVs = new ArrayList<>();
+    
+    affectedAGVs.add(agvID);
+    
+    while (!affectedAGVs.isEmpty()) {
+
+      final int currentAGV = affectedAGVs.removeFirst();
+      
+      if (investigatedAGVs.contains(currentAGV)) {
+        continue;
+      } else {
+        investigatedAGVs.add(currentAGV);
+      }
+      
+      final List<Point> path = agvList.get(currentAGV).getCurrentPlan().getPath();
+      final List<Range<Long>> intervals = agvList.get(currentAGV).getCurrentPlan()
+          .getIntervals();
+
+      final int currentIndex = getIndexOfCurrentResv(intervals, currentTime);
+
+      for (int i = currentIndex; i < intervals.size(); i++) {
+        final List<Reservation> reservations;
+        
+        if (i % 2 == 0) {
+          // node
+          final NodeAgent nodeAgent = nodeAgentList
+              .getNodeAgent(path.get(i / 2));
+          reservations = nodeAgent.getReservations();
+        } else {
+          // edge
+          final EdgeAgent edgeAgent = edgeAgentList
+              .getEdgeAgent(path.get(i / 2), path.get(i / 2 + 1));
+          reservations = edgeAgent.getReservations(path.get(i / 2));
+        }
+        
+        final Range<Long> delayedInterval = intervals.get(i);
+        final long startTimeOfDelayedInterval = delayedInterval.lowerEndpoint();
+
+        for (Reservation resv : reservations) {
+          if (resv.getInterval().lowerEndpoint() > startTimeOfDelayedInterval) {
+            affectedAGVs.add(resv.getAgvID());
+          }
+        }
+      }
+    }
+    
+    return investigatedAGVs;
   }
   
   @Override

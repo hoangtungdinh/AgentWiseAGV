@@ -1,5 +1,6 @@
 package multistage.garagemodel.delegatemas;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -101,6 +102,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.result = result;
     this.isGoingToExplore = false;
     this.propagatedDelay = false;
+    this.isFreezing = false;
   }
 
   @Override
@@ -154,7 +156,20 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       nextDestination(timeLapse.getEndTime());
     }
     
-    if (!currentPlan.getIntervals().isEmpty() && timeLapse.getEndTime() >= currentPlan.getIntervals().get(0).upperEndpoint()) {
+    if (!currentPlan.getIntervals().isEmpty() && timeLapse
+        .getEndTime() >= currentPlan.getIntervals().get(0).upperEndpoint()) {
+      final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();
+      final List<Point> resource = new ArrayList<>();
+      if (currentPlan.getIntervals().size() % 2 == 1) {
+        // first plan step is for a node
+        resource.add(currentPlan.getPath().get(0));
+        virtualEnvironment.setVisited(agvID, resource, endTime);
+      } else {
+        // first plan step is for an edge
+        resource.add(currentPlan.getPath().get(0));
+        resource.add(currentPlan.getPath().get(1));
+        virtualEnvironment.setVisited(agvID, resource, endTime);
+      }
       currentPlan.removeFirstStep();
     }
     
@@ -253,18 +268,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       // it still have to wait, then consume time
       if (!checkPoints.isEmpty()
           && roundedPos.equals(checkPoints.getFirst().getPoint())) {
-        
-        // if the check point is a node then announce to both the node and the
-        // next edge that it has visited
-        if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
-          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
-          virtualEnvironment.setVisited(agvID, checkPoints.get(1));
-        } else {
-          // if the check point is at an edge, then announce that it has visited
-          // the edge. It is to prevent that set visited becomes false again during
-          // refreshing
-          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
-        }
         
         if (currentTime < checkPoints.getFirst().getExpectedTime()) {
           if (noHigherPriorityAGVs(checkPoints.getFirst().getExpectedTime(),

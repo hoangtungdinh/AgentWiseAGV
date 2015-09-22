@@ -1,5 +1,6 @@
 package multistage.garagemodel.contextaware;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.measure.unit.SI;
@@ -46,7 +47,7 @@ public final class AGVSystem {
       View.Builder viewBuilder = View.builder()
 //        .withAutoPlay()
         .withSpeedUp(setting.getSpeedUp())
-        .withAutoClose()
+//        .withAutoClose()
         .with(WarehouseRenderer.builder()
             .withMargin(setting.getVehicleLength())
             .withNodes()
@@ -96,8 +97,10 @@ public final class AGVSystem {
           "Cannot get the road model from the simulator");
     }
     
-    VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel,
-        sim.getRandomGenerator(), setting);
+    final List<VehicleAgent> agvList = new ArrayList<>();
+    
+    final VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel,
+        sim.getRandomGenerator(), setting, agvList);
     sim.addTickListener(virtualEnvironment);
     
     List<Point> garageList = graph.getGarages();
@@ -116,8 +119,10 @@ public final class AGVSystem {
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
-      sim.register(new VehicleAgent(destinations, virtualEnvironment, i,
-          garageList, setting, result));
+      final VehicleAgent vehicleAgent = new VehicleAgent(destinations, virtualEnvironment, i,
+          garageList, setting, result);
+      sim.register(vehicleAgent);
+      agvList.add(vehicleAgent);
     }
 
     sim.start();

@@ -414,6 +414,8 @@ public class EdgeAgent implements ResourceAgent {
         }
       }
     }
+    
+    throw new IllegalStateException("No reservation to modify");
   }
   
   /**
@@ -517,19 +519,22 @@ public class EdgeAgent implements ResourceAgent {
    * Sets the reservation of 'agvID' that contains 'time' as visited.
    *
    * @param agvID the agv id
-   * @param time the time
+   * @param endTime the end time of the interval
    * @param startNode the start node
    */
-  public void setVisited(int agvID, long time, Point startNode) {
+  public void setVisited(int agvID, long endTime, Point startNode) {
     // get reservations of AGVs coming from startNode
     final List<Reservation> reservations = reservationMap.get(startNode);
     
     for (Reservation resv : reservations) {
-      if (resv.getAgvID() == agvID && resv.getInterval().contains(time)) {
+      final long existingEndTime = resv.getInterval().upperEndpoint();
+      if (resv.getAgvID() == agvID && existingEndTime == endTime) {
         resv.setVisited();
         return;
       }
     }
+    
+    throw new IllegalStateException("No reservation to set visited");
   }
   
   /**

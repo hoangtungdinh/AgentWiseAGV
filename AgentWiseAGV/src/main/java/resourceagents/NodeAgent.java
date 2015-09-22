@@ -176,6 +176,8 @@ public class NodeAgent implements ResourceAgent {
         }
       }
     }
+    
+    throw new IllegalStateException("No reservation to modify");
   }
   
   /**
@@ -237,13 +239,16 @@ public class NodeAgent implements ResourceAgent {
    * @param agvID the agv id
    * @param time the time
    */
-  public void setVisited(int agvID, long time) {
+  public void setVisited(int agvID, long endTime) {
     for (Reservation resv : reservations) {
-      if (resv.getAgvID() == agvID && resv.getInterval().contains(time)) {
+      long existingEndTime = resv.getInterval().upperEndpoint();
+      if (resv.getAgvID() == agvID && existingEndTime == endTime) {
         resv.setVisited();
         return;
       }
     }
+    
+    throw new IllegalStateException("No reservation to set visited!");
   }
   
   /**
