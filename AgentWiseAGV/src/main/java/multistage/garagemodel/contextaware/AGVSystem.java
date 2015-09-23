@@ -105,17 +105,17 @@ public final class AGVSystem {
     if (setting.getNumOfAGVs() > garageList.size()) {
       throw new IllegalArgumentException("the number of agvs cannot be larger than the number of garages");
     }
-    
+
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
-        sim.getRandomGenerator(), roadModel, setting.getNumOfAGVs(),
-        setting.getNumOfDestinations(), garageList);
+        sim.getRandomGenerator(), roadModel, setting.getNumOfDestinations(),
+        garageList);
     
-    Destinations destinations = destinationGenerator.run();
     
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
+      final Destinations destinations = destinationGenerator.run();
       sim.register(new VehicleAgent(destinations, virtualEnvironment, i,
           garageList, setting, result));
     }
