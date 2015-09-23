@@ -20,9 +20,6 @@ public class DestinationGenerator {
   /** The random generator. */
   private RandomGenerator randomGenerator;
 
-  /** The number of AGVs. */
-  private int numberOfAGVs;
-
   /** The number of destinations for each AGVs. */
   private int numOfDesForEachAGV;
   
@@ -37,16 +34,14 @@ public class DestinationGenerator {
    *
    * @param randomGenerator the random generator
    * @param roadModel the road model
-   * @param numberOfAGVs the number of agvs
    * @param numOfDesForEachAGV the number of destinations for each agv
    * @param garages the garages
    */
   public DestinationGenerator(RandomGenerator randomGenerator,
-      CollisionGraphRoadModel roadModel, int numberOfAGVs,
-      int numOfDesForEachAGV, List<Point> garages) {
+      CollisionGraphRoadModel roadModel, int numOfDesForEachAGV,
+      List<Point> garages) {
     this.randomGenerator = randomGenerator;
     this.roadModel = roadModel;
-    this.numberOfAGVs = numberOfAGVs;
     this.numOfDesForEachAGV = numOfDesForEachAGV;
     this.garages = garages;
   }
@@ -60,10 +55,7 @@ public class DestinationGenerator {
     // List of all destination
     List<Point> destinations = new ArrayList<>();
     
-    // total number of destinations
-    final int numOfDestinations = numberOfAGVs * numOfDesForEachAGV;
-    
-    for (int i = 0; i < numOfDestinations; i++) {
+    for (int i = 0; i < numOfDesForEachAGV; i++) {
       if (i == 0) {
         // generate the first destination
         Point nextDes = roadModel.getRandomPosition(randomGenerator);

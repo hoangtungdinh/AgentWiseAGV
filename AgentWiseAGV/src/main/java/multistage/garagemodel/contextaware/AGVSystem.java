@@ -111,14 +111,13 @@ public final class AGVSystem {
     
     // generate destinations for all AGVs
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
-        sim.getRandomGenerator(), roadModel, setting.getNumOfAGVs(),
-        setting.getNumOfDestinations(), garageList);
+        sim.getRandomGenerator(), roadModel, setting.getNumOfDestinations(),
+        garageList);
     
-    Destinations destinations = destinationGenerator.run();
-    
-    Result result = new Result(setting, sim);
+    final Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
+      final Destinations destinations = destinationGenerator.run();
       final VehicleAgent vehicleAgent = new VehicleAgent(destinations, virtualEnvironment, i,
           garageList, setting, result);
       sim.register(vehicleAgent);
