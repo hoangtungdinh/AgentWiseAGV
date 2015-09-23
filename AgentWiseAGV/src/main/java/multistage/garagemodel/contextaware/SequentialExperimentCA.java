@@ -12,7 +12,7 @@ import multistage.result.Result;
 import multistage.result.Sample;
 import setting.Setting;
 
-public class ExperimentCA {
+public class SequentialExperimentCA {
 
   public static void main(String[] args) {
     LinkedList<Long> seeds = new LinkedList<>();
