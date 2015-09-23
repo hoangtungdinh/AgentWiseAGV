@@ -17,6 +17,8 @@ import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import multistage.Destinations;
 import multistage.garagemodel.GraphCreator;
 import multistage.garagemodel.destinationgenerator.DestinationGenerator;
+import multistage.incidentgenerator.IncidentGenerator;
+import multistage.incidentgenerator.IncidentList;
 import multistage.result.Result;
 import setting.Setting;
 
@@ -110,13 +112,17 @@ public final class AGVSystem {
     final DestinationGenerator destinationGenerator = new DestinationGenerator(
         sim.getRandomGenerator(), roadModel, setting.getNumOfDestinations(),
         garageList);
+
+    final IncidentGenerator incidentGenerator = new IncidentGenerator(
+        sim.getRandomGenerator(), setting);
     
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
       final Destinations destinations = destinationGenerator.run();
+      final IncidentList incidentList = incidentGenerator.run();
       final VehicleAgent vehicleAgent = new VehicleAgent(destinations, virtualEnvironment, i,
-          garageList, setting, result);
+          garageList, setting, result, incidentList);
       sim.register(vehicleAgent);
       agvList.add(vehicleAgent);
     }

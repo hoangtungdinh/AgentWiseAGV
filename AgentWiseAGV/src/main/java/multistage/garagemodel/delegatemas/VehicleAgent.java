@@ -18,6 +18,8 @@ import com.google.common.collect.Range;
 
 import multistage.Destinations;
 import multistage.State;
+import multistage.incidentgenerator.Incident;
+import multistage.incidentgenerator.IncidentList;
 import multistage.result.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
@@ -86,8 +88,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private boolean propagatedDelay;
   
+  private IncidentList incidentList;
+  
+  private Incident nextIncident;
+  
+  private long endOfFreezingTime;
+  
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
-      int agvID, List<Point> garageList, Setting setting, Result result) {
+      int agvID, List<Point> garageList, Setting setting, Result result, IncidentList incidentList) {
     roadModel = Optional.absent();
     path = new LinkedList<>();
     this.destinationList = destinationList;
@@ -103,6 +111,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.isGoingToExplore = false;
     this.propagatedDelay = false;
     this.isFreezing = false;
+    this.incidentList = incidentList;
+    if (!this.incidentList.isEmpty()) {
+      this.nextIncident = this.incidentList.getNextIncident();
+    } else {
+      nextIncident = null;
+    }
+    this.endOfFreezingTime = -1;
   }
 
   @Override
@@ -176,28 +191,27 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
-    if (agvID == 3) {
-      if (currentTime > 15000 && currentTime < 100000) {
+    if (nextIncident != null) {
+      if (currentTime >= nextIncident.getStartTime() && isFreezing == false) {
         isFreezing = true;
-      } else {
-        if (isFreezing) {
-          isFreezing = false;
-          propagatedDelay = false;
-          nextExplorationTime = currentTime;
+        if (endOfFreezingTime > currentTime) {
+          endOfFreezingTime += nextIncident.getDuration();
+        } else {
+          endOfFreezingTime = currentTime + nextIncident.getDuration();
+        }
+        
+        if (!incidentList.isEmpty()) {
+          nextIncident = incidentList.getNextIncident();
+        } else {
+          nextIncident = null;
         }
       }
     }
     
-    if (agvID == 7) {
-      if (currentTime > 30000 && currentTime < 120000) {
-        isFreezing = true;
-      } else {
-        if (isFreezing) {
-          isFreezing = false;
-          propagatedDelay = false;
-          nextExplorationTime = currentTime;
-        }
-      }
+    if (isFreezing && currentTime >= endOfFreezingTime) {
+      isFreezing = false;
+      propagatedDelay = false;
+      nextExplorationTime = currentTime;
     }
     
     if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint()) && propagatedDelay) {

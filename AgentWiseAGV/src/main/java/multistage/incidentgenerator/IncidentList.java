@@ -11,7 +11,15 @@ public class IncidentList {
     this.incidentList = new LinkedList<>(incidentList);
   }
   
-  public Incident getIncident() {
+  public Incident getNextIncident() {
     return incidentList.removeFirst();
+  }
+  
+  public List<Incident> getAllIncidents() {
+    return incidentList;
+  }
+  
+  public boolean isEmpty() {
+    return incidentList.isEmpty();
   }
 }

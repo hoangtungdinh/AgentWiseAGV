@@ -18,4 +18,12 @@ public class Incident {
   public long getDuration() {
     return duration;
   }
+
+  @Override
+  public String toString() {
+    final String str = "Start time: " + startTime + "\t" + "Duration: "
+        + duration;
+    return str;
+  }
+  
 }

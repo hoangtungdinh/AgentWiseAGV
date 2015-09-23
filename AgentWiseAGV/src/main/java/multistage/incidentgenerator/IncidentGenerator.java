@@ -30,6 +30,7 @@ public class IncidentGenerator {
         final Incident incident = new Incident(incidentStartTime, incidentDuration);
         incidentList.add(incident);
       }
+      startOfTimeBlock += setting.getTimeBlock();
     }
     
     return new IncidentList(incidentList);
