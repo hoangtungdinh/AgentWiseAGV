@@ -17,12 +17,18 @@ public class Setting {
   private int numOfAlterRoutes;
   private int numOfDestsForEachAGV;
   private long expectedFreezingDuration;
+  private long timeBlock;
+  private double incidentRate;
+  private long minIncidentDuration;
+  private long maxIncidentDuration;
   
   public Setting(double vehicleLength, double vehicleSpeed, int numOfAGVs,
       long endTime, int speedUp, long seed, int numOfDestinations,
       long evaporationDuration, long refreshDuration, long explorationDuration,
       long switchingThreshold, int numOfAlterRoutes, int numOfDestsForEachAGV,
-      long expectedFreezingDuration) {
+      long expectedFreezingDuration, long timeBlock, double incidentRate,
+      long minIncidentDuration, long maxIncidentDuration) {
+    super();
     this.vehicleLength = vehicleLength;
     this.vehicleSpeed = vehicleSpeed;
     this.numOfAGVs = numOfAGVs;
@@ -37,6 +43,10 @@ public class Setting {
     this.numOfAlterRoutes = numOfAlterRoutes;
     this.numOfDestsForEachAGV = numOfDestsForEachAGV;
     this.expectedFreezingDuration = expectedFreezingDuration;
+    this.timeBlock = timeBlock;
+    this.incidentRate = incidentRate;
+    this.minIncidentDuration = minIncidentDuration;
+    this.maxIncidentDuration = maxIncidentDuration;
   }
 
   public double getVehicleLength() {
@@ -94,6 +104,22 @@ public class Setting {
   public long getExpectedFreezingDuration() {
     return expectedFreezingDuration;
   }
+  
+  public long getTimeBlock() {
+    return timeBlock;
+  }
+
+  public double getIncidentRate() {
+    return incidentRate;
+  }
+
+  public long getMinIncidentDuration() {
+    return minIncidentDuration;
+  }
+
+  public long getMaxIncidentDuration() {
+    return maxIncidentDuration;
+  }
 
   public static class SettingBuilder {
     private double vehicleLength = 2d;
@@ -111,6 +137,11 @@ public class Setting {
     private int numOfAlterRoutes = 10;
     private int numOfDestsForEachAGV = 3;
     private long expectedFreezingDuration = 100000L;
+    
+    private long timeBlock = 100000;
+    private double incidentRate = 0.1;
+    private long minIncidentDuration = 50000;
+    private long maxIncidentDuration = 100000;
     
     public SettingBuilder() {
 
@@ -185,12 +216,33 @@ public class Setting {
       this.expectedFreezingDuration = expectedFreezingDuration;
       return this;
     }
+    
+    public SettingBuilder setTimeBlock(long timeBlock) {
+      this.timeBlock = timeBlock;
+      return this;
+    }
+
+    public SettingBuilder setIncidentRate(double incidentRate) {
+      this.incidentRate = incidentRate;
+      return this;
+    }
+
+    public SettingBuilder setMinIncidentDuration(long minIncidentDuration) {
+      this.minIncidentDuration = minIncidentDuration;
+      return this;
+    }
+
+    public SettingBuilder setMaxIncidentDuration(long maxIncidentDuration) {
+      this.maxIncidentDuration = maxIncidentDuration;
+      return this;
+    }
 
     public Setting build() {
       return new Setting(vehicleLength, vehicleSpeed, numOfAGVs, endTime,
           speedUp, seed, numOfDestinations, evaporationDuration,
           refreshDuration, explorationDuration, switchingThreshold,
-          numOfAlterRoutes, numOfDestsForEachAGV, expectedFreezingDuration);
+          numOfAlterRoutes, numOfDestsForEachAGV, expectedFreezingDuration,
+          timeBlock, incidentRate, minIncidentDuration, maxIncidentDuration);
     }
   }
   
