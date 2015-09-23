@@ -165,14 +165,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       // if the agv reaches the entrance of the garage, then it becomes idle
       // and will try to move into the garage
       state = State.IDLE;
-    } else if (state == State.IDLE) {
+    } else if (state == State.IDLE && !isFreezing) {
       // if the agv reached the garage, then it becomes active
       state = State.ACTIVE;
       nextDestination(timeLapse.getEndTime());
     }
     
-    if (!currentPlan.getIntervals().isEmpty() && timeLapse
-        .getEndTime() >= currentPlan.getIntervals().get(0).upperEndpoint()) {
+    if (!currentPlan.getIntervals().isEmpty() && currentTime >= currentPlan.getIntervals().get(0).upperEndpoint()) {
       final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();
       final List<Point> resource = new ArrayList<>();
       if (currentPlan.getIntervals().size() % 2 == 1) {
@@ -192,12 +191,17 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
     if (nextIncident != null) {
-      if (currentTime >= nextIncident.getStartTime() && isFreezing == false) {
+      if (currentTime >= nextIncident.getStartTime()) {
         isFreezing = true;
+        
+        final double distanceToNextCheckPoint = Point.distance(roundedPos,
+            checkPoints.getFirst().getPoint());
+        final long timeToNextCheckPoint = (long) (distanceToNextCheckPoint*1000 / setting.getVehicleSpeed());
+        
         if (endOfFreezingTime > currentTime) {
-          endOfFreezingTime += nextIncident.getDuration();
+          endOfFreezingTime += nextIncident.getDuration() + timeToNextCheckPoint;
         } else {
-          endOfFreezingTime = currentTime + nextIncident.getDuration();
+          endOfFreezingTime = currentTime + nextIncident.getDuration() + timeToNextCheckPoint;
         }
         
         if (!incidentList.isEmpty()) {
@@ -355,9 +359,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       destinations.removeFirst();
     }
     
-    if (timeLapse.getEndTime() == setting.getEndTime()) {
-      result.updateResult(reachedDestinations);
-    }
   }
   
   public double round(double input) {
@@ -485,6 +486,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           refresh(currentTime);
         }
       }
+    }
+    
+    if (currentTime == setting.getEndTime()) {
+      result.updateResult(reachedDestinations);
     }
   }
 

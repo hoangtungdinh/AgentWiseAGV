@@ -248,7 +248,7 @@ public class NodeAgent implements ResourceAgent {
       }
     }
     
-    throw new IllegalStateException("No reservation to set visited!");
+//    throw new IllegalStateException("No reservation to set visited!");
   }
   
   /**
