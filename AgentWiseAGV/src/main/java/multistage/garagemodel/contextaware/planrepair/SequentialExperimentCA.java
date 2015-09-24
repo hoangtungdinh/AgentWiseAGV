@@ -1,4 +1,4 @@
-package multistage.garagemodel.contextaware;
+package multistage.garagemodel.contextaware.planrepair;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,7 +33,7 @@ public class SequentialExperimentCA {
           System.out.println("num of AGVs: " + (numAGV*5) + "\tSample: " + i + "\tSeed: " + seed);
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 5).setSeed(seed).build();
-          final multistage.garagemodel.contextaware.AGVSystem agvSystem = new AGVSystem(setting, false);
+          final AGVSystem agvSystem = new AGVSystem(setting, false);
           final Result result = agvSystem.run();
           sample.addResult(result);
         }

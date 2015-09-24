@@ -1,4 +1,4 @@
-package multistage.garagemodel.contextaware;
+package multistage.garagemodel.contextaware.waiting;
 
 import java.util.ArrayList;
 import java.util.List;
