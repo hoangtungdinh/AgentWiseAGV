@@ -16,10 +16,10 @@ import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 import com.google.common.collect.Range;
 
+import incidentgenerator.Incident;
+import incidentgenerator.IncidentList;
 import multistage.Destinations;
 import multistage.State;
-import multistage.incidentgenerator.Incident;
-import multistage.incidentgenerator.IncidentList;
 import multistage.result.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
@@ -193,6 +193,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     if (nextIncident != null) {
       if (currentTime >= nextIncident.getStartTime()) {
         isFreezing = true;
+        propagatedDelay = false;
         
         final double distanceToNextCheckPoint = Point.distance(roundedPos,
             checkPoints.getFirst().getPoint());

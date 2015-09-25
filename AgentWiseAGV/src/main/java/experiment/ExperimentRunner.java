@@ -2,9 +2,9 @@ package experiment;
 
 import java.util.concurrent.Callable;
 
-import multistage.garagemodel.delegatemas.AGVSystem;
-import multistage.result.Result;
 import setting.Setting;
+import singlestage.delegatemas.AGVSystem;
+import singlestage.result.Result;
 
 public class ExperimentRunner implements Callable<Result> {
   

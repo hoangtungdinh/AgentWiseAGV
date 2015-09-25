@@ -14,11 +14,11 @@ import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 
+import incidentgenerator.IncidentGenerator;
+import incidentgenerator.IncidentList;
 import multistage.Destinations;
 import multistage.garagemodel.GraphCreator;
 import multistage.garagemodel.destinationgenerator.DestinationGenerator;
-import multistage.incidentgenerator.IncidentGenerator;
-import multistage.incidentgenerator.IncidentList;
 import multistage.result.Result;
 import setting.Setting;
 

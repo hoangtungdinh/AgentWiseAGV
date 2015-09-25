@@ -1,4 +1,4 @@
-package multistage.incidentgenerator;
+package incidentgenerator;
 
 import java.util.ArrayList;
 import java.util.List;

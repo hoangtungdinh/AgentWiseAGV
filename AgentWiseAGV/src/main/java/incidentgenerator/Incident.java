@@ -1,4 +1,4 @@
-package multistage.incidentgenerator;
+package incidentgenerator;
 
 public class Incident {
   

@@ -1,4 +1,4 @@
-package multistage.garagemodel.contextaware.waiting;
+package multistage.garagemodel.contextaware.planrepair;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,7 +19,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import multistage.result.Result;
 import setting.Setting;
 
-public class ExperimentMultiContextAware {
+public class ExperimentMultiContextAwarePlanRepair {
 
   public static void main(String[] args) {
     ListeningExecutorService executor = MoreExecutors
@@ -31,7 +31,7 @@ public class ExperimentMultiContextAware {
     try {
       LinkedList<Long> seeds = new LinkedList<>();
       
-      InputStream inputStream = ExperimentMultiContextAware.class
+      InputStream inputStream = ExperimentMultiContextAwarePlanRepair.class
           .getResourceAsStream("seeds.txt");
       BufferedReader bufferedReader = new BufferedReader(
           new InputStreamReader(inputStream));
