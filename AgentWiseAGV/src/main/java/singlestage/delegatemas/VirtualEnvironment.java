@@ -506,7 +506,7 @@ public class VirtualEnvironment implements TickListener {
   public void afterTick(TimeLapse timeLapse) {
     nodeAgentList.removeOutDatedReservation(timeLapse.getEndTime());
     edgeAgentList.removeOutdatedReservations(timeLapse.getEndTime());
-    if (timeLapse.getEndTime() > 1000000) {
+    if (timeLapse.getEndTime() > 10000000) {
       throw new IllegalStateException("Gridlock happens!!!");
     }
   }

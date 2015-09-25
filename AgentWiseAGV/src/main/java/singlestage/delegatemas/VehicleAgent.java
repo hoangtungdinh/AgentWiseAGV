@@ -121,7 +121,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.result = result;
     this.isGoingToExplore = false;
     this.hasCompleted = false;
-    this.propagatedDelay = false;
+    this.propagatedDelay = true;
     this.planAgain = false;
     this.isFreezing = false;
     this.incidentList = incidentList;
@@ -190,6 +190,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     if (currentTime == startTime) {
       roadModel.get().addObjectAt(this, origin);
+      final List<Point> resource = new ArrayList<>();
+      final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();
+      resource.add(currentPlan.getPath().get(0));
+      virtualEnvironment.setVisited(agvID, resource, endTime);
     }
     
     if (!roadModel.get().containsObject(this)) {
@@ -223,6 +227,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             checkPoints.getFirst().getResource(), newInterval, RangeEndPoint.LOWER);
         startTime = currentTime;
         roadModel.get().addObjectAt(this, origin);
+        final List<Point> resource = new ArrayList<>();
+        final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();
+        resource.add(currentPlan.getPath().get(0));
+        virtualEnvironment.setVisited(agvID, resource, endTime);
       }
       return;
     }
@@ -248,7 +256,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     if (nextIncident != null) {
-      if (currentTime >= nextIncident.getStartTime()) {
+      if (currentTime >= nextIncident.getStartTime() && propagatedDelay == true) {
         isFreezing = true;
         propagatedDelay = false;
         
@@ -346,6 +354,19 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     // it still have to wait, then consume time
     if (!checkPoints.isEmpty()
         && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+      
+      final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();
+      final List<Point> resource = new ArrayList<>();
+      if (currentPlan.getIntervals().size() % 2 == 1) {
+        // first plan step is for a node
+        resource.add(currentPlan.getPath().get(0));
+        virtualEnvironment.setVisited(agvID, resource, endTime);
+      } else {
+        // first plan step is for an edge
+        resource.add(currentPlan.getPath().get(0));
+        resource.add(currentPlan.getPath().get(1));
+        virtualEnvironment.setVisited(agvID, resource, endTime);
+      }
       
       if (currentTime < checkPoints.getFirst().getExpectedTime()) {
         if (noHigherPriorityAGVs(checkPoints.getFirst().getExpectedTime(),

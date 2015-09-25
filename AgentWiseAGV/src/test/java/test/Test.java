@@ -6,7 +6,7 @@ public class Test {
 
   public static void main(String[] args) {
     final Setting setting = new Setting.SettingBuilder()
-        .setNumOfAGVs(70).setSeed(6432341).build();
+        .setNumOfAGVs(90).setSeed(610691).build();
     // 20 9776449
     final singlestage.delegatemas.AGVSystem agvSystem = new singlestage.delegatemas.AGVSystem(setting, true);
 //    final multistage.garagemodel.contextaware.waiting.AGVSystem agvSystem = new multistage.garagemodel.contextaware.waiting.AGVSystem(setting, true);
