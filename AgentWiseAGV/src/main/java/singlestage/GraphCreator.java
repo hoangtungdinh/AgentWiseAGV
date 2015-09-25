@@ -36,7 +36,7 @@ public class GraphCreator {
   }
 
   public ListenableGraph<LengthData> createGraph() {
-    final int size = 3;
+    final int size = 30;
     
     final Graph<LengthData> g = new TableGraph<>();
 

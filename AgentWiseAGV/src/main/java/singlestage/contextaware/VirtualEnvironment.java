@@ -28,7 +28,6 @@ import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
 import routeplan.CheckPoint;
 import routeplan.Plan;
-import routeplan.ResourceType;
 import routeplan.contextaware.PlanFTW;
 import routeplan.contextaware.PlanStep;
 import setting.Setting;
@@ -400,16 +399,19 @@ public class VirtualEnvironment implements TickListener {
    * @param agvID the agv id
    * @param nextCheckPoint the next check point
    */
-  public void setVisited(int agvID, CheckPoint nextCheckPoint) {
-    final List<Point> resource = nextCheckPoint.getResource();
-    if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
+  public void setVisited(int agvID, List<Point> resource, long endTime) {
+    if (resource.size() == 1) {
       // if the resource is a node
       final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
-      nodeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime());
+      nodeAgent.setVisited(agvID, endTime);
     } else {
       // if the resource is an edge
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
-      edgeAgent.setVisited(agvID, nextCheckPoint.getExpectedTime(), resource.get(0));
+      edgeAgent.setVisited(agvID, endTime, resource.get(0));
+    }
+    
+    if (resource.size() < 1 && resource.size() > 2) {
+      throw new IllegalStateException("Invalid resource list");
     }
   }
   

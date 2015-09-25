@@ -74,6 +74,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private boolean propagatedDelay;
   
+  private Plan currentPlan;
+  
   /**
    * Instantiates a new vehicle agent.
    *
@@ -128,6 +130,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     dest.add(destination);
     Plan plan = virtualEnvironment.exploreRoute(agvID, origin, dest);
     executablePlan = new ExecutablePlan(plan, setting);
+    currentPlan = plan;
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
     virtualEnvironment.makeReservation(agvID, plan, 0, Long.MAX_VALUE - 100000);
@@ -140,12 +143,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
     // add the agv to the model if the start time has passed and no delayed
     // vehicle at the origin
-    if (timeLapse.getStartTime() >= startTime) {
+    if (currentTime >= startTime) {
       if (!roadModel.get().containsObject(this)) {
         if (isSafeToMove(true) && !roadModel.get().isOccupied(checkPoints.getFirst().getPoint())) {
           // if no delayed agv, the node is not occupied then start
           roadModel.get().addObjectAt(this, origin);
-          virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+          virtualEnvironment.setVisited(agvID, checkPoints.getFirst().getResource(), currentPlan.getIntervals().get(0).upperEndpoint());
         }
       }
     }
@@ -159,7 +162,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     // check if check point is the destination then update result and return
     if (roundedPos.equals(destination)) {
-      virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+      virtualEnvironment.setVisited(agvID, checkPoints.getFirst().getResource(), currentPlan.getIntervals().get(0).upperEndpoint());
       result.updateResult(startTime, timeLapse.getTime());
       sim.unregister(this);
       return;
@@ -204,8 +207,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       
       // if the check point is a node then announce to both the node and the next edge that it has visited
       if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
-        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
-        virtualEnvironment.setVisited(agvID, checkPoints.get(1));
+        virtualEnvironment.setVisited(agvID, checkPoints.getFirst().getResource(), currentPlan.getIntervals().get(0).upperEndpoint());
+        virtualEnvironment.setVisited(agvID, checkPoints.get(1).getResource(), currentPlan.getIntervals().get(1).upperEndpoint());
       }
       
       // check if it is time to move according to the plan
@@ -221,6 +224,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           if (isSafeToMove(false)) {
             // if there is no higher priority delayed AGVs
             checkPoints.removeFirst();
+            currentPlan.removeFirstStep();
           } else {
             timeLapse.consumeAll();
           }
@@ -236,6 +240,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             // if the check point is an edge then move when next node is free
             if (!roadModel.get().isOccupied(checkPoints.getFirst().getResource().get(1))) {
               checkPoints.removeFirst();
+              currentPlan.removeFirstStep();
             } else {
               timeLapse.consumeAll();
             }
@@ -244,6 +249,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             final CheckPoint checkPoint = checkPoints.get(1);
             if (getNumOfAGVsOnEdge(checkPoint.getResource().get(0), checkPoint.getResource().get(1)) < 2) {
               checkPoints.removeFirst();
+              currentPlan.removeFirstStep();
             } else {
               timeLapse.consumeAll();
             }
