@@ -238,7 +238,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
-    if (roadModel.get().getPosition(this).equals(destination)) {
+    if (roundedPos.equals(destination)) {
       // virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
       this.hasCompleted = true;
       result.updateResult(startTime, timeLapse.getTime());
@@ -280,7 +280,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     if (isFreezing && currentTime >= endOfFreezingTime) {
       isFreezing = false;
-      propagatedDelay = false;
       nextExplorationTime = currentTime;
     }
     

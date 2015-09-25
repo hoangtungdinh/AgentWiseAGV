@@ -16,6 +16,8 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.base.Optional;
 
+import incidentgenerator.Incident;
+import incidentgenerator.IncidentList;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
@@ -62,6 +64,16 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The result. */
   private Result result;
   
+  private IncidentList incidentList;
+
+  private Incident nextIncident;
+  
+  private long endOfFreezingTime;
+  
+  private boolean isFreezing;
+  
+  private boolean propagatedDelay;
+  
   /**
    * Instantiates a new vehicle agent.
    *
@@ -73,7 +85,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    * @param result the result
    */
   public VehicleAgent(OriginDestination originDestination, VirtualEnvironment virtualEnvironment,
-      int agvID, Simulator sim, Setting setting, Result result) {
+      int agvID, Simulator sim, Setting setting, Result result, IncidentList incidentList) {
     roadModel = Optional.absent();
     path = new LinkedList<>();
     this.origin = originDestination.getOrigin();
@@ -85,6 +97,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     planRoute();
     startTime = checkPoints.getFirst().getExpectedTime();
     this.result = result;
+    this.isFreezing = false;
+    this.propagatedDelay = true;
+    this.incidentList = incidentList;
+    if (!this.incidentList.isEmpty()) {
+      this.nextIncident = this.incidentList.getNextIncident();
+    } else {
+      nextIncident = null;
+    }
+    this.endOfFreezingTime = -1;
   }
 
   @Override
@@ -114,6 +135,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
   @Override
   public void tick(TimeLapse timeLapse) {
+    
+    final long currentTime = timeLapse.getStartTime();
 
     // add the agv to the model if the start time has passed and no delayed
     // vehicle at the origin
@@ -134,15 +157,42 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
-    if (agvID == 5 && timeLapse.getStartTime() < 100000
-        && timeLapse.getStartTime() > 5000
-        && checkPoints.getFirst().getPoint().equals(roundedPos)) {
+    // check if check point is the destination then update result and return
+    if (roundedPos.equals(destination)) {
+      virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
+      result.updateResult(startTime, timeLapse.getTime());
+      sim.unregister(this);
       return;
     }
     
-    if (agvID == 7 && timeLapse.getStartTime() < 110000
-        && timeLapse.getStartTime() > 20000
-        && checkPoints.getFirst().getPoint().equals(roundedPos)) {
+    if (nextIncident != null) {
+      if (currentTime >= nextIncident.getStartTime() && propagatedDelay == true) {
+        isFreezing = true;
+        propagatedDelay = false;
+        
+        final double distanceToNextCheckPoint = Point.distance(roundedPos,
+            checkPoints.getFirst().getPoint());
+        final long timeToNextCheckPoint = (long) (distanceToNextCheckPoint*1000 / setting.getVehicleSpeed());
+        
+        if (endOfFreezingTime > currentTime) {
+          endOfFreezingTime += nextIncident.getDuration() + timeToNextCheckPoint;
+        } else {
+          endOfFreezingTime = currentTime + nextIncident.getDuration() + timeToNextCheckPoint;
+        }
+        
+        if (!incidentList.isEmpty()) {
+          nextIncident = incidentList.getNextIncident();
+        } else {
+          nextIncident = null;
+        }
+      }
+    }
+    
+    if (isFreezing && currentTime >= endOfFreezingTime) {
+      isFreezing = false;
+    }
+    
+    if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint()) && propagatedDelay) {
       return;
     }
     
@@ -151,14 +201,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     if (!checkPoints.isEmpty()
         && roundedPos.equals(checkPoints.getFirst().getPoint())) {
       // if the AGV is at exactly the check point
-      
-      // check if check point is the destination then update result and return
-      if (roundedPos.equals(destination)) {
-        virtualEnvironment.setVisited(agvID, checkPoints.getFirst());
-        result.updateResult(startTime, timeLapse.getTime());
-        sim.unregister(this);
-        return;
-      }
       
       // if the check point is a node then announce to both the node and the next edge that it has visited
       if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
@@ -262,7 +304,20 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   }
   
   @Override
-  public void afterTick(TimeLapse timeLapse) {}
+  public void afterTick(TimeLapse timeLapse) {
+    if (!roadModel.get().containsObject(this)) {
+      return;
+    }
+    
+    final Point currentPos = roadModel.get().getPosition(this);
+    final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
+    
+    if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint())) {
+      if (!propagatedDelay) {
+        propagatedDelay = true;
+      }
+    }
+  }
 
 }
 

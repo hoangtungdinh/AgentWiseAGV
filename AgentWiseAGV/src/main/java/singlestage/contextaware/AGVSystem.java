@@ -12,6 +12,8 @@ import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.AGVRenderer;
 import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 
+import incidentgenerator.IncidentGenerator;
+import incidentgenerator.IncidentList;
 import setting.Setting;
 import singlestage.GraphCreator;
 import singlestage.destinationgenerator.DestinationGenerator;
@@ -104,11 +106,15 @@ public final class AGVSystem {
     
     List<OriginDestination> odList = destinationGenerator.run();
     
+    final IncidentGenerator incidentGenerator = new IncidentGenerator(
+        sim.getRandomGenerator(), setting);
+    
     Result result = new Result(setting, sim);
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
+      final IncidentList incidentList = incidentGenerator.run();
       sim.register(new VehicleAgent(odList.get(i), virtualEnvironment, i, sim,
-          setting, result));
+          setting, result, incidentList));
     }
 
     sim.start();
