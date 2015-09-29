@@ -264,7 +264,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
                 - ((long) (0.1 * 1000 / setting.getVehicleSpeed()));
             checkPoints.addFirst(new CheckPoint(nextCheckPoint.getPoint(),
                 currentCheckPointTime, nextCheckPoint.getResource(),
-                nextCheckPoint.getResourceType()));
+                nextCheckPoint.getResourceType(), nextCheckPoint.getID()));
             // add two last plan step before exploration to the plan. Note that
             // the interval of the edge may change
             final long timeToLeaveEdgeFromCheckPoint = (long) ((setting

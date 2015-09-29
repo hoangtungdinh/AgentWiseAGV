@@ -364,6 +364,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     return numAGVsOnEdge;
   }
   
+  public List<CheckPoint> getCheckPoints() {
+    return checkPoints;
+  }
+
+  public int getID() {
+    return agvID;
+  }
+  
   public Plan getCurrentPlan() {
     return currentPlan;
   }

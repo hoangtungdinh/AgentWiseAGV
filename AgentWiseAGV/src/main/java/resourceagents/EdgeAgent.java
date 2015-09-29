@@ -3,8 +3,10 @@ package resourceagents;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,8 @@ public class EdgeAgent implements ResourceAgent {
   
   private Setting setting;
   
+  private LinkedList<Integer> orderList;
+  
   /**
    * Instantiates a new edge agent.
    * The point p1 and p2 can be at any order
@@ -53,6 +57,7 @@ public class EdgeAgent implements ResourceAgent {
   public EdgeAgent(Point p1, Point p2, double length, Setting setting) {
     this.setting = setting;
     this.length = length - setting.getVehicleLength();
+    this.orderList = null;
     node1 = p1;
     node2 = p2;
 
@@ -600,4 +605,37 @@ public class EdgeAgent implements ResourceAgent {
       }
     }
   }
+  
+  public void createOrderList() {
+    if (orderList != null) {
+      throw new IllegalStateException("This method should be called only once!");
+    }
+    
+    // first create a reservation list with all reservations from node1
+    final List<Reservation> resvList = new ArrayList<>(reservationMap.get(node1));
+    // add all reservations from node2 to that list
+    resvList.addAll(reservationMap.get(node2));
+    
+    Collections.sort(resvList);
+    
+    orderList = new LinkedList<>();
+    for (Reservation resv : resvList) {
+      orderList.add(resv.getAgvID());
+    }
+  }
+  
+  public int getFirstAGV() {
+    return orderList.getFirst();
+  }
+  
+  public void removeFirstAGV() {
+    orderList.removeFirst();
+  }
+
+  @Override
+  public String toString() {
+    return ("Edge: " + node1 + " to " + node2);
+  }
+  
+  
 }

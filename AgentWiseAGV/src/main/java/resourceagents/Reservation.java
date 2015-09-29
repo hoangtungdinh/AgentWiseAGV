@@ -8,7 +8,7 @@ import com.google.common.collect.Range;
  *
  * @author Tung
  */
-public class Reservation {
+public class Reservation implements Comparable<Reservation> {
   
   /** The id of the AGV. */
   private int agvID;
@@ -90,5 +90,19 @@ public class Reservation {
   
   public void setNewInterval(Range<Long> newInterval) {
     this.interval = newInterval;
+  }
+
+  @Override
+  public int compareTo(Reservation other) {
+    final long thisStartTime = interval.lowerEndpoint();
+    final long otherStartTime = other.getInterval().lowerEndpoint();
+    
+    if (thisStartTime < otherStartTime) {
+      return -1;
+    }  else if (thisStartTime > otherStartTime) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 }

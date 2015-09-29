@@ -1,7 +1,9 @@
 package resourceagents;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.github.rinde.rinsim.geom.Point;
@@ -18,16 +20,18 @@ import setting.Setting;
  * @author Tung
  */
 public class NodeAgent implements ResourceAgent {
-  
- /** The reservations. */
- private List<Reservation> reservations;
- 
- /** The node that the agent associated. */
- private Point node;
+
+  /** The reservations. */
+  private List<Reservation> reservations;
+
+  /** The node that the agent associated. */
+  private Point node;
 
   /** The setting. */
   private Setting setting;
   
+  private LinkedList<Integer> orderList;
+
   /**
    * Instantiates a new node agent.
    *
@@ -35,9 +39,10 @@ public class NodeAgent implements ResourceAgent {
    * @param setting the setting
    */
   public NodeAgent(Point node, Setting setting) {
-    reservations = new ArrayList<>();
+    this.reservations = new ArrayList<>();
     this.node = node;
     this.setting = setting;
+    this.orderList = null;
   }
   
   /**
@@ -303,4 +308,39 @@ public class NodeAgent implements ResourceAgent {
       }
     }
   }
+  
+  /**
+   * Creates the order list based on the current reservation
+   */
+  public void createOrderList() {
+    // this method should be called only once
+    if (orderList != null) {
+      throw new IllegalStateException("This method should be called only once!");
+    }
+    
+//    orderList = new LinkedList<>();
+    
+    // sort the reservation list according to the start time
+    Collections.sort(reservations);
+    for (Reservation resv : reservations) {
+      orderList.add(resv.getAgvID());
+    }
+   
+    return;
+  }
+  
+  public int getFirstAGV() {
+    return orderList.getFirst();
+  }
+  
+  public void removeFirstAGV() {
+    orderList.removeFirst();
+  }
+
+  @Override
+  public String toString() {
+    return ("Node: " + node);
+  }
+  
+  
 }

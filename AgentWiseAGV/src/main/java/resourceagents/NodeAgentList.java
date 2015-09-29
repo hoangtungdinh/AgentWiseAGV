@@ -74,4 +74,10 @@ public class NodeAgentList {
       nodeAgent.removeReservationsOf(agvList);
     }
   }
+  
+  public void createOrderList() {
+    for (NodeAgent nodeAgent : nodeAgentList) {
+      nodeAgent.createOrderList();
+    }
+  }
 }
