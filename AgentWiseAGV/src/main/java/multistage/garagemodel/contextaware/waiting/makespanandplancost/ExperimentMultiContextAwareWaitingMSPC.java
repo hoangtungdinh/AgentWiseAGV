@@ -19,19 +19,19 @@ import com.google.common.util.concurrent.MoreExecutors;
 import result.plancostandmakespan.Result;
 import setting.Setting;
 
-public class ExperimentMultiContextAwareWaiting {
+public class ExperimentMultiContextAwareWaitingMSPC {
 
   public static void main(String[] args) {
     ListeningExecutorService executor = MoreExecutors
         .listeningDecorator(Executors
-            .newFixedThreadPool(4));
+            .newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
 
     List<ListenableFuture<Result>> futures = new ArrayList<>();
     
     try {
       LinkedList<Long> seeds = new LinkedList<>();
       
-      InputStream inputStream = ExperimentMultiContextAwareWaiting.class
+      InputStream inputStream = ExperimentMultiContextAwareWaitingMSPC.class
           .getResourceAsStream("seeds.txt");
       BufferedReader bufferedReader = new BufferedReader(
           new InputStreamReader(inputStream));

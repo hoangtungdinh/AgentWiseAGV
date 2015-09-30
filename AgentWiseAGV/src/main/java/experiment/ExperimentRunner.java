@@ -2,9 +2,9 @@ package experiment;
 
 import java.util.concurrent.Callable;
 
+import multistage.garagemodel.contextaware.waiting.makespanandplancost.AGVSystem;
 import result.plancostandmakespan.Result;
 import setting.Setting;
-import singlestage.delegatemas.AGVSystem;
 
 public class ExperimentRunner implements Callable<Result> {
   
@@ -21,6 +21,7 @@ public class ExperimentRunner implements Callable<Result> {
     final AGVSystem agvSystem = new AGVSystem(setting,
         false);
     Result result = null;
+    
     try {
       result = agvSystem.run();
     } catch (Exception e) {
@@ -28,6 +29,7 @@ public class ExperimentRunner implements Callable<Result> {
       System.out.println("Error at seed: " + setting.getSeed() + " numOfAGVs: " + setting.getNumOfAGVs());
       System.exit(0);
     }
+    
     System.out.println("num of AGVs: " + (setting.getNumOfAGVs()) + "\tSeed: "
         + setting.getSeed() + "\tDONE");
     return result;

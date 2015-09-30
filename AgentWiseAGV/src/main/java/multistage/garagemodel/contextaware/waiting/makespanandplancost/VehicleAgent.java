@@ -156,6 +156,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       state = State.IDLE;
     }
     
+    if (state == State.IDLE) {
+      return;
+    }
+    
     if (!currentPlan.getIntervals().isEmpty()
         && currentTime >= currentPlan.getIntervals().get(0).upperEndpoint()) {
       final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();

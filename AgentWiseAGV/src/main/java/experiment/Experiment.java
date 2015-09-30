@@ -42,11 +42,11 @@ public class Experiment {
       
       bufferedReader.close();
 
-      for (int numAGV = 1; numAGV <= 10; numAGV++) {
-        for (int i = 0; i < 100; i++) {
+      for (int numAGV = 1; numAGV <= 1; numAGV++) {
+        for (int i = 0; i < 1000; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
-              .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
+              .setNumOfAGVs(numAGV * 20).setSeed(seed).build();
           futures.add(executor.submit(new ExperimentRunner(setting)));
         }
       }
