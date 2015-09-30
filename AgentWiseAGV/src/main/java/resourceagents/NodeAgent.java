@@ -31,7 +31,7 @@ public class NodeAgent implements ResourceAgent {
   /** The setting. */
   private Setting setting;
   
-  private LinkedList<SingleStep> orderList;
+  private LinkedList<SingleStep> orderedList;
 
   /**
    * Instantiates a new node agent.
@@ -43,7 +43,7 @@ public class NodeAgent implements ResourceAgent {
     this.reservations = new ArrayList<>();
     this.node = node;
     this.setting = setting;
-    this.orderList = null;
+    this.orderedList = null;
   }
   
   /**
@@ -315,7 +315,7 @@ public class NodeAgent implements ResourceAgent {
    */
   public void createOrderList() {
     // this method should be called only once
-    if (orderList != null) {
+    if (orderedList != null) {
       throw new IllegalStateException("This method should be called only once!");
     }
     
@@ -325,18 +325,18 @@ public class NodeAgent implements ResourceAgent {
     Collections.sort(reservations);
     for (Reservation resv : reservations) {
       final SingleStep singleStep = new SingleStep(this, resv.getAgvID(), resv.getInterval().lowerEndpoint());
-      orderList.add(singleStep);
+      orderedList.add(singleStep);
     }
    
     return;
   }
   
   public int getFirstAGV() {
-    return orderList.getFirst().getAgvID();
+    return orderedList.getFirst().getAgvID();
   }
   
   public void removeFirstAGV() {
-    orderList.removeFirst();
+    orderedList.removeFirst();
   }
 
   @Override
@@ -344,5 +344,7 @@ public class NodeAgent implements ResourceAgent {
     return ("Node: " + node);
   }
   
-  
+  public List<SingleStep> getOrderedList() {
+    return orderedList;
+  }
 }

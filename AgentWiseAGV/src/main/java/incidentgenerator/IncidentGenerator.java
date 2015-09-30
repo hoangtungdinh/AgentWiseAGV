@@ -25,6 +25,7 @@ public class IncidentGenerator {
   }
 
   public IncidentList run() {
+    // we expect that there is one incident per setting.getEndTime() / setting.getNumOfIncidents()
     final TimeSeriesGenerator timeSeriesGenerator = TimeSeries
         .homogenousPoisson((double) setting.getEndTime() / 100,
             setting.getNumOfIncidents());

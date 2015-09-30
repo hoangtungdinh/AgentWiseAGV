@@ -44,7 +44,7 @@ public class EdgeAgent implements ResourceAgent {
   
   private Setting setting;
   
-  private LinkedList<SingleStep> orderList;
+  private LinkedList<SingleStep> orderedList;
   
   /**
    * Instantiates a new edge agent.
@@ -58,7 +58,7 @@ public class EdgeAgent implements ResourceAgent {
   public EdgeAgent(Point p1, Point p2, double length, Setting setting) {
     this.setting = setting;
     this.length = length - setting.getVehicleLength();
-    this.orderList = null;
+    this.orderedList = null;
     node1 = p1;
     node2 = p2;
 
@@ -608,7 +608,7 @@ public class EdgeAgent implements ResourceAgent {
   }
   
   public void createOrderList() {
-    if (orderList != null) {
+    if (orderedList != null) {
       throw new IllegalStateException("This method should be called only once!");
     }
     
@@ -619,19 +619,19 @@ public class EdgeAgent implements ResourceAgent {
     
     Collections.sort(resvList);
     
-    orderList = new LinkedList<>();
+    orderedList = new LinkedList<>();
     for (Reservation resv : resvList) {
       final SingleStep singleStep = new SingleStep(this, resv.getAgvID(), resv.getInterval().lowerEndpoint());
-      orderList.add(singleStep);
+      orderedList.add(singleStep);
     }
   }
   
   public int getFirstAGV() {
-    return orderList.getFirst().getAgvID();
+    return orderedList.getFirst().getAgvID();
   }
   
   public void removeFirstAGV() {
-    orderList.removeFirst();
+    orderedList.removeFirst();
   }
 
   @Override
@@ -639,5 +639,7 @@ public class EdgeAgent implements ResourceAgent {
     return ("Edge: " + node1 + " to " + node2);
   }
   
-  
+  public List<SingleStep> getOrderedList() {
+    return orderedList;
+  }
 }

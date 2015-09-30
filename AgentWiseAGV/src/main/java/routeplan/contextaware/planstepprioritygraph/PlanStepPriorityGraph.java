@@ -7,10 +7,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.analysis.function.Sin;
+
+import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import ch.qos.logback.core.pattern.parser.Node;
 import multistage.garagemodel.contextaware.repair.makespanandplancost.VehicleAgent;
+import resourceagents.EdgeAgent;
 import resourceagents.EdgeAgentList;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
@@ -100,7 +105,40 @@ public class PlanStepPriorityGraph {
    * Creates the edges according to step 2 in ter mors's paper
    */
   public void createEdgesStep2() {
+    for (NodeAgent nodeAgent : nodeAgentList.getAllNodeAgents()) {
+      final List<SingleStep> orderedList = nodeAgent.getOrderedList();
+      createEdgesFromOrderedList(orderedList);
+    }
     
+    for (EdgeAgent edgeAgent : edgeAgentList.getAllEdgeAgents()) {
+      final List<SingleStep> orderedList = edgeAgent.getOrderedList();
+      createEdgesFromOrderedList(orderedList);
+    }
+  }
+
+  public void createEdgesFromOrderedList(List<SingleStep> orderedList) {
+    for (int i = 0; i < orderedList.size() - 1; i++) {
+      final SingleStep fromStep = orderedList.get(i);
+      final SingleStep toStep = orderedList.get(i + 1);
+      graph.put(fromStep, toStep);
+      
+      final SingleStep successorOfFromStep = getSuccessorStep(fromStep);
+      final SingleStep successorOfToStep = getSuccessorStep(toStep);
+      if (successorOfFromStep != null && successorOfToStep != null) {
+        graph.put(successorOfFromStep, successorOfToStep);
+      }
+    }
+  }
+  
+  public SingleStep getSuccessorStep(SingleStep step) {
+    final int agvID = step.getAgvID();
+    final List<SingleStep> plan = agvPlanMap.get(agvID);
+    final int indexOfStep = plan.indexOf(step);
+    if (indexOfStep < plan.size() - 1) {
+      return plan.get(indexOfStep + 1);
+    } else {
+      return null;
+    }
   }
   
   public void createEdgesStep3() {
