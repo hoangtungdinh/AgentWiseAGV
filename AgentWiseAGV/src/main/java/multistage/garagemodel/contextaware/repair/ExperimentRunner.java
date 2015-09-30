@@ -2,7 +2,7 @@ package multistage.garagemodel.contextaware.repair;
 
 import java.util.concurrent.Callable;
 
-import multistage.result.Result;
+import result.throughput.Result;
 import setting.Setting;
 
 public class ExperimentRunner implements Callable<Result> {

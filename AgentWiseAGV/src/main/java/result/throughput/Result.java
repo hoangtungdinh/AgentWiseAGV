@@ -1,4 +1,4 @@
-package multistage.result;
+package result.throughput;
 
 import com.github.rinde.rinsim.core.Simulator;
 

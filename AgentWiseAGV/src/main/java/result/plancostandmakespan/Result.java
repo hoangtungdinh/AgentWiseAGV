@@ -1,4 +1,4 @@
-package singlestage.result;
+package result.plancostandmakespan;
 
 import com.github.rinde.rinsim.core.Simulator;
 
@@ -8,6 +8,7 @@ public class Result {
   
   private long jointPlanCost;
   
+  @SuppressWarnings("unused")
   private long earliestStartingTime;
   
   private long latestFinishTime;
@@ -30,22 +31,37 @@ public class Result {
     this.sim = sim;
   }
   
+//  public void updateResult(long startTime, long finishTime) {
+//    numOfAGVs++;
+//    
+//    if (earliestStartingTime > startTime) {
+//      earliestStartingTime = startTime;
+//    }
+//    
+//    if (latestFinishTime < finishTime) {
+//      latestFinishTime = finishTime;
+//    }
+//    
+//    jointPlanCost += finishTime - startTime;
+//    
+//    if (numOfAGVs == setting.getNumOfAGVs()) {
+//      sim.stop();
+//      makeSpan = latestFinishTime - earliestStartingTime;
+//    }
+//  }
+  
   public void updateResult(long startTime, long finishTime) {
     numOfAGVs++;
-    
-    if (earliestStartingTime > startTime) {
-      earliestStartingTime = startTime;
-    }
     
     if (latestFinishTime < finishTime) {
       latestFinishTime = finishTime;
     }
     
-    jointPlanCost += finishTime - startTime;
+    jointPlanCost += finishTime;
     
     if (numOfAGVs == setting.getNumOfAGVs()) {
       sim.stop();
-      makeSpan = latestFinishTime - earliestStartingTime;
+      makeSpan = latestFinishTime;
     }
   }
   

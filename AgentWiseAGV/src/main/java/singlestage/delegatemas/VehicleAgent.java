@@ -19,6 +19,7 @@ import com.google.common.collect.Range;
 
 import incidentgenerator.Incident;
 import incidentgenerator.IncidentList;
+import result.plancostandmakespan.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
@@ -26,7 +27,6 @@ import routeplan.RangeEndPoint;
 import routeplan.ResourceType;
 import setting.Setting;
 import singlestage.destinationgenerator.OriginDestination;
-import singlestage.result.Result;
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
   

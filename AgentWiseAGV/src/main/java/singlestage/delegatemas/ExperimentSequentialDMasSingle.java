@@ -11,9 +11,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import experiment.Experiment;
+import result.plancostandmakespan.Result;
+import result.plancostandmakespan.Sample;
 import setting.Setting;
-import singlestage.result.Result;
-import singlestage.result.Sample;
 
 public class ExperimentSequentialDMasSingle {
 

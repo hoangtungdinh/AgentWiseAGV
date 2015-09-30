@@ -1,4 +1,4 @@
-package singlestage.result;
+package result.plancostandmakespan;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -16,7 +16,7 @@ import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 import multistage.Destinations;
 import multistage.centralstationmodel.GraphCreator;
 import multistage.centralstationmodel.destinationgenerator.DestinationGenerator;
-import multistage.result.Result;
+import result.throughput.Result;
 import setting.Setting;
 
 public final class AGVSystem {

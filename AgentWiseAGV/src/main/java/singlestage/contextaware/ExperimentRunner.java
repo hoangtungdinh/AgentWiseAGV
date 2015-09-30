@@ -2,8 +2,8 @@ package singlestage.contextaware;
 
 import java.util.concurrent.Callable;
 
+import result.plancostandmakespan.Result;
 import setting.Setting;
-import singlestage.result.Result;
 
 public class ExperimentRunner implements Callable<Result> {
   

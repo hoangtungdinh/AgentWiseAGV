@@ -14,11 +14,11 @@ import com.github.rinde.rinsim.ui.renderers.WarehouseRenderer;
 
 import incidentgenerator.IncidentGenerator;
 import incidentgenerator.IncidentList;
+import result.plancostandmakespan.Result;
 import setting.Setting;
 import singlestage.GraphCreator;
 import singlestage.destinationgenerator.DestinationGenerator;
 import singlestage.destinationgenerator.OriginDestination;
-import singlestage.result.Result;
 
 public final class AGVSystem {
 

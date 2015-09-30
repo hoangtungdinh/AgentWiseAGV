@@ -15,7 +15,7 @@ import com.google.common.base.Optional;
 
 import multistage.Destinations;
 import multistage.State;
-import multistage.result.Result;
+import result.throughput.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;

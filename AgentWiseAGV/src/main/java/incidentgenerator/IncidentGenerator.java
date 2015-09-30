@@ -3,6 +3,7 @@ package incidentgenerator;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.math3.random.RandomGenerator;
@@ -47,23 +48,37 @@ public class IncidentGenerator {
   }
   
   public List<Long> toLong(List<Double> listDouble) {
-    final List<Long> listLong = new ArrayList<>();
+    final LinkedList<Long> listLong = new LinkedList<>();
     for (double num : listDouble) {
-      listLong.add((long) num);
+      final long numInLong = (long) num;
+      if (listLong.isEmpty()
+          || numInLong > listLong.getLast() + 10){
+        listLong.add((long) num);
+      }
     }
     return listLong;
   }
   
   public List<Long> generateIncidentDurations(List<Long> startTimeList) {
     final List<Long> durationList = new ArrayList<>();
+    
     for (int i = 0; i < startTimeList.size() - 1; i++) {
-      final long duration = (long) randomGenerator
+      long duration = (long) randomGenerator
           .nextInt((int) (startTimeList.get(i + 1) - startTimeList.get(i)));
+      
+      while (duration == 0) {
+        duration = (long) randomGenerator
+            .nextInt((int) (startTimeList.get(i + 1) - startTimeList.get(i)));
+      }
+      
       durationList.add(duration);
     }
+    
     final long duration = (long) randomGenerator.nextInt(
         (int) ((setting.getEndTime() / 100) / setting.getNumOfIncidents()));
+    
     durationList.add(duration);
+    
     return durationList;
   }
 

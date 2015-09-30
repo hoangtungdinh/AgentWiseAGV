@@ -19,7 +19,7 @@ import incidentgenerator.IncidentList;
 import multistage.Destinations;
 import multistage.garagemodel.GraphCreator;
 import multistage.garagemodel.destinationgenerator.DestinationGenerator;
-import multistage.result.Result;
+import result.throughput.Result;
 import setting.Setting;
 
 public final class AGVSystem {

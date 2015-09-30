@@ -18,13 +18,13 @@ import com.google.common.base.Optional;
 
 import incidentgenerator.Incident;
 import incidentgenerator.IncidentList;
+import result.plancostandmakespan.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
 import routeplan.ResourceType;
 import setting.Setting;
 import singlestage.destinationgenerator.OriginDestination;
-import singlestage.result.Result;
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
   

@@ -117,7 +117,7 @@ public class Setting {
     private long switchingThreshold = 0;
     private int numOfAlterRoutes = 10;
     private int numOfDestsForEachAGV = 3;
-    private long expectedFreezingDuration = 100000L;
+    private long expectedFreezingDuration = 1000000L;
     
     private int numOfIncidents = 10;
     
