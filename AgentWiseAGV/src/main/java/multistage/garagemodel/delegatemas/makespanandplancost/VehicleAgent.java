@@ -1,4 +1,4 @@
-package multistage.garagemodel.delegatemas;
+package multistage.garagemodel.delegatemas.makespanandplancost;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -20,14 +20,13 @@ import incidentgenerator.Incident;
 import incidentgenerator.IncidentList;
 import multistage.Destinations;
 import multistage.State;
-import result.throughput.Result;
+import result.plancostandmakespan.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
 import routeplan.RangeEndPoint;
 import routeplan.ResourceType;
 import setting.Setting;
-
 
 public class VehicleAgent implements TickListener, MovingRoadUser {
   
@@ -80,6 +79,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private Point garage;
   
+  @SuppressWarnings("unused")
   private int reachedDestinations = 0;
 
   private boolean isGoingToExplore;
@@ -94,6 +94,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private long endOfFreezingTime;
   
+  private long finishTime;
+  
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
       int agvID, List<Point> garageList, Setting setting, Result result, IncidentList incidentList) {
     roadModel = Optional.absent();
@@ -104,7 +106,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.garageList = garageList;
     this.garage = garageList.get(agvID);
     this.initialPos = garage;
-    state = State.IDLE;
+    state = State.ACTIVE;
     this.setting = setting;
     this.destinations = new LinkedList<>();
     this.result = result;
@@ -125,6 +127,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     roadModel = Optional.of((CollisionGraphRoadModel) model);
     roadModel.get().addObjectAt(this, initialPos);
     path = new LinkedList<>();
+    nextDestination(0);
   }
 
   @Override
@@ -165,10 +168,12 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       // if the agv reaches the entrance of the garage, then it becomes idle
       // and will try to move into the garage
       state = State.IDLE;
-    } else if (state == State.IDLE && !isFreezing) {
-      // if the agv reached the garage, then it becomes active
-      state = State.ACTIVE;
-      nextDestination(timeLapse.getEndTime());
+      finishTime = currentTime;
+      result.updateResult(0, finishTime);
+    }
+    
+    if (state == State.IDLE) {
+      return;
     }
     
     if (!currentPlan.getIntervals().isEmpty() && currentTime >= currentPlan.getIntervals().get(0).upperEndpoint()) {
@@ -486,6 +491,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
+    if (state == State.IDLE) {
+      return;
+    }
+    
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
@@ -500,10 +509,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           refresh(currentTime);
         }
       }
-    }
-    
-    if (currentTime == setting.getEndTime()) {
-      result.updateResult(reachedDestinations);
     }
   }
 

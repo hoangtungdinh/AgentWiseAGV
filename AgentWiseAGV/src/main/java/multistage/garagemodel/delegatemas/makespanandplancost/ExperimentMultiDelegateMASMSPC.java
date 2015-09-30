@@ -1,4 +1,4 @@
-package multistage.garagemodel.delegatemas;
+package multistage.garagemodel.delegatemas.makespanandplancost;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,10 +16,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import result.throughput.Result;
+import result.plancostandmakespan.Result;
 import setting.Setting;
 
-public class ExperimentMultiDelegateMAS {
+public class ExperimentMultiDelegateMASMSPC {
 
   public static void main(String[] args) {
     ListeningExecutorService executor = MoreExecutors
@@ -31,7 +31,7 @@ public class ExperimentMultiDelegateMAS {
     try {
       LinkedList<Long> seeds = new LinkedList<>();
       
-      InputStream inputStream = ExperimentMultiDelegateMAS.class
+      InputStream inputStream = ExperimentMultiDelegateMASMSPC.class
           .getResourceAsStream("seeds.txt");
       BufferedReader bufferedReader = new BufferedReader(
           new InputStreamReader(inputStream));
@@ -47,7 +47,7 @@ public class ExperimentMultiDelegateMAS {
       bufferedReader.close();
 
       for (int numAGV = 1; numAGV <= 10; numAGV++) {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
@@ -69,12 +69,12 @@ public class ExperimentMultiDelegateMAS {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsMultiDMAS.txt"));
-      printWriterMS.println("numAGVs\tFinishedTask");
+          new File("ResultsMultiDMAS_makespan.txt"));
+      printWriterMS.println("numAGVs\tmakespan");
       for (ListenableFuture<Result> result : futures) {
         try {
           printWriterMS.println(result.get().getSetting().getNumOfAGVs() + "\t"
-              + result.get().getNumOfReachedDestinations());
+              + result.get().getMakeSpan());
         } catch (InterruptedException e) {
           e.printStackTrace();
         } catch (ExecutionException e) {
@@ -82,6 +82,21 @@ public class ExperimentMultiDelegateMAS {
         }
       }
       printWriterMS.close();
+
+      PrintWriter printWriterPC = new PrintWriter(
+          new File("ResultsMultiDMAS_plancost.txt"));
+      printWriterPC.println("numAGVs\tPlanCost");
+      for (ListenableFuture<Result> result : futures) {
+        try {
+          printWriterPC.println(result.get().getSetting().getNumOfAGVs() + "\t"
+              + result.get().getJointPlanCost());
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (ExecutionException e) {
+          e.printStackTrace();
+        }
+      }
+      printWriterPC.close();
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }

@@ -1,4 +1,4 @@
-package multistage.garagemodel.delegatemas;
+package multistage.garagemodel.delegatemas.makespanandplancost;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ import incidentgenerator.IncidentList;
 import multistage.Destinations;
 import multistage.garagemodel.GraphCreator;
 import multistage.garagemodel.destinationgenerator.DestinationGenerator;
-import result.throughput.Result;
+import result.plancostandmakespan.Result;
 import setting.Setting;
 
 public final class AGVSystem {

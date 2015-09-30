@@ -1,4 +1,4 @@
-package multistage.garagemodel.delegatemas;
+package multistage.garagemodel.delegatemas.throughput;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package multistage.garagemodel.delegatemas;
+package multistage.garagemodel.delegatemas.throughput;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,7 +33,7 @@ public class SequentialExperimentDMas {
           System.out.println("num of AGVs: " + (numAGV*5) + "\tSample: " + i + "\tSeed: " + seed);
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 5).setSeed(seed).build();
-          final multistage.garagemodel.delegatemas.AGVSystem agvSystem = new AGVSystem(setting, false);
+          final multistage.garagemodel.delegatemas.throughput.AGVSystem agvSystem = new AGVSystem(setting, false);
           final Result result = agvSystem.run();
           sample.addResult(result);
         }
