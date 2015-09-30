@@ -80,4 +80,8 @@ public class NodeAgentList {
       nodeAgent.createOrderList();
     }
   }
+  
+  public List<NodeAgent> getAllNodeAgents() {
+    return nodeAgentList;
+  }
 }

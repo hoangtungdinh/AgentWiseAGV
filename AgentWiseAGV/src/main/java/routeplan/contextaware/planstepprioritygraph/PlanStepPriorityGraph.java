@@ -12,6 +12,7 @@ import com.google.common.collect.Multimap;
 
 import multistage.garagemodel.contextaware.repair.makespanandplancost.VehicleAgent;
 import resourceagents.EdgeAgentList;
+import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
 import resourceagents.ResourceAgent;
 import routeplan.CheckPoint;
@@ -95,6 +96,9 @@ public class PlanStepPriorityGraph {
     }
   }
   
+  /**
+   * Creates the edges according to step 2 in ter mors's paper
+   */
   public void createEdgesStep2() {
     
   }

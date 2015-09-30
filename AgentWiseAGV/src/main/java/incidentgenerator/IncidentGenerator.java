@@ -10,7 +10,6 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.rinsim.scenario.generator.TimeSeries;
 import com.github.rinde.rinsim.scenario.generator.TimeSeries.TimeSeriesGenerator;
-import com.google.common.base.Predicate;
 
 import setting.Setting;
 
@@ -26,12 +25,9 @@ public class IncidentGenerator {
   }
 
   public IncidentList run() {
-    final Predicate<List<Double>> pred = TimeSeries
-        .numEventsPredicate(setting.getNumOfIncidents());
-    final TimeSeriesGenerator timeSeriesGenerator = TimeSeries.filter(
-        TimeSeries.homogenousPoisson((double) setting.getEndTime() / 100,
-            setting.getNumOfIncidents()),
-        pred);
+    final TimeSeriesGenerator timeSeriesGenerator = TimeSeries
+        .homogenousPoisson((double) setting.getEndTime() / 100,
+            setting.getNumOfIncidents());
     final List<Double> startTimesInDouble = timeSeriesGenerator.generate(randomGenerator.nextLong());
     final List<Long> startTimesInLong = toLong(startTimesInDouble);
     final List<Long> durationList = generateIncidentDurations(startTimesInLong);
@@ -66,7 +62,8 @@ public class IncidentGenerator {
       long duration = (long) randomGenerator
           .nextInt((int) (startTimeList.get(i + 1) - startTimeList.get(i)));
       
-      while (duration == 0) {
+      // incident duration must be larger than 0 and smaller than 100000
+      while (duration == 0 || duration > 1000) {
         duration = (long) randomGenerator
             .nextInt((int) (startTimeList.get(i + 1) - startTimeList.get(i)));
       }
@@ -74,8 +71,13 @@ public class IncidentGenerator {
       durationList.add(duration);
     }
     
-    final long duration = (long) randomGenerator.nextInt(
+    long duration = (long) randomGenerator.nextInt(
         (int) ((setting.getEndTime() / 100) / setting.getNumOfIncidents()));
+    
+    while (duration == 0 || duration > 1000) {
+      duration = (long) randomGenerator
+          .nextInt(1000);
+    }
     
     durationList.add(duration);
     

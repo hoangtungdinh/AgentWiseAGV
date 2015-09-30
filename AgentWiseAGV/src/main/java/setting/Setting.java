@@ -106,7 +106,7 @@ public class Setting {
     private double vehicleLength = 2d;
     private double vehicleSpeed = 1d;
     private int numOfAGVs = 100;
-    private long endTime = 1000 * 1000L;
+    private long endTime = 10000 * 1000L;
     private int speedUp = 2;
     private long seed = 0;
     
@@ -117,9 +117,9 @@ public class Setting {
     private long switchingThreshold = 0;
     private int numOfAlterRoutes = 10;
     private int numOfDestsForEachAGV = 3;
-    private long expectedFreezingDuration = 1000000L;
+    private long expectedFreezingDuration = 100000L;
     
-    private int numOfIncidents = 10;
+    private int numOfIncidents = 50;
     
     public SettingBuilder() {
 

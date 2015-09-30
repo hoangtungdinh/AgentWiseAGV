@@ -16,6 +16,7 @@ import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
 import routeplan.RangeEndPoint;
+import routeplan.contextaware.planstepprioritygraph.SingleStep;
 import setting.Setting;
 
 /**
@@ -43,7 +44,7 @@ public class EdgeAgent implements ResourceAgent {
   
   private Setting setting;
   
-  private LinkedList<Integer> orderList;
+  private LinkedList<SingleStep> orderList;
   
   /**
    * Instantiates a new edge agent.
@@ -620,12 +621,13 @@ public class EdgeAgent implements ResourceAgent {
     
     orderList = new LinkedList<>();
     for (Reservation resv : resvList) {
-      orderList.add(resv.getAgvID());
+      final SingleStep singleStep = new SingleStep(this, resv.getAgvID(), resv.getInterval().lowerEndpoint());
+      orderList.add(singleStep);
     }
   }
   
   public int getFirstAGV() {
-    return orderList.getFirst();
+    return orderList.getFirst().getAgvID();
   }
   
   public void removeFirstAGV() {

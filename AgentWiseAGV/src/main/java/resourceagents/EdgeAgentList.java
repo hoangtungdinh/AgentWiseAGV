@@ -84,4 +84,8 @@ public class EdgeAgentList {
       edgeAgent.removeReservationsOf(agvList);
     }
   }
+  
+  public List<EdgeAgent> getAllEdgeAgents() {
+    return edgeAgentList;
+  }
 }

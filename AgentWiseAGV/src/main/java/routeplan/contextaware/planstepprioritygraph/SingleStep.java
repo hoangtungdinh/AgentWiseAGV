@@ -16,7 +16,7 @@ public class SingleStep {
 
   /**
    * The step id to distinguish two different step of the same agv in the same
-   * resource.
+   * resource. It is the start time of the reservation of agvs on this resource
    */
   private long stepID;
 

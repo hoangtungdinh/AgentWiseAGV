@@ -47,7 +47,7 @@ public class ExperimentMultiDelegateMASMSPC {
       bufferedReader.close();
 
       for (int numAGV = 1; numAGV <= 10; numAGV++) {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
