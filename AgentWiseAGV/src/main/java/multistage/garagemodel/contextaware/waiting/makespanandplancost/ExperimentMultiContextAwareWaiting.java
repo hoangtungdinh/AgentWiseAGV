@@ -1,4 +1,4 @@
-package multistage.garagemodel.contextaware.waiting;
+package multistage.garagemodel.contextaware.waiting.makespanandplancost;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,7 +16,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import result.throughput.Result;
+import result.plancostandmakespan.Result;
 import setting.Setting;
 
 public class ExperimentMultiContextAwareWaiting {
@@ -47,7 +47,7 @@ public class ExperimentMultiContextAwareWaiting {
       bufferedReader.close();
 
       for (int numAGV = 1; numAGV <= 10; numAGV++) {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
@@ -69,12 +69,12 @@ public class ExperimentMultiContextAwareWaiting {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsMultiCA.txt"));
-      printWriterMS.println("numAGVs\tFinishedTask");
+          new File("ResultsMultiCA_makespan.txt"));
+      printWriterMS.println("numAGVs\tmakespan");
       for (ListenableFuture<Result> result : futures) {
         try {
           printWriterMS.println(result.get().getSetting().getNumOfAGVs() + "\t"
-              + result.get().getNumOfReachedDestinations());
+              + result.get().getMakeSpan());
         } catch (InterruptedException e) {
           e.printStackTrace();
         } catch (ExecutionException e) {
@@ -82,6 +82,21 @@ public class ExperimentMultiContextAwareWaiting {
         }
       }
       printWriterMS.close();
+
+      PrintWriter printWriterPC = new PrintWriter(
+          new File("ResultsMultiCA_plancost.txt"));
+      printWriterPC.println("numAGVs\tPlanCost");
+      for (ListenableFuture<Result> result : futures) {
+        try {
+          printWriterPC.println(result.get().getSetting().getNumOfAGVs() + "\t"
+              + result.get().getJointPlanCost());
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (ExecutionException e) {
+          e.printStackTrace();
+        }
+      }
+      printWriterPC.close();
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }

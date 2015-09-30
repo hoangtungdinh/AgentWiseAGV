@@ -10,7 +10,7 @@ import java.util.Map;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import multistage.garagemodel.contextaware.repair.VehicleAgent;
+import multistage.garagemodel.contextaware.repair.makespanandplancost.VehicleAgent;
 import resourceagents.EdgeAgentList;
 import resourceagents.NodeAgentList;
 import resourceagents.ResourceAgent;

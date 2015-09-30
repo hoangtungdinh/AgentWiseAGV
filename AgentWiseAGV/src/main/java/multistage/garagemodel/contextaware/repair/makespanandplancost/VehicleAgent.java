@@ -1,4 +1,4 @@
-package multistage.garagemodel.contextaware.waiting;
+package multistage.garagemodel.contextaware.repair.makespanandplancost;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -362,6 +362,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
     
     return numAGVsOnEdge;
+  }
+  
+  public List<CheckPoint> getCheckPoints() {
+    return checkPoints;
+  }
+
+  public int getID() {
+    return agvID;
   }
   
   public Plan getCurrentPlan() {

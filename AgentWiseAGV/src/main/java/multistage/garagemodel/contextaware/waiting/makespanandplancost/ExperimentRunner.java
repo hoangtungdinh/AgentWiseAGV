@@ -1,8 +1,8 @@
-package multistage.garagemodel.contextaware.waiting;
+package multistage.garagemodel.contextaware.waiting.makespanandplancost;
 
 import java.util.concurrent.Callable;
 
-import result.throughput.Result;
+import result.plancostandmakespan.Result;
 import setting.Setting;
 
 public class ExperimentRunner implements Callable<Result> {
