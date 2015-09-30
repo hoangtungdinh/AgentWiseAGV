@@ -141,6 +141,9 @@ public class PlanStepPriorityGraph {
     }
   }
   
+  /**
+   * Creates the edges according to step 3 in ter mors's paper.
+   */
   public void createEdgesStep3() {
     
   }
