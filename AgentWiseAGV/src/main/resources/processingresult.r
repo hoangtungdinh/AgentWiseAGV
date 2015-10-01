@@ -23,7 +23,11 @@ ggplot(makespan_datC, aes(x=numAGVs, y=makespan, color=approach, group=approach)
   theme_classic() + 
   scale_x_discrete(limits=makespan_datC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
-  coord_cartesian(xlim = c(5, 105))
+  coord_cartesian(xlim = c(5, 105)) +
+  xlab('Number of AGVs') +
+  ylab('Makespan')
+
+ggsave('staticmakespan.pdf', width = 8, height = 4)
 
 ####################################
 
@@ -44,7 +48,11 @@ ggplot(planCost_datC, aes(x=numAGVs, y=PlanCost, color=approach, group=approach)
   theme_classic() + 
   scale_x_discrete(limits=planCost_datC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
-  coord_cartesian(xlim = c(5, 105))
+  coord_cartesian(xlim = c(5, 105)) +
+  xlab('Number of AGVs') +
+  ylab('Plancost')
+
+ggsave('staticplancost.pdf', width = 8, height = 4)
 
 ####################################
 
@@ -67,7 +75,11 @@ ggplot(percentageMSC, aes(x=numAGVs, y=percentageOfMakeSpan)) +
   theme_classic() + 
   scale_x_discrete(limits=percentageMSC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
-  coord_cartesian(xlim = c(5, 105))
+  coord_cartesian(xlim = c(5, 105)) +
+  xlab('Number of AGVs') +
+  ylab('Makespan DMAS / Makespan CA')
+
+ggsave('staticmakespanpercentage.pdf', width = 8, height = 4)
 
 ####################################
 
@@ -90,7 +102,11 @@ ggplot(percentageMSC, aes(x=numAGVs, y=percentageOfPlanCost)) +
   theme_classic() + 
   scale_x_discrete(limits=percentageMSC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
-  coord_cartesian(xlim = c(5, 105))
+  coord_cartesian(xlim = c(5, 105)) +
+  xlab('Number of AGVs') +
+  ylab('Plancost DMAS / Plancost CA')
+
+ggsave('staticplancostpercentage.pdf', width = 8, height = 4)
 
 #######################################
 caMultiStage = read.table("ResultsMultiCA.txt", header=TRUE)
@@ -110,7 +126,11 @@ ggplot(throughput_datC, aes(x=numAGVs, y=FinishedTask, color=approach, group=app
   theme_classic() + 
   scale_x_discrete(limits=throughput_datC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
-  coord_cartesian(xlim = c(5, 105))
+  coord_cartesian(xlim = c(5, 105)) +
+  xlab('Number of AGVs') +
+  ylab('Throughput')
+
+ggsave('staticthrougput.pdf', width = 8, height = 4)
 
 ################################################
 
@@ -133,4 +153,8 @@ ggplot(percentageThroughPutC, aes(x=numAGVs, y=percentageOfThroughPut)) +
   theme_classic() + 
   scale_x_discrete(limits=percentageMSC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
-  coord_cartesian(xlim = c(5, 105))
+  coord_cartesian(xlim = c(5, 105)) +
+  xlab('Number of AGVs') +
+  ylab('Throughput DMAS / Throughput CA')
+
+ggsave('staticthrougputpercentage.pdf', width = 8, height = 4)
