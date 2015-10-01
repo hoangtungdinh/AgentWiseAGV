@@ -25,7 +25,9 @@ ggplot(makespan_datC, aes(x=numAGVs, y=makespan, color=approach, group=approach)
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105)) +
   xlab('Number of AGVs') +
-  ylab('Makespan')
+  ylab('Makespan') + 
+  theme(legend.title=element_blank()) +
+  theme(legend.justification=c(0,1), legend.position=c(0, 1))
 
 ggsave('staticmakespan.pdf', width = 8, height = 4)
 
@@ -50,7 +52,9 @@ ggplot(planCost_datC, aes(x=numAGVs, y=PlanCost, color=approach, group=approach)
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105)) +
   xlab('Number of AGVs') +
-  ylab('Plancost')
+  ylab('Plancost') + 
+  theme(legend.title=element_blank()) +
+  theme(legend.justification=c(0,1), legend.position=c(0, 1))
 
 ggsave('staticplancost.pdf', width = 8, height = 4)
 
@@ -77,7 +81,9 @@ ggplot(percentageMSC, aes(x=numAGVs, y=percentageOfMakeSpan)) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105)) +
   xlab('Number of AGVs') +
-  ylab('Makespan DMAS / Makespan CA')
+  ylab('Makespan DMAS / Makespan CA') + 
+  theme(legend.title=element_blank()) +
+  theme(legend.justification=c(0,1), legend.position=c(0, 1))
 
 ggsave('staticmakespanpercentage.pdf', width = 8, height = 4)
 
@@ -104,7 +110,9 @@ ggplot(percentageMSC, aes(x=numAGVs, y=percentageOfPlanCost)) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105)) +
   xlab('Number of AGVs') +
-  ylab('Plancost DMAS / Plancost CA')
+  ylab('Plancost DMAS / Plancost CA') + 
+  theme(legend.title=element_blank()) +
+  theme(legend.justification=c(0,1), legend.position=c(0, 1))
 
 ggsave('staticplancostpercentage.pdf', width = 8, height = 4)
 
@@ -128,7 +136,9 @@ ggplot(throughput_datC, aes(x=numAGVs, y=FinishedTask, color=approach, group=app
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105)) +
   xlab('Number of AGVs') +
-  ylab('Throughput')
+  ylab('Throughput') + 
+  theme(legend.title=element_blank()) +
+  theme(legend.justification=c(0,1), legend.position=c(0, 1))
 
 ggsave('staticthrougput.pdf', width = 8, height = 4)
 
@@ -155,6 +165,8 @@ ggplot(percentageThroughPutC, aes(x=numAGVs, y=percentageOfThroughPut)) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105)) +
   xlab('Number of AGVs') +
-  ylab('Throughput DMAS / Throughput CA')
+  ylab('Throughput DMAS / Throughput CA') + 
+  theme(legend.title=element_blank()) +
+  theme(legend.justification=c(0,1), legend.position=c(0, 1))
 
 ggsave('staticthrougputpercentage.pdf', width = 8, height = 4)
