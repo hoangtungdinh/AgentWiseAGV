@@ -4,16 +4,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.math3.analysis.function.Sin;
-
-import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import ch.qos.logback.core.pattern.parser.Node;
 import multistage.garagemodel.contextaware.repair.makespanandplancost.VehicleAgent;
 import resourceagents.EdgeAgent;
 import resourceagents.EdgeAgentList;
@@ -26,6 +23,8 @@ import routeplan.ResourceType;
 public class PlanStepPriorityGraph {
   
   private Multimap<SingleStep, SingleStep> graph;
+  
+  private List<SingleStep> allNodes;
   
   private NodeAgentList nodeAgentList;
   
@@ -46,6 +45,7 @@ public class PlanStepPriorityGraph {
   public void createGraph() {
     graph = HashMultimap.create();
     agvPlanMap = new HashMap<>();
+    allNodes = new ArrayList<>();
     createEdgesStep1();
     createEdgesStep2();
   }
@@ -97,6 +97,7 @@ public class PlanStepPriorityGraph {
         }
       }
       
+      allNodes.addAll(plan);
       agvPlanMap.put(agv.getID(), plan);
     }
   }
@@ -120,6 +121,11 @@ public class PlanStepPriorityGraph {
     for (int i = 0; i < orderedList.size() - 1; i++) {
       final SingleStep fromStep = orderedList.get(i);
       final SingleStep toStep = orderedList.get(i + 1);
+      
+      if (fromStep.getAgvID() == toStep.getAgvID()) {
+        continue;
+      }
+      
       graph.put(fromStep, toStep);
       
       final SingleStep successorOfFromStep = getSuccessorStep(fromStep);
@@ -142,9 +148,26 @@ public class PlanStepPriorityGraph {
   }
   
   /**
-   * Creates the edges according to step 3 in ter mors's paper.
+   * Checks if is acyclic.
+   * Implement according to https://en.wikipedia.org/wiki/Topological_sorting#CITEREFKahn1962
+   *
+   * @return true, if is acyclic
    */
-  public void createEdgesStep3() {
+  public boolean isAcyclic() {
+    final List<SingleStep> nodesWithIncomingEdges = new ArrayList<>(graph.values());
+    final LinkedList<SingleStep> listS = new LinkedList<>(allNodes);
+    listS.removeAll(nodesWithIncomingEdges);
+    final LinkedList<SingleStep> listL = new LinkedList<>();
     
+    while (!listS.isEmpty()) {
+      final SingleStep nodeN = listS.remove();
+      listL.addLast(nodeN);
+      final List<SingleStep> outComingNodes = new ArrayList<>(graph.get(nodeN));
+      for (SingleStep nodeM : outComingNodes) {
+        final boolean validEdge = graph.remove(nodeN, nodeM);
+        checkState(validEdge, "Cannot find any edge!");
+        
+      }
+    }
   }
 }
