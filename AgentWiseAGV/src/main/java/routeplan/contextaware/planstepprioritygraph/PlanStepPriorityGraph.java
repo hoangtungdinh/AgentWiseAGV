@@ -154,8 +154,9 @@ public class PlanStepPriorityGraph {
    * @return true, if is acyclic
    */
   public boolean isAcyclic() {
-    final List<SingleStep> nodesWithIncomingEdges = new ArrayList<>(graph.values());
+    List<SingleStep> nodesWithIncomingEdges = new ArrayList<>(graph.values());
     final LinkedList<SingleStep> listS = new LinkedList<>(allNodes);
+    // listS contains set of all nodes with no incoming edges
     listS.removeAll(nodesWithIncomingEdges);
     final LinkedList<SingleStep> listL = new LinkedList<>();
     
@@ -163,11 +164,23 @@ public class PlanStepPriorityGraph {
       final SingleStep nodeN = listS.remove();
       listL.addLast(nodeN);
       final List<SingleStep> outComingNodes = new ArrayList<>(graph.get(nodeN));
+      // for each node M with an edge e from N to M
       for (SingleStep nodeM : outComingNodes) {
+        // remove edge e from the graph
         final boolean validEdge = graph.remove(nodeN, nodeM);
         checkState(validEdge, "Cannot find any edge!");
-        
+        // if M has no other incoming edges then insert M to listS
+        nodesWithIncomingEdges = new ArrayList<>(graph.values());
+        if (!nodesWithIncomingEdges.contains(nodeM)) {
+          listS.add(nodeM);
+        }
       }
+    }
+    
+    if (graph.isEmpty()) {
+      return true;
+    } else {
+      return false;
     }
   }
 }
