@@ -6,13 +6,13 @@ public class Test {
 
   public static void main(String[] args) {
     final Setting setting = new Setting.SettingBuilder()
-        .setNumOfAGVs(10).setSeed(6277757).build();
+        .setNumOfAGVs(10).setSeed(2).build();
     // 20 9776449
 //    final singlestage.contextaware.AGVSystem agvSystem = new singlestage.contextaware.AGVSystem(setting, true);
 //    final singlestage.delegatemas.AGVSystem agvSystem = new singlestage.delegatemas.AGVSystem(setting, true);
-    final multistage.garagemodel.contextaware.waiting.makespanandplancost.AGVSystem agvSystem = new multistage.garagemodel.contextaware.waiting.makespanandplancost.AGVSystem(setting, true);
+//    final multistage.garagemodel.contextaware.waiting.makespanandplancost.AGVSystem agvSystem = new multistage.garagemodel.contextaware.waiting.makespanandplancost.AGVSystem(setting, true);
 //    final multistage.garagemodel.delegatemas.AGVSystem agvSystem = new multistage.garagemodel.delegatemas.AGVSystem(setting, true);
-//    final multistage.garagemodel.contextaware.repair.AGVSystem agvSystem = new multistage.garagemodel.contextaware.repair.AGVSystem(setting, true);
+    final multistage.garagemodel.contextaware.repair.makespanandplancost.AGVSystem agvSystem = new multistage.garagemodel.contextaware.repair.makespanandplancost.AGVSystem(setting, true);
     agvSystem.run();
   }
   

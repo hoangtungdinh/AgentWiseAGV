@@ -1,6 +1,5 @@
 package multistage.garagemodel.contextaware.repair.makespanandplancost;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -20,11 +19,10 @@ import incidentgenerator.Incident;
 import incidentgenerator.IncidentList;
 import multistage.Destinations;
 import multistage.State;
-import result.throughput.Result;
+import result.plancostandmakespan.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
-import routeplan.RangeEndPoint;
 import routeplan.ResourceType;
 import setting.Setting;
 
@@ -70,6 +68,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private Point garage;
   
+  @SuppressWarnings("unused")
   private int reachedDestinations = 0;
 
   private boolean isFreezing;
@@ -82,6 +81,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
   private long endOfFreezingTime;
   
+  private long finishTime;
+  
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
       int agvID, List<Point> garageList, Setting setting, Result result, IncidentList incidentList) {
     roadModel = Optional.absent();
@@ -92,7 +93,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.garageList = garageList;
     this.garage = garageList.get(agvID);
     this.initialPos = garage;
-    state = State.IDLE;
+    state = State.ACTIVE;
     this.setting = setting;
     this.destinations = new LinkedList<>();
     this.result = result;
@@ -112,6 +113,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     roadModel = Optional.of((CollisionGraphRoadModel) model);
     roadModel.get().addObjectAt(this, initialPos);
     path = new LinkedList<>();
+    nextDestination(0);
+    virtualEnvironment.notifyPlanned();
   }
 
   @Override
@@ -134,11 +137,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     currentPlan = plan;
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-    virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, setting.getEndTime());
+    virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, Long.MAX_VALUE - currentTime);
   }
 
   @Override
   public void tick(TimeLapse timeLapse) {
+    
+    if (!virtualEnvironment.finishPlanningPhase()) {
+      return;
+    }
     
     final long currentTime = timeLapse.getStartTime();
     
@@ -147,28 +154,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         && path.size() == 1) {
       // if the agv reaches the entrance of the garage, then it becomes idle
       // and will try to move into the garage
+      finishTime = currentTime;
+      result.updateResult(0, finishTime);
       state = State.IDLE;
-    } else if (state == State.IDLE && !isFreezing) {
-      // if the agv reached the garage, then it becomes active
-      state = State.ACTIVE;
-      nextDestination(timeLapse.getEndTime());
     }
     
-    if (!currentPlan.getIntervals().isEmpty()
-        && currentTime >= currentPlan.getIntervals().get(0).upperEndpoint()) {
-      final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();
-      final List<Point> resource = new ArrayList<>();
-      if (currentPlan.getIntervals().size() % 2 == 1) {
-        // first plan step is for a node
-        resource.add(currentPlan.getPath().get(0));
-        virtualEnvironment.setVisited(agvID, resource, endTime);
-      } else {
-        // first plan step is for an edge
-        resource.add(currentPlan.getPath().get(0));
-        resource.add(currentPlan.getPath().get(1));
-        virtualEnvironment.setVisited(agvID, resource, endTime);
-      }
-      currentPlan.removeFirstStep();
+    if (state == State.IDLE) {
+      return;
     }
     
     final Point currentPos = roadModel.get().getPosition(this);
@@ -212,78 +204,29 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (!checkPoints.isEmpty()
           && roundedPos.equals(checkPoints.getFirst().getPoint())) {
         
-        // set visited the current chec kpoint
-        final long endTime = currentPlan.getIntervals().get(0).upperEndpoint();
-        final List<Point> resource = new ArrayList<>();
-        if (currentPlan.getIntervals().size() % 2 == 1) {
-          // first plan step is for a node
-          resource.add(currentPlan.getPath().get(0));
-          virtualEnvironment.setVisited(agvID, resource, endTime);
-        } else {
-          // first plan step is for an edge
-          resource.add(currentPlan.getPath().get(0));
-          resource.add(currentPlan.getPath().get(1));
-          virtualEnvironment.setVisited(agvID, resource, endTime);
-        }
-        
-        if (currentTime < checkPoints.getFirst().getExpectedTime()) {
-          if (noHigherPriorityAGVs(checkPoints.getFirst().getExpectedTime(),
-              checkPoints.get(1).getResource()) && nextResourceIsFree(checkPoints.get(1))) {
-            // remove the first step of the plan
-            if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
-              // if is currently at a node
-              final long timeToLeaveNodeFromCheckPoint = (long) (setting
-                  .getVehicleLength()* 1000 / setting.getVehicleSpeed());
-              final Range<Long> newFirstInterval = Range.closed(currentPlan.getIntervals().get(0).lowerEndpoint(),
-                  currentTime + timeToLeaveNodeFromCheckPoint);
-              final long newLowerEndPoint = currentTime;
-              final long newUpperEndPoint = currentPlan.getIntervals().get(1)
-                  .upperEndpoint();
-              final Range<Long> newSecondInterval = Range.closed(newLowerEndPoint,
-                  newUpperEndPoint);
-              currentPlan.modifyFirstAndSecondIntervals(newFirstInterval,
-                  newSecondInterval);
-              virtualEnvironment.modifyReservation(agvID,
-                  checkPoints.get(0).getResource(), newFirstInterval, RangeEndPoint.UPPER);
-              virtualEnvironment.modifyReservation(agvID,
-                  checkPoints.get(1).getResource(), newSecondInterval, RangeEndPoint.LOWER);
-            } else {
-              // if is currently at an edge
-              final long timeToLeaveEdgeFromCheckPoint = (long) ((setting
-                  .getVehicleLength() + 0.1)* 1000 / setting.getVehicleSpeed());
-              final Range<Long> newFirstInterval = Range.closed(currentPlan.getIntervals().get(0).lowerEndpoint(),
-                  currentTime + timeToLeaveEdgeFromCheckPoint);
-              
-              final long timeLeftToEnterNodeFromEdgeCheckPoint = (long) (0.1 * 1000 / setting.getVehicleSpeed());
-              final long newLowerEndPoint = currentTime + timeLeftToEnterNodeFromEdgeCheckPoint;
-              final long newUpperEndPoint = currentPlan.getIntervals().get(1)
-                  .upperEndpoint();
-              final Range<Long> newSecondInterval = Range.closed(newLowerEndPoint,
-                  newUpperEndPoint);
-              currentPlan.modifyFirstAndSecondIntervals(newFirstInterval,
-                  newSecondInterval);
-              virtualEnvironment.modifyReservation(agvID,
-                  checkPoints.get(0).getResource(), newFirstInterval, RangeEndPoint.UPPER);
-              virtualEnvironment.modifyReservation(agvID,
-                  checkPoints.get(1).getResource(), newSecondInterval, RangeEndPoint.LOWER);
-            }
+        if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
+          if (nextResourceIsFree(checkPoints.get(1)) && virtualEnvironment.isAllowedToMove(agvID, checkPoints.get(1).getResource())) {
+            // if the agv is allowed to move to the next edge
+            // remove itself from the order list of the current node
+            virtualEnvironment.removeFirstAGV(checkPoints.getFirst().getResource());
+            // also remove itself from the order list of the next edge
+            virtualEnvironment.removeFirstAGV(checkPoints.get(1).getResource());
+            // remove the current checkpoint
             checkPoints.removeFirst();
           } else {
-            final long timeDifference = checkPoints.getFirst().getExpectedTime()
-                - currentTime;
-            if (timeDifference < timeLapse.getTimeLeft()) {
-              timeLapse.consume(timeDifference);
-              checkPoints.removeFirst();
-            } else if (timeDifference == timeLapse.getTimeLeft()) {
-              timeLapse.consume(timeDifference);
-              checkPoints.removeFirst();
-            } else {
-              // time difference is larger than time left
-              timeLapse.consumeAll();
-            }
+            // if it is not allowed to move
+            timeLapse.consumeAll();
           }
         } else {
-          checkPoints.removeFirst();
+          // if the current checkpoint is on an edge
+          if (nextResourceIsFree(checkPoints.get(1)) && virtualEnvironment.isAllowedToMove(agvID, checkPoints.get(1).getResource())) {
+            // if the agv is allowed to move to the next node
+            // only remove the current checkpoint (since its order on the list of the current edge was removed)
+            checkPoints.removeFirst();
+          } else {
+            // if it is not allowed to move
+            timeLapse.consumeAll();
+          }
         }
       }
 
@@ -301,31 +244,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   public double round(double input) {
     return (Math.round(input * 10) / 10d);
-  }
-  
-  public void notifyDelay(Plan newPlan, long currentTime) {
-    currentPlan = newPlan;
-    executablePlan = new ExecutablePlan(currentPlan, setting);
-    checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
-
-    while (checkPoints.getFirst().getExpectedTime() < currentTime) {
-      checkPoints.removeFirst();
-    }
-
-    virtualEnvironment.makeReservation(agvID, currentPlan, currentTime,
-        currentTime + setting.getEndTime());
-  }
-  
-  /**
-   * Checks if there is no higher priority agvs that have not entered the resource (count from the timePoint downward)
-   *
-   * @param timePoint the time point
-   * @param resource the resource
-   * @return true, if there is no delayed agv that hasn't entered the resource
-   */
-  public boolean noHigherPriorityAGVs(long timePoint, List<Point> resource) {
-    return virtualEnvironment
-        .getListOfHigherPriorityAGVs(agvID, timePoint, resource).isEmpty();
   }
   
   public boolean nextResourceIsFree(CheckPoint nextCheckPoint) {
@@ -364,34 +282,31 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     return numAGVsOnEdge;
   }
   
-  public List<CheckPoint> getCheckPoints() {
-    return checkPoints;
+  public Plan getCurrentPlan() {
+    return currentPlan;
   }
-
+  
   public int getID() {
     return agvID;
   }
   
-  public Plan getCurrentPlan() {
-    return currentPlan;
+  public List<CheckPoint> getCheckPoints() {
+    return checkPoints;
   }
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
+    if (state == State.IDLE) {
+      return;
+    }
+    
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
-    final long currentTime = timeLapse.getEndTime();
-    
     if (isFreezing && roundedPos.equals(checkPoints.getFirst().getPoint())) {
       if (!propagatedDelay) {
-        virtualEnvironment.propagateDelay(agvID, currentTime);
         propagatedDelay = true;
       }
-    }
-    
-    if (currentTime == setting.getEndTime()) {
-      result.updateResult(reachedDestinations);
     }
   }
 

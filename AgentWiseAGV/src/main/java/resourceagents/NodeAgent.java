@@ -319,7 +319,7 @@ public class NodeAgent implements ResourceAgent {
       throw new IllegalStateException("This method should be called only once!");
     }
     
-//    orderList = new LinkedList<>();
+    orderedList = new LinkedList<>();
     
     // sort the reservation list according to the start time
     Collections.sort(reservations);

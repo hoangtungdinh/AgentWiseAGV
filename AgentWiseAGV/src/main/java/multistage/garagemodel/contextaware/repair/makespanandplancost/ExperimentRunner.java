@@ -2,7 +2,7 @@ package multistage.garagemodel.contextaware.repair.makespanandplancost;
 
 import java.util.concurrent.Callable;
 
-import result.throughput.Result;
+import result.plancostandmakespan.Result;
 import setting.Setting;
 
 public class ExperimentRunner implements Callable<Result> {
@@ -19,7 +19,16 @@ public class ExperimentRunner implements Callable<Result> {
         + setting.getSeed());
     final AGVSystem agvSystem = new AGVSystem(setting,
         false);
-    final Result result = agvSystem.run();
+    Result result = null;
+    
+    try {
+      result = agvSystem.run();
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Error at seed: " + setting.getSeed() + " numOfAGVs: " + setting.getNumOfAGVs());
+      System.exit(0);
+    }
+    
     System.out.println("num of AGVs: " + (setting.getNumOfAGVs()) + "\tSeed: "
         + setting.getSeed() + "\tDONE");
     return result;
