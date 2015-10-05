@@ -28,7 +28,6 @@ import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
-import resourceagents.ResourceAgent;
 import routeplan.CheckPoint;
 import routeplan.Plan;
 import routeplan.contextaware.PlanFTW;
@@ -453,7 +452,8 @@ public class VirtualEnvironment implements TickListener {
     if (resource.size() == 1) {
       // this is a node
       final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
-      if (nodeAgent.getFirstAGV() == agvID) {
+      if (nodeAgent.getNextAGV() == agvID) {
+        nodeAgent.setNonSwappable();
         return true;
       } else {
         return false;
@@ -461,7 +461,8 @@ public class VirtualEnvironment implements TickListener {
     } else {
       // this is an edge
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
-      if (edgeAgent.getFirstAGV() == agvID) {
+      if (edgeAgent.getNextAGV() == agvID) {
+        edgeAgent.setNonSwappable();
         return true;
       } else {
         return false;
@@ -478,6 +479,18 @@ public class VirtualEnvironment implements TickListener {
       // if it is an edge
       final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
       edgeAgent.removeFirstAGV();
+    }
+  }
+  
+  public void setFirstOrderVisited(List<Point> resource) {
+    if (resource.size() == 1) {
+      // if it is a node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      nodeAgent.setFirstOrderVisited();;
+    } else {
+      // if it is an edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      edgeAgent.setFirstOrderVisited();
     }
   }
   
@@ -503,6 +516,11 @@ public class VirtualEnvironment implements TickListener {
       final Set<SingleStep> delayedSteps = getDelayedSteps(currentPlanStep, resource, delayedAGVs);
       if (delayedSteps.isEmpty()) {
         break;
+      }
+      for (SingleStep singleStep : delayedSteps) {
+        if (!singleStep.isSwappable() || singleStep.isVisited()) {
+          return;
+        }
       }
       final Set<Integer> newDelayedAGVs = getDelayedAGVsFromDelayedSteps(delayedSteps);
       delayedAGVs = newDelayedAGVs;
@@ -550,6 +568,9 @@ public class VirtualEnvironment implements TickListener {
     planStepPriorityGraph.createGraph();
     if (!planStepPriorityGraph.isAcyclic()) {
       rollback();
+      System.out.println("Just rolled back");
+    } else {
+      System.out.println("Swap successfully " + agvID);
     }
   }
   
@@ -593,16 +614,7 @@ public class VirtualEnvironment implements TickListener {
   }
 
   public SingleStep convertCheckPointToSingleStep(CheckPoint checkPoint, int agvID) {
-    final ResourceAgent resourceAgent;
-    if (checkPoint.getResource().size() == 1) {
-      // for node
-      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(checkPoint.getResource().get(0));
-      resourceAgent = nodeAgent;
-    } else {
-      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(checkPoint.getResource().get(0), checkPoint.getResource().get(1));
-      resourceAgent = edgeAgent;
-    }
-    final SingleStep singleStep = new SingleStep(resourceAgent, agvID, checkPoint.getID());
+    final SingleStep singleStep = new SingleStep(agvID, checkPoint.getID());
     return singleStep;
   }
 

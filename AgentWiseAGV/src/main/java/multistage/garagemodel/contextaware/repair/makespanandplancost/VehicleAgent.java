@@ -262,11 +262,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
           if (nextResourceIsFree(checkPoints.get(1)) && virtualEnvironment.isAllowedToMove(agvID, checkPoints.get(1).getResource())) {
             // if the agv is allowed to move to the next edge
-            // TODO check again the remove first
+            virtualEnvironment.setFirstOrderVisited(checkPoints.getFirst().getResource());
+            virtualEnvironment.setFirstOrderVisited(checkPoints.get(1).getResource());
             // remove itself from the order list of the current node
             virtualEnvironment.removeFirstAGV(checkPoints.getFirst().getResource());
-            // also remove itself from the order list of the next edge
-            virtualEnvironment.removeFirstAGV(checkPoints.get(1).getResource());
             // remove the current checkpoint
             checkPoints.removeFirst();
             swapToken = true;
@@ -283,6 +282,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
           if (nextResourceIsFree(checkPoints.get(1)) && virtualEnvironment.isAllowedToMove(agvID, checkPoints.get(1).getResource())) {
             // if the agv is allowed to move to the next node
             // only remove the current checkpoint (since its order on the list of the current edge was removed)
+            virtualEnvironment.removeFirstAGV(checkPoints.getFirst().getResource());
             checkPoints.removeFirst();
             swapToken = true;
           } else {

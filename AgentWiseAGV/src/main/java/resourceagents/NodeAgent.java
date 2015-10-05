@@ -265,6 +265,13 @@ public class NodeAgent implements ResourceAgent {
   }
   
   /**
+   * Sets the first order visited.  Only for context aware
+   */
+  public void setFirstOrderVisited() {
+    orderedList.getFirst().setVisited();
+  }
+  
+  /**
    * Gets the list of delayed agvs at the startTime
    *
    * @param agvID the agv id
@@ -331,15 +338,31 @@ public class NodeAgent implements ResourceAgent {
     // sort the reservation list according to the start time
     Collections.sort(reservations);
     for (Reservation resv : reservations) {
-      final SingleStep singleStep = new SingleStep(this, resv.getAgvID(), resv.getInterval().lowerEndpoint());
+      final SingleStep singleStep = new SingleStep(resv.getAgvID(), resv.getInterval().lowerEndpoint());
       orderedList.add(singleStep);
     }
    
     return;
   }
   
-  public int getFirstAGV() {
-    return orderedList.getFirst().getAgvID();
+  public int getNextAGV() {
+    for (SingleStep step : orderedList) {
+      if (!step.isVisited()) {
+        return step.getAgvID();
+      }
+    }
+    checkState(false, "Cannot find the next agv");
+    return -1;
+  }
+  
+  public void setNonSwappable() {
+    for (SingleStep step : orderedList) {
+      if (!step.isVisited()) {
+        step.setNonSwappable();
+        return;
+      }
+    }
+    checkState(false, "Cannot find the next agv");
   }
   
   public void removeFirstAGV() {
@@ -412,6 +435,7 @@ public class NodeAgent implements ResourceAgent {
     for (int i = 0; i < orderedList.size(); i++) {
       if (delayedSteps.contains(orderedList.get(i))) {
         index = i;
+        break;
       }
     }
     

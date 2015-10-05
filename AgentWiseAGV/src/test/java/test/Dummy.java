@@ -17,20 +17,20 @@ import setting.Setting;
 public class Dummy {
 
   public static void main(String[] args) {
-    final Setting setting = new Setting.SettingBuilder()
-        .setNumOfAGVs(10).setSeed(6277757).build();
-    final SingleStep node1 = new SingleStep(new NodeAgent(new Point(0d, 0d), setting), 1, 1);
-    final SingleStep node2 = new SingleStep(new NodeAgent(new Point(0d, 1d), setting), 2, 2);
-    final SingleStep node3 = new SingleStep(new NodeAgent(new Point(0d, 2d), setting), 3, 3);
-    final List<SingleStep> allNodes = new ArrayList<>();
-    allNodes.add(node1);
-    allNodes.add(node2);
-    allNodes.add(node3);
-    final Multimap<SingleStep, SingleStep> graph = HashMultimap.create();
-    graph.put(node1, node2);
-    graph.put(node2, node3);
-    graph.put(node3, node1);
-    System.out.println(isAcyclic(graph, allNodes));
+//    final Setting setting = new Setting.SettingBuilder()
+//        .setNumOfAGVs(10).setSeed(6277757).build();
+//    final SingleStep node1 = new SingleStep(new NodeAgent(new Point(0d, 0d), setting), 1, 1);
+//    final SingleStep node2 = new SingleStep(new NodeAgent(new Point(0d, 1d), setting), 2, 2);
+//    final SingleStep node3 = new SingleStep(new NodeAgent(new Point(0d, 2d), setting), 3, 3);
+//    final List<SingleStep> allNodes = new ArrayList<>();
+//    allNodes.add(node1);
+//    allNodes.add(node2);
+//    allNodes.add(node3);
+//    final Multimap<SingleStep, SingleStep> graph = HashMultimap.create();
+//    graph.put(node1, node2);
+//    graph.put(node2, node3);
+//    graph.put(node3, node1);
+//    System.out.println(isAcyclic(graph, allNodes));
   }
   
   public static boolean isAcyclic(Multimap<SingleStep, SingleStep> graph, List<SingleStep> allNodes) {

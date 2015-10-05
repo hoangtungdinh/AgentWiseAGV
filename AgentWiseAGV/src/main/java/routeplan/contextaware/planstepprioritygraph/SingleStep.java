@@ -1,15 +1,11 @@
 package routeplan.contextaware.planstepprioritygraph;
 
 import autovalue.shaded.com.google.common.common.base.Objects;
-import resourceagents.ResourceAgent;
 
 /**
  * The Class SingleStep.
  */
 public class SingleStep {
-
-  /** The resource agent corresponding to this step. */
-  private ResourceAgent resourceAgent;
 
   /** The agv id. */
   private int agvID;
@@ -19,15 +15,16 @@ public class SingleStep {
    * resource. It is the start time of the reservation of agvs on this resource
    */
   private long stepID;
+  
+  private boolean swappable;
+  
+  private boolean visited;
 
-  public SingleStep(ResourceAgent resourceAgent, int agvID, long stepID) {
-    this.resourceAgent = resourceAgent;
+  public SingleStep(int agvID, long stepID) {
     this.agvID = agvID;
     this.stepID = stepID;
-  }
-
-  public ResourceAgent getResourceAgent() {
-    return resourceAgent;
+    this.swappable = true;
+    this.visited = false;
   }
 
   public int getAgvID() {
@@ -37,10 +34,26 @@ public class SingleStep {
   public long getStepID() {
     return stepID;
   }
+  
+  public void setNonSwappable() {
+    this.swappable = false;
+  }
+  
+  public void setVisited() {
+    this.visited = true;
+  }
+  
+  public boolean isSwappable() {
+    return swappable;
+  }
+  
+  public boolean isVisited() {
+    return visited;
+  }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(resourceAgent, agvID, stepID);
+    return Objects.hashCode(agvID, stepID);
   }
 
   @Override
@@ -58,15 +71,13 @@ public class SingleStep {
 
     final SingleStep singleStep = (SingleStep) other;
 
-    return this.resourceAgent == singleStep.getResourceAgent()
-        && this.agvID == singleStep.getAgvID()
+    return this.agvID == singleStep.getAgvID()
         && this.stepID == singleStep.getStepID();
   }
 
   @Override
   public String toString() {
-    return ("agvID: " + agvID + "\tstepID: " + stepID + "\tResource: "
-        + resourceAgent);
+    return ("agvID: " + agvID + "\tstepID: " + stepID);
   }
   
   

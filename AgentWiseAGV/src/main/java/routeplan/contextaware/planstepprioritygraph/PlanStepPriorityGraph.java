@@ -4,9 +4,11 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -16,15 +18,13 @@ import resourceagents.EdgeAgent;
 import resourceagents.EdgeAgentList;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
-import resourceagents.ResourceAgent;
 import routeplan.CheckPoint;
-import routeplan.ResourceType;
 
 public class PlanStepPriorityGraph {
   
   private Multimap<SingleStep, SingleStep> graph;
   
-  private List<SingleStep> allNodes;
+  private Set<SingleStep> allNodes;
   
   private NodeAgentList nodeAgentList;
   
@@ -45,7 +45,7 @@ public class PlanStepPriorityGraph {
   public void createGraph() {
     graph = HashMultimap.create();
     agvPlanMap = new HashMap<>();
-    allNodes = new ArrayList<>();
+    allNodes = new HashSet<>();
     createEdgesStep1();
     createEdgesStep2();
   }
@@ -71,21 +71,10 @@ public class PlanStepPriorityGraph {
             fromCheckPoint.getResourceType() != toCheckPoint.getResourceType(),
             "Two consecutive check points must have different types");
         
-        final ResourceAgent fromResource;
-        final ResourceAgent toResource;
+        final SingleStep fromStep = new SingleStep(agv.getID(), fromCheckPoint.getID());
+        final SingleStep toStep = new SingleStep(agv.getID(), toCheckPoint.getID());
         
-        if (fromCheckPoint.getResourceType() == ResourceType.EDGE) {
-          // go from edge to node 
-          fromResource = edgeAgentList.getEdgeAgent(fromCheckPoint.getResource().get(0), fromCheckPoint.getResource().get(1));
-          toResource = nodeAgentList.getNodeAgent(toCheckPoint.getResource().get(0));
-        } else {
-          // go from node to edge
-          fromResource = nodeAgentList.getNodeAgent(fromCheckPoint.getResource().get(0));
-          toResource = edgeAgentList.getEdgeAgent(toCheckPoint.getResource().get(0), toCheckPoint.getResource().get(1));
-        }
-        
-        final SingleStep fromStep = new SingleStep(fromResource, agv.getID(), fromCheckPoint.getExpectedTime());
-        final SingleStep toStep = new SingleStep(toResource, agv.getID(), toCheckPoint.getExpectedTime());
+        checkState(!graph.containsEntry(fromStep, toStep), "Some problem here");
         
         graph.put(fromStep, toStep);
         
@@ -122,16 +111,19 @@ public class PlanStepPriorityGraph {
       final SingleStep fromStep = orderedList.get(i);
       final SingleStep toStep = orderedList.get(i + 1);
       
-      if (fromStep.getAgvID() == toStep.getAgvID()) {
-        continue;
-      }
+      checkState(allNodes.contains(fromStep), "Cannot find fromStep in allNodes");
+      checkState(allNodes.contains(toStep), "Cannot find toStep in allNodes");
       
-      graph.put(fromStep, toStep);
+      if (!graph.containsEntry(fromStep, toStep)) {
+        graph.put(fromStep, toStep);
+      }
       
       final SingleStep successorOfFromStep = getSuccessorStep(fromStep);
       final SingleStep successorOfToStep = getSuccessorStep(toStep);
       if (successorOfFromStep != null && successorOfToStep != null) {
-        graph.put(successorOfFromStep, successorOfToStep);
+        if (!graph.containsEntry(successorOfFromStep, successorOfToStep)) {
+          graph.put(successorOfFromStep, successorOfToStep);
+        }
       }
     }
   }
@@ -154,7 +146,7 @@ public class PlanStepPriorityGraph {
    * @return true, if is acyclic
    */
   public boolean isAcyclic() {
-    List<SingleStep> nodesWithIncomingEdges = new ArrayList<>(graph.values());
+    Set<SingleStep> nodesWithIncomingEdges = new HashSet<>(graph.values());
     final LinkedList<SingleStep> listS = new LinkedList<>(allNodes);
     // listS contains set of all nodes with no incoming edges
     listS.removeAll(nodesWithIncomingEdges);
@@ -170,7 +162,7 @@ public class PlanStepPriorityGraph {
         final boolean validEdge = graph.remove(nodeN, nodeM);
         checkState(validEdge, "Cannot find any edge!");
         // if M has no other incoming edges then insert M to listS
-        nodesWithIncomingEdges = new ArrayList<>(graph.values());
+        nodesWithIncomingEdges = new HashSet<>(graph.values());
         if (!nodesWithIncomingEdges.contains(nodeM)) {
           listS.add(nodeM);
         }
