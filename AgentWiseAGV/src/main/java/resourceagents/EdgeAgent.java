@@ -1,14 +1,17 @@
 package resourceagents;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.rinde.rinsim.geom.Point;
 import com.google.common.collect.Range;
@@ -17,6 +20,7 @@ import com.google.common.collect.TreeRangeSet;
 
 import routeplan.RangeEndPoint;
 import routeplan.contextaware.planstepprioritygraph.SingleStep;
+import routeplan.contextaware.planstepprioritygraph.SwapRequest;
 import setting.Setting;
 
 /**
@@ -43,6 +47,8 @@ public class EdgeAgent implements ResourceAgent {
   private int capacity;
   
   private Setting setting;
+  
+  private LinkedList<SingleStep> backupList;
   
   private LinkedList<SingleStep> orderedList;
   
@@ -641,5 +647,70 @@ public class EdgeAgent implements ResourceAgent {
   
   public List<SingleStep> getOrderedList() {
     return orderedList;
+  }
+
+  public void createBackUp() {
+    backupList = new LinkedList<>(orderedList);
+  }
+  
+  public void rollback() {
+    orderedList = new LinkedList<>(backupList);
+  }
+
+  public Set<Integer> getPrecedingAGVs(SingleStep currentStep) {
+    final Set<Integer> delayedAGVs = new HashSet<>();
+    for (SingleStep singleStep : orderedList) {
+      if (singleStep.equals(currentStep)) {
+        return delayedAGVs;
+      } else {
+        if (singleStep.getAgvID() != currentStep.getAgvID()) {
+          delayedAGVs.add(singleStep.getAgvID());
+        }
+      }
+    }
+    checkState(false, "cannot find the current step");
+    return null;
+  }
+
+  public Set<SingleStep> getDelayedSteps(SingleStep currentStep,
+      Set<Integer> currentDelayedAGVs) {
+    boolean startCount = false;
+    final Set<SingleStep> delayedSteps = new HashSet<>();
+    for (SingleStep singleStep : orderedList) {
+      if (singleStep.equals(currentStep)) {
+        return delayedSteps;
+      } else {
+        if (currentDelayedAGVs.contains(singleStep.getAgvID())) {
+          startCount = true;
+        }
+        
+        if (startCount) {
+          if (singleStep.getAgvID() != currentStep.getAgvID()) {
+            delayedSteps.add(singleStep);
+          }
+        }
+      }
+    }
+    checkState(false, "cannot find the current step");
+    return null;
+  }
+
+  public void swapOrder(SwapRequest swapRequest) {
+    final SingleStep stepToBeSwapped = swapRequest.getStepToBeSwapped();
+    final Set<SingleStep> delayedSteps = swapRequest.getDelayedSteps();
+    final boolean removeSuccess = orderedList.remove(stepToBeSwapped);
+    
+    checkState(removeSuccess, "Cannot find the step to be swapped");
+    
+    int index = -1;
+    for (int i = 0; i < orderedList.size(); i++) {
+      if (delayedSteps.contains(orderedList.get(i))) {
+        index = i;
+      }
+    }
+    
+    checkState(index != -1, "Cannot find any delayed step");
+    
+    orderedList.add(index, stepToBeSwapped);
   }
 }

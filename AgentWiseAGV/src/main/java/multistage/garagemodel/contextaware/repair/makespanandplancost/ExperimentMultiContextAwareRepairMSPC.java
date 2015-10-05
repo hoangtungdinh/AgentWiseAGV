@@ -69,7 +69,7 @@ public class ExperimentMultiContextAwareRepairMSPC {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsMultiCA_makespan.txt"));
+          new File("ResultsMultiCArepair_makespan.txt"));
       printWriterMS.println("numAGVs\tmakespan");
       for (ListenableFuture<Result> result : futures) {
         try {
@@ -84,7 +84,7 @@ public class ExperimentMultiContextAwareRepairMSPC {
       printWriterMS.close();
 
       PrintWriter printWriterPC = new PrintWriter(
-          new File("ResultsMultiCA_plancost.txt"));
+          new File("ResultsMultiCArepair_plancost.txt"));
       printWriterPC.println("numAGVs\tPlanCost");
       for (ListenableFuture<Result> result : futures) {
         try {

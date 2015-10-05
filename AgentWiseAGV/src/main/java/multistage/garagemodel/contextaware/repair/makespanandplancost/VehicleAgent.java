@@ -26,6 +26,10 @@ import routeplan.Plan;
 import routeplan.ResourceType;
 import setting.Setting;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class VehicleAgent.
+ */
 public class VehicleAgent implements TickListener, MovingRoadUser {
   
   /** The road model. */
@@ -58,31 +62,61 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   /** The state. */
   private State state;
   
+  /** The destinations. */
   private LinkedList<Point> destinations;
   
+  /** The setting. */
   private Setting setting;
   
+  /** The result. */
   private Result result;
   
+  /** The garage list. */
   private List<Point> garageList;
   
+  /** The garage. */
   private Point garage;
   
+  /** The reached destinations. */
   @SuppressWarnings("unused")
   private int reachedDestinations = 0;
 
+  /** The is freezing. */
   private boolean isFreezing;
   
+  /** The propagated delay. */
   private boolean propagatedDelay;
   
+  /** The incident list. */
   private IncidentList incidentList;
 
+  /** The next incident. */
   private Incident nextIncident;
 
+  /** The end of freezing time. */
   private long endOfFreezingTime;
   
+  /** The finish time. */
   private long finishTime;
   
+  
+  /**
+   * The swap token, to indicate that each the agv is only allowed to swap at
+   * each resource once.
+   */
+  private boolean swapToken;
+
+  /**
+   * Instantiates a new vehicle agent.
+   *
+   * @param destinationList the destination list
+   * @param virtualEnvironment the virtual environment
+   * @param agvID the agv id
+   * @param garageList the garage list
+   * @param setting the setting
+   * @param result the result
+   * @param incidentList the incident list
+   */
   public VehicleAgent(Destinations destinationList, VirtualEnvironment virtualEnvironment,
       int agvID, List<Point> garageList, Setting setting, Result result, IncidentList incidentList) {
     roadModel = Optional.absent();
@@ -106,8 +140,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       nextIncident = null;
     }
     this.endOfFreezingTime = -1;
+    this.swapToken = true;
   }
 
+  /**
+   * Inits the road user.
+   *
+   * @param model the model
+   */
   @Override
   public void initRoadUser(RoadModel model) {
     roadModel = Optional.of((CollisionGraphRoadModel) model);
@@ -117,11 +157,21 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     virtualEnvironment.notifyPlanned();
   }
 
+  /**
+   * Gets the speed.
+   *
+   * @return the speed
+   */
   @Override
   public double getSpeed() {
     return setting.getVehicleSpeed();
   }
 
+  /**
+   * Next destination.
+   *
+   * @param currentTime the current time
+   */
   void nextDestination(long currentTime) {
     
     destinations = new LinkedList<>();
@@ -140,6 +190,11 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, Long.MAX_VALUE - currentTime);
   }
 
+  /**
+   * Tick.
+   *
+   * @param timeLapse the time lapse
+   */
   @Override
   public void tick(TimeLapse timeLapse) {
     
@@ -207,14 +262,20 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
           if (nextResourceIsFree(checkPoints.get(1)) && virtualEnvironment.isAllowedToMove(agvID, checkPoints.get(1).getResource())) {
             // if the agv is allowed to move to the next edge
+            // TODO check again the remove first
             // remove itself from the order list of the current node
             virtualEnvironment.removeFirstAGV(checkPoints.getFirst().getResource());
             // also remove itself from the order list of the next edge
             virtualEnvironment.removeFirstAGV(checkPoints.get(1).getResource());
             // remove the current checkpoint
             checkPoints.removeFirst();
+            swapToken = true;
           } else {
             // if it is not allowed to move
+            if (swapToken) {
+              swapToken = false;
+              virtualEnvironment.swapOrder(checkPoints, agvID);
+            }
             timeLapse.consumeAll();
           }
         } else {
@@ -223,8 +284,13 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
             // if the agv is allowed to move to the next node
             // only remove the current checkpoint (since its order on the list of the current edge was removed)
             checkPoints.removeFirst();
+            swapToken = true;
           } else {
             // if it is not allowed to move
+            if (swapToken) {
+              swapToken = false;
+              virtualEnvironment.swapOrder(checkPoints, agvID);
+            }
             timeLapse.consumeAll();
           }
         }
@@ -242,10 +308,22 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
   }
   
+  /**
+   * Round.
+   *
+   * @param input the input
+   * @return the double
+   */
   public double round(double input) {
     return (Math.round(input * 10) / 10d);
   }
   
+  /**
+   * Next resource is free.
+   *
+   * @param nextCheckPoint the next check point
+   * @return true, if successful
+   */
   public boolean nextResourceIsFree(CheckPoint nextCheckPoint) {
     if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
       final Point nextNode = nextCheckPoint.getResource().get(0);
@@ -260,7 +338,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   }
   
   /**
-   * Gets the number of agvs on an edge, exclusive
+   * Gets the number of agvs on an edge, exclusive.
    *
    * @param from the from
    * @param to the to
@@ -282,18 +360,38 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     return numAGVsOnEdge;
   }
   
+  /**
+   * Gets the current plan.
+   *
+   * @return the current plan
+   */
   public Plan getCurrentPlan() {
     return currentPlan;
   }
   
+  /**
+   * Gets the id.
+   *
+   * @return the id
+   */
   public int getID() {
     return agvID;
   }
   
+  /**
+   * Gets the check points.
+   *
+   * @return the check points
+   */
   public List<CheckPoint> getCheckPoints() {
     return checkPoints;
   }
 
+  /**
+   * After tick.
+   *
+   * @param timeLapse the time lapse
+   */
   @Override
   public void afterTick(TimeLapse timeLapse) {
     if (state == State.IDLE) {

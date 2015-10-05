@@ -19,6 +19,7 @@ public class CheckPoint {
   
   private ResourceType resourceType;
   
+  /** The lower end point of the reservation. */
   private long id;
   
   /**

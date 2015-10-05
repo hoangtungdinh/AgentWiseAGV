@@ -2,6 +2,7 @@ package multistage.garagemodel.contextaware.repair.makespanandplancost;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.TreeMap;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.rinsim.core.model.road.CollisionGraphRoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadUser;
 import com.github.rinde.rinsim.core.model.time.TickListener;
 import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.geom.Graphs;
@@ -26,9 +28,14 @@ import resourceagents.EdgeAgentList;
 import resourceagents.FreeTimeWindow;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
+import resourceagents.ResourceAgent;
+import routeplan.CheckPoint;
 import routeplan.Plan;
 import routeplan.contextaware.PlanFTW;
 import routeplan.contextaware.PlanStep;
+import routeplan.contextaware.planstepprioritygraph.PlanStepPriorityGraph;
+import routeplan.contextaware.planstepprioritygraph.SingleStep;
+import routeplan.contextaware.planstepprioritygraph.SwapRequest;
 import setting.Setting;
 
 /**
@@ -51,7 +58,6 @@ public class VirtualEnvironment implements TickListener {
   private Setting setting;
   
   /** The agv list. */
-  @SuppressWarnings("unused")
   private List<VehicleAgent> agvList;
   
   private int numOfPlannedAGVs;
@@ -481,5 +487,142 @@ public class VirtualEnvironment implements TickListener {
   
   public boolean finishPlanningPhase() {
     return createdOrderList;
+  }
+
+  public void swapOrder(LinkedList<CheckPoint> checkPoints, int agvID) {
+    // the first checkpoint is the resource where the agv is staying at. Thus, we start from the second checkpoint, which is the next resource
+    int k = 1;
+    final SingleStep firstPlanStep = convertCheckPointToSingleStep(checkPoints.get(k), agvID);
+    Set<Integer> delayedAGVs = new HashSet<>();
+    delayedAGVs.addAll(getPrecedingAGVs(firstPlanStep, checkPoints.get(k).getResource()));
+    final Map<List<Point>, SwapRequest> delayedAgentMap = new HashMap<>();
+    boolean deadlock = false;
+    while (!deadlock && !delayedAGVs.isEmpty()) {
+      final List<Point> resource = checkPoints.get(k).getResource();
+      final SingleStep currentPlanStep = convertCheckPointToSingleStep(checkPoints.get(k), agvID);
+      final Set<SingleStep> delayedSteps = getDelayedSteps(currentPlanStep, resource, delayedAGVs);
+      if (delayedSteps.isEmpty()) {
+        break;
+      }
+      final Set<Integer> newDelayedAGVs = getDelayedAGVsFromDelayedSteps(delayedSteps);
+      delayedAGVs = newDelayedAGVs;
+      for (int delayedAGVID : delayedAGVs) {
+        final VehicleAgent delayedAGV = agvList.get(delayedAGVID);
+        if (resource.size() == 1) {
+          // node
+          if (roadModel.isOccupiedBy(resource.get(0), delayedAGV)) {
+            return;
+          }
+        } else {
+          // edge
+          final Set<RoadUser> allAGVsOnEdge = roadModel.getRoadUsersOn(resource.get(0), resource.get(1));
+          for (RoadUser roadUser : allAGVsOnEdge) {
+            final VehicleAgent agvOnEdge = (VehicleAgent) roadUser;
+            if (agvOnEdge.getID() == delayedAGVID) {
+              return;
+            }
+          }
+        }
+      }
+      
+      delayedAgentMap.put(resource, new SwapRequest(currentPlanStep, delayedSteps));
+      k++;
+    }
+    
+    // create the backup of current order before changing
+    createBackUp();
+    
+    for (List<Point> resource : delayedAgentMap.keySet()) {
+      final SwapRequest swapRequest = delayedAgentMap.get(resource);
+      if (resource.size() == 1) {
+        // node
+        final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+        nodeAgent.swapOrder(swapRequest);
+      } else {
+        // edge
+        final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+        edgeAgent.swapOrder(swapRequest);
+      }
+    }
+    
+    // create plan step priority graph and check for deadlock
+    final PlanStepPriorityGraph planStepPriorityGraph = new PlanStepPriorityGraph(nodeAgentList, edgeAgentList, agvList);
+    planStepPriorityGraph.createGraph();
+    if (!planStepPriorityGraph.isAcyclic()) {
+      rollback();
+    }
+  }
+  
+  public Set<Integer> getDelayedAGVsFromDelayedSteps(Set<SingleStep> delayedSteps) {
+    final Set<Integer> delayedAGVs = new HashSet<>();
+    
+    for (SingleStep singleStep : delayedSteps) {
+      delayedAGVs.add(singleStep.getAgvID());
+    }
+    
+    return delayedAGVs;
+  }
+  
+  public Set<SingleStep> getDelayedSteps(SingleStep currentStep,
+      List<Point> resource, Set<Integer> currentDelayedAGVs) {
+    final Set<SingleStep> delayedAGVs = new HashSet<>();
+    if (resource.size() == 1) {
+      // node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      delayedAGVs.addAll(nodeAgent.getDelayedSteps(currentStep, currentDelayedAGVs));
+    } else {
+      // edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      delayedAGVs.addAll(edgeAgent.getDelayedSteps(currentStep, currentDelayedAGVs));
+    }
+    return delayedAGVs;
+  }
+
+  public Set<Integer> getPrecedingAGVs(SingleStep currentStep, List<Point> resource) {
+    final Set<Integer> delayedAGVs = new HashSet<>();
+    if (resource.size() == 1) {
+      // node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(resource.get(0));
+      delayedAGVs.addAll(nodeAgent.getPrecedingAGVs(currentStep));
+    } else {
+      // edge
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(resource.get(0), resource.get(1));
+      delayedAGVs.addAll(edgeAgent.getPrecedingAGVs(currentStep));
+    }
+    return delayedAGVs;
+  }
+
+  public SingleStep convertCheckPointToSingleStep(CheckPoint checkPoint, int agvID) {
+    final ResourceAgent resourceAgent;
+    if (checkPoint.getResource().size() == 1) {
+      // for node
+      final NodeAgent nodeAgent = nodeAgentList.getNodeAgent(checkPoint.getResource().get(0));
+      resourceAgent = nodeAgent;
+    } else {
+      final EdgeAgent edgeAgent = edgeAgentList.getEdgeAgent(checkPoint.getResource().get(0), checkPoint.getResource().get(1));
+      resourceAgent = edgeAgent;
+    }
+    final SingleStep singleStep = new SingleStep(resourceAgent, agvID, checkPoint.getID());
+    return singleStep;
+  }
+
+  public void createBackUp() {
+    for (NodeAgent nodeAgent : nodeAgentList.getAllNodeAgents()) {
+      nodeAgent.createBackUp();
+    }
+    
+    for (EdgeAgent edgeAgent : edgeAgentList.getAllEdgeAgents()) {
+      edgeAgent.createBackUp();
+    }
+  }
+  
+  public void rollback() {
+    for (NodeAgent nodeAgent : nodeAgentList.getAllNodeAgents()) {
+      nodeAgent.rollback();
+    }
+    
+    for (EdgeAgent edgeAgent : edgeAgentList.getAllEdgeAgents()) {
+      edgeAgent.rollback();
+    }
   }
 }
