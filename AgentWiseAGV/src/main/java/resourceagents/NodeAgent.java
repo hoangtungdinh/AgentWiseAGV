@@ -268,7 +268,14 @@ public class NodeAgent implements ResourceAgent {
    * Sets the first order visited.  Only for context aware
    */
   public void setFirstOrderVisited() {
-    orderedList.getFirst().setVisited();
+    for (SingleStep singleStep : orderedList) {
+      if (!singleStep.isVisited()) {
+        singleStep.setVisited();
+        return;
+      }
+    }
+    
+    checkState(false, "Cannot find the reservations");
   }
   
   /**

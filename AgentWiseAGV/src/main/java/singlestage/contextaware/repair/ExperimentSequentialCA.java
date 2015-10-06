@@ -1,4 +1,4 @@
-package singlestage.contextaware;
+package singlestage.contextaware.repair;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,7 +33,7 @@ public class ExperimentSequentialCA {
           System.out.println("num of AGVs: " + (numAGV*10) + "\tSample: " + i + "\tSeed: " + seed);
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
-          final singlestage.contextaware.AGVSystem agvSystem = new AGVSystem(setting, false);
+          final AGVSystem agvSystem = new AGVSystem(setting, false);
           final Result result = agvSystem.run();
           sample.addResult(result);
         }

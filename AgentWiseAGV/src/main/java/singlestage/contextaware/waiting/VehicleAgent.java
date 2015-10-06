@@ -1,4 +1,4 @@
-package singlestage.contextaware;
+package singlestage.contextaware.waiting;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
