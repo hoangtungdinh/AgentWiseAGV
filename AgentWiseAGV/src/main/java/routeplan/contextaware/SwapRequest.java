@@ -1,4 +1,4 @@
-package routeplan.contextaware.planstepprioritygraph;
+package routeplan.contextaware;
 
 import java.util.Set;
 

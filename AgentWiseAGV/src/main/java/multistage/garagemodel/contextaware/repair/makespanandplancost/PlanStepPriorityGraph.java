@@ -1,4 +1,4 @@
-package routeplan.contextaware.planstepprioritygraph;
+package multistage.garagemodel.contextaware.repair.makespanandplancost;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -13,12 +13,12 @@ import java.util.Set;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import multistage.garagemodel.contextaware.repair.makespanandplancost.VehicleAgent;
 import resourceagents.EdgeAgent;
 import resourceagents.EdgeAgentList;
 import resourceagents.NodeAgent;
 import resourceagents.NodeAgentList;
 import routeplan.CheckPoint;
+import routeplan.contextaware.SingleStep;
 
 public class PlanStepPriorityGraph {
   

@@ -32,9 +32,8 @@ import routeplan.CheckPoint;
 import routeplan.Plan;
 import routeplan.contextaware.PlanFTW;
 import routeplan.contextaware.PlanStep;
-import routeplan.contextaware.planstepprioritygraph.PlanStepPriorityGraph;
-import routeplan.contextaware.planstepprioritygraph.SingleStep;
-import routeplan.contextaware.planstepprioritygraph.SwapRequest;
+import routeplan.contextaware.SingleStep;
+import routeplan.contextaware.SwapRequest;
 import setting.Setting;
 
 /**
@@ -568,9 +567,9 @@ public class VirtualEnvironment implements TickListener {
     planStepPriorityGraph.createGraph();
     if (!planStepPriorityGraph.isAcyclic()) {
       rollback();
-      System.out.println("Just rolled back");
-    } else {
-      System.out.println("Swap successfully " + agvID);
+//      System.out.println("Just rolled back");
+//    } else {
+//      System.out.println("Swap successfully " + agvID);
     }
   }
   

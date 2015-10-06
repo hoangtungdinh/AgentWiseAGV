@@ -16,8 +16,8 @@ import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 
 import routeplan.RangeEndPoint;
-import routeplan.contextaware.planstepprioritygraph.SingleStep;
-import routeplan.contextaware.planstepprioritygraph.SwapRequest;
+import routeplan.contextaware.SingleStep;
+import routeplan.contextaware.SwapRequest;
 import setting.Setting;
 
 /**

@@ -1,4 +1,4 @@
-package routeplan.contextaware.planstepprioritygraph;
+package routeplan.contextaware;
 
 import autovalue.shaded.com.google.common.common.base.Objects;
 

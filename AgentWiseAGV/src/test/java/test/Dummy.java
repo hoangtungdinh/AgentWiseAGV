@@ -11,7 +11,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import resourceagents.NodeAgent;
-import routeplan.contextaware.planstepprioritygraph.SingleStep;
+import routeplan.contextaware.SingleStep;
 import setting.Setting;
 
 public class Dummy {
