@@ -19,7 +19,7 @@ import incidentgenerator.Incident;
 import incidentgenerator.IncidentList;
 import multistage.Destinations;
 import multistage.State;
-import result.plancostandmakespan.Result;
+import result.throughput.Result;
 import routeplan.CheckPoint;
 import routeplan.ExecutablePlan;
 import routeplan.Plan;
@@ -77,7 +77,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   private Point garage;
   
   /** The reached destinations. */
-  @SuppressWarnings("unused")
   private int reachedDestinations = 0;
 
   /** The is freezing. */
@@ -94,11 +93,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
 
   /** The end of freezing time. */
   private long endOfFreezingTime;
-  
-  /** The finish time. */
-  private long finishTime;
-  
-  
+
   /**
    * The swap token, to indicate that each the agv is only allowed to swap at
    * each resource once.
@@ -126,7 +121,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     this.garageList = garageList;
     this.garage = garageList.get(agvID);
     this.initialPos = garage;
-    state = State.ACTIVE;
+    state = State.IDLE;
     this.setting = setting;
     this.destinations = new LinkedList<>();
     this.result = result;
@@ -152,8 +147,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     roadModel = Optional.of((CollisionGraphRoadModel) model);
     roadModel.get().addObjectAt(this, initialPos);
     path = new LinkedList<>();
-    nextDestination(0);
-    virtualEnvironment.notifyPlanned();
   }
 
   /**
@@ -187,6 +180,7 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
     virtualEnvironment.makeReservation(agvID, currentPlan, currentTime, Long.MAX_VALUE - currentTime);
+    virtualEnvironment.notifyPlanned();
   }
 
   /**
@@ -197,10 +191,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   @Override
   public void tick(TimeLapse timeLapse) {
     
-    if (!virtualEnvironment.finishPlanningPhase()) {
-      return;
-    }
-    
     final long currentTime = timeLapse.getStartTime();
     
     if (state == State.ACTIVE
@@ -208,12 +198,19 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         && path.size() == 1) {
       // if the agv reaches the entrance of the garage, then it becomes idle
       // and will try to move into the garage
-      finishTime = currentTime;
-      result.updateResult(0, finishTime);
       state = State.IDLE;
+      virtualEnvironment.notifyFinished();
     }
     
     if (state == State.IDLE) {
+      if (virtualEnvironment.isAllowedToPlan()) {
+        nextDestination(timeLapse.getEndTime());
+        state = State.ACTIVE;
+      }
+      return;
+    }
+    
+    if (!virtualEnvironment.finishPlanningPhase()) {
       return;
     }
     
@@ -397,6 +394,8 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       return;
     }
     
+    final long currentTime = timeLapse.getEndTime();
+    
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
     
@@ -404,6 +403,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (!propagatedDelay) {
         propagatedDelay = true;
       }
+    }
+    
+    if (currentTime == setting.getEndTime()) {
+      result.updateResult(reachedDestinations);
     }
   }
 

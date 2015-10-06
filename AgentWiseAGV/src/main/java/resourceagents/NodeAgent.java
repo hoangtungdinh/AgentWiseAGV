@@ -328,11 +328,6 @@ public class NodeAgent implements ResourceAgent {
    * Creates the order list based on the current reservation
    */
   public void createOrderList() {
-    // this method should be called only once
-    if (orderedList != null) {
-      throw new IllegalStateException("This method should be called only once!");
-    }
-    
     orderedList = new LinkedList<>();
     
     // sort the reservation list according to the start time

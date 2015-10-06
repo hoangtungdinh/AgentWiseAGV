@@ -621,10 +621,6 @@ public class EdgeAgent implements ResourceAgent {
   }
   
   public void createOrderList() {
-    if (orderedList != null) {
-      throw new IllegalStateException("This method should be called only once!");
-    }
-    
     // first create a reservation list with all reservations from node1
     final List<Reservation> resvList = new ArrayList<>(reservationMap.get(node1));
     // add all reservations from node2 to that list

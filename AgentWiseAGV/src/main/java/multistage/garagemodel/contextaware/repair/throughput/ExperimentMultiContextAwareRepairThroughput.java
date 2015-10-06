@@ -16,10 +16,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import result.plancostandmakespan.Result;
+import result.throughput.Result;
 import setting.Setting;
 
-public class ExperimentMultiContextAwareRepairMSPC {
+public class ExperimentMultiContextAwareRepairThroughput {
 
   public static void main(String[] args) {
     ListeningExecutorService executor = MoreExecutors
@@ -31,7 +31,7 @@ public class ExperimentMultiContextAwareRepairMSPC {
     try {
       LinkedList<Long> seeds = new LinkedList<>();
       
-      InputStream inputStream = ExperimentMultiContextAwareRepairMSPC.class
+      InputStream inputStream = ExperimentMultiContextAwareRepairThroughput.class
           .getResourceAsStream("seeds.txt");
       BufferedReader bufferedReader = new BufferedReader(
           new InputStreamReader(inputStream));
@@ -69,12 +69,12 @@ public class ExperimentMultiContextAwareRepairMSPC {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsMultiCArepair_makespan.txt"));
-      printWriterMS.println("numAGVs\tmakespan");
+          new File("ResultsMultiCAThroughput.txt"));
+      printWriterMS.println("numAGVs\tFinishedTask");
       for (ListenableFuture<Result> result : futures) {
         try {
           printWriterMS.println(result.get().getSetting().getNumOfAGVs() + "\t"
-              + result.get().getMakeSpan());
+              + result.get().getNumOfReachedDestinations());
         } catch (InterruptedException e) {
           e.printStackTrace();
         } catch (ExecutionException e) {
@@ -82,21 +82,6 @@ public class ExperimentMultiContextAwareRepairMSPC {
         }
       }
       printWriterMS.close();
-
-      PrintWriter printWriterPC = new PrintWriter(
-          new File("ResultsMultiCArepair_plancost.txt"));
-      printWriterPC.println("numAGVs\tPlanCost");
-      for (ListenableFuture<Result> result : futures) {
-        try {
-          printWriterPC.println(result.get().getSetting().getNumOfAGVs() + "\t"
-              + result.get().getJointPlanCost());
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (ExecutionException e) {
-          e.printStackTrace();
-        }
-      }
-      printWriterPC.close();
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }

@@ -8,8 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-import result.plancostandmakespan.Result;
-import result.plancostandmakespan.Sample;
+import result.throughput.Result;
+import result.throughput.Sample;
 import setting.Setting;
 
 public class SequentialExperimentCA {
@@ -50,25 +50,15 @@ public class SequentialExperimentCA {
   
   public static void print(List<Sample> samples) {
     try {
-      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsMultiCA_makespan.txt"));
-      printWriterMS.println("numAGVs\tmakespan");
+      PrintWriter printWriterMS = new PrintWriter(new File("src/main/resources/ResultsMultiCAThroughput.txt"));
+      printWriterMS.println("numAGVs\tFinishedTask");
       for (Sample sample : samples) {
         List<Result> results = sample.getResults();
         for (Result result : results) {
-          printWriterMS.println(sample.getNumOfAGVs() + "\t" + result.getMakeSpan());
+          printWriterMS.println(sample.getNumOfAGVs() + "\t" + result.getNumOfReachedDestinations());
         }
       }
       printWriterMS.close();
-      
-      PrintWriter printWriterPC = new PrintWriter(new File("src/main/resources/ResultsMultiCA_plancost.txt"));
-      printWriterPC.println("numAGVs\tPlanCost");
-      for (Sample sample : samples) {
-        List<Result> results = sample.getResults();
-        for (Result result : results) {
-          printWriterPC.println(sample.getNumOfAGVs() + "\t" + result.getJointPlanCost());
-        }
-      }
-      printWriterPC.close();
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }

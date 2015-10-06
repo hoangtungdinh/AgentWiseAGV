@@ -60,7 +60,11 @@ public class VirtualEnvironment implements TickListener {
   
   private int numOfPlannedAGVs;
   
+  private int numOfFinishedAGVs;
+  
   private boolean createdOrderList;
+  
+  private boolean isAllowedToPlan;
   
   /**
    * shortest path lengths from all nodes to a destination the keys are
@@ -84,7 +88,9 @@ public class VirtualEnvironment implements TickListener {
     this.shortestLengthToDest = new HashMap<>();
     this.agvList = agvList;
     this.numOfPlannedAGVs = 0;
+    this.numOfFinishedAGVs = 0;
     this.createdOrderList = false;
+    this.isAllowedToPlan = true;
   }
   
   /**
@@ -427,8 +433,6 @@ public class VirtualEnvironment implements TickListener {
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
-//    nodeAgentList.removeOutDatedReservation(timeLapse.getEndTime());
-//    edgeAgentList.removeOutdatedReservations(timeLapse.getEndTime());
     if (!createdOrderList && numOfPlannedAGVs == setting.getNumOfAGVs()) {
       for (NodeAgent nodeAgent : nodeAgentList.getAllNodeAgents()) {
         nodeAgent.createOrderList();
@@ -436,7 +440,19 @@ public class VirtualEnvironment implements TickListener {
       for (EdgeAgent edgeAgent : edgeAgentList.getAllEdgeAgents()) {
         edgeAgent.createOrderList();
       }
+      numOfFinishedAGVs = 0;
+      numOfPlannedAGVs = 0;
+      isAllowedToPlan = false;
       createdOrderList = true;
+    } else {
+      if (!isAllowedToPlan && numOfFinishedAGVs == setting.getNumOfAGVs()) {
+        edgeAgentList.removeAllReservations();
+        nodeAgentList.removeAllReservations();
+        numOfFinishedAGVs = 0;
+        numOfPlannedAGVs = 0;
+        isAllowedToPlan = true;
+        createdOrderList = false;
+      }
     }
   }
  
@@ -495,6 +511,10 @@ public class VirtualEnvironment implements TickListener {
   
   public void notifyPlanned() {
     this.numOfPlannedAGVs++;
+  }
+  
+  public void notifyFinished() {
+    this.numOfFinishedAGVs++;
   }
   
   public boolean finishPlanningPhase() {
@@ -635,5 +655,9 @@ public class VirtualEnvironment implements TickListener {
     for (EdgeAgent edgeAgent : edgeAgentList.getAllEdgeAgents()) {
       edgeAgent.rollback();
     }
+  }
+  
+  public boolean isAllowedToPlan() {
+    return isAllowedToPlan;
   }
 }
