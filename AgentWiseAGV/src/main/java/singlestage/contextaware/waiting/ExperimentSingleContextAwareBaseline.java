@@ -19,7 +19,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import result.plancostandmakespan.Result;
 import setting.Setting;
 
-public class ExperimentSingleContextAware {
+public class ExperimentSingleContextAwareBaseline {
 
   public static void main(String[] args) {
     ListeningExecutorService executor = MoreExecutors
@@ -31,7 +31,7 @@ public class ExperimentSingleContextAware {
     try {
       LinkedList<Long> seeds = new LinkedList<>();
       
-      InputStream inputStream = ExperimentSingleContextAware.class
+      InputStream inputStream = ExperimentSingleContextAwareBaseline.class
           .getResourceAsStream("seeds.txt");
       BufferedReader bufferedReader = new BufferedReader(
           new InputStreamReader(inputStream));

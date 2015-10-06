@@ -12,7 +12,7 @@ import result.plancostandmakespan.Result;
 import result.plancostandmakespan.Sample;
 import setting.Setting;
 
-public class ExperimentSequentialCA {
+public class ExperimentSequentialCABaseline {
 
   public static void main(String[] args) {
     LinkedList<Long> seeds = new LinkedList<>();

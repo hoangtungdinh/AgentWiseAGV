@@ -119,7 +119,7 @@ public class Setting {
     private int numOfDestsForEachAGV = 3;
     private long expectedFreezingDuration = 100000L;
     
-    private int numOfIncidents = 20;
+    private int numOfIncidents = 100;
     
     public SettingBuilder() {
 
