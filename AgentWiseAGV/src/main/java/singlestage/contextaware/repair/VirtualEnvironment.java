@@ -521,6 +521,9 @@ public class VirtualEnvironment implements TickListener {
     final Map<List<Point>, SwapRequest> delayedAgentMap = new HashMap<>();
     boolean deadlock = false;
     while (!deadlock && !delayedAGVs.isEmpty()) {
+      if (k >= checkPoints.size()) {
+        break;
+      }
       final List<Point> resource = checkPoints.get(k).getResource();
       final SingleStep currentPlanStep = convertCheckPointToSingleStep(checkPoints.get(k), agvID);
       final Set<SingleStep> delayedSteps = getDelayedSteps(currentPlanStep, resource, delayedAGVs);
@@ -538,7 +541,7 @@ public class VirtualEnvironment implements TickListener {
         final VehicleAgent delayedAGV = agvList.get(delayedAGVID);
         if (resource.size() == 1) {
           // node
-          if (roadModel.isOccupiedBy(resource.get(0), delayedAGV)) {
+          if (roadModel.containsObject(delayedAGV) && roadModel.isOccupiedBy(resource.get(0), delayedAGV)) {
             return;
           }
         } else {
