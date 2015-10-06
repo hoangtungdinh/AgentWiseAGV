@@ -427,8 +427,6 @@ public class VirtualEnvironment implements TickListener {
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
-//    nodeAgentList.removeOutDatedReservation(timeLapse.getEndTime());
-//    edgeAgentList.removeOutdatedReservations(timeLapse.getEndTime());
     if (!createdOrderList && numOfPlannedAGVs == setting.getNumOfAGVs()) {
       for (NodeAgent nodeAgent : nodeAgentList.getAllNodeAgents()) {
         nodeAgent.createOrderList();

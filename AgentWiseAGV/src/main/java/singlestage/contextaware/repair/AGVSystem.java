@@ -1,5 +1,6 @@
 package singlestage.contextaware.repair;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.measure.unit.SI;
@@ -96,8 +97,10 @@ public final class AGVSystem {
           "Cannot get the road model from the simulator");
     }
     
-    VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel,
-        sim.getRandomGenerator(), setting);
+    final List<VehicleAgent> agvList = new ArrayList<>();
+    
+    final VirtualEnvironment virtualEnvironment = new VirtualEnvironment(roadModel,
+        sim.getRandomGenerator(), setting, agvList);
     sim.addTickListener(virtualEnvironment);
     
     // generate destinations for all AGVs
@@ -113,8 +116,10 @@ public final class AGVSystem {
 
     for (int i = 0; i < setting.getNumOfAGVs(); i++) {
       final IncidentList incidentList = incidentGenerator.run();
-      sim.register(new VehicleAgent(odList.get(i), virtualEnvironment, i, sim,
-          setting, result, incidentList));
+      final VehicleAgent vehicleAgent = new VehicleAgent(odList.get(i), virtualEnvironment, i, sim,
+          setting, result, incidentList);
+      sim.register(vehicleAgent);
+      agvList.add(vehicleAgent);
     }
 
     sim.start();

@@ -1,5 +1,7 @@
 package singlestage.contextaware.repair;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,7 +76,14 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
   
   private boolean propagatedDelay;
   
+  @SuppressWarnings("unused")
   private Plan currentPlan;
+  
+  /**
+   * The swap token, to indicate that each the agv is only allowed to swap at
+   * each resource once.
+   */
+  private boolean swapToken;
   
   /**
    * Instantiates a new vehicle agent.
@@ -134,21 +143,29 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     path = new LinkedList<>(executablePlan.getPath());
     checkPoints = new LinkedList<>(executablePlan.getCheckPoints());
     virtualEnvironment.makeReservation(agvID, plan, 0, Long.MAX_VALUE - 100000);
+    virtualEnvironment.notifyPlanned();
   }
 
   @Override
   public void tick(TimeLapse timeLapse) {
     
+    if (!virtualEnvironment.finishPlanningPhase()) {
+      return;
+    }
+    
     final long currentTime = timeLapse.getStartTime();
 
     // add the agv to the model if the start time has passed and no delayed
     // vehicle at the origin
-    if (currentTime >= startTime) {
-      if (!roadModel.get().containsObject(this)) {
-        if (isSafeToMove(true) && !roadModel.get().isOccupied(checkPoints.getFirst().getPoint())) {
-          // if no delayed agv, the node is not occupied then start
-          roadModel.get().addObjectAt(this, origin);
-          virtualEnvironment.setVisited(agvID, checkPoints.getFirst().getResource(), currentPlan.getIntervals().get(0).upperEndpoint());
+    if (!roadModel.get().containsObject(this)) {
+      if (nextResourceIsFree(checkPoints.getFirst()) && virtualEnvironment
+          .isAllowedToMove(agvID, checkPoints.getFirst().getResource())) {
+        roadModel.get().addObjectAt(this, origin);
+        swapToken = true;
+      } else {
+        if (swapToken) {
+          swapToken = false;
+          virtualEnvironment.swapOrder(checkPoints, agvID, false);
         }
       }
     }
@@ -162,7 +179,10 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     
     // check if check point is the destination then update result and return
     if (roundedPos.equals(destination)) {
-      virtualEnvironment.setVisited(agvID, checkPoints.getFirst().getResource(), currentPlan.getIntervals().get(0).upperEndpoint());
+      virtualEnvironment.removeFirstAGV(checkPoints.getFirst().getResource());
+      checkPoints.removeFirst();
+      checkState(checkPoints.isEmpty(),
+          "Checkpoints has to be empty after agv reaching the destination");
       result.updateResult(startTime, timeLapse.getTime());
       sim.unregister(this);
       return;
@@ -205,58 +225,38 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         && roundedPos.equals(checkPoints.getFirst().getPoint())) {
       // if the AGV is at exactly the check point
       
-      // if the check point is a node then announce to both the node and the next edge that it has visited
       if (checkPoints.getFirst().getResourceType() == ResourceType.NODE) {
-        virtualEnvironment.setVisited(agvID, checkPoints.getFirst().getResource(), currentPlan.getIntervals().get(0).upperEndpoint());
-        virtualEnvironment.setVisited(agvID, checkPoints.get(1).getResource(), currentPlan.getIntervals().get(1).upperEndpoint());
-      }
-      
-      // check if it is time to move according to the plan
-      if (timeLapse.getStartTime() < checkPoints.getFirst().getExpectedTime()) {
-        // if it hasn't been the start time yet
-        // the amount of time left to the start time
-        final long timeDifference = checkPoints.getFirst().getExpectedTime()
-            - timeLapse.getStartTime();
-        // if the amount of time left to the start time is smaller than or equal to the time left of this tick
-        if (timeDifference <= timeLapse.getTimeLeft()) {
-          // consume the amount of time left to start time
-          timeLapse.consume(timeDifference);
-          if (isSafeToMove(false)) {
-            // if there is no higher priority delayed AGVs
-            checkPoints.removeFirst();
-            currentPlan.removeFirstStep();
-          } else {
-            timeLapse.consumeAll();
-          }
+        if (nextResourceIsFree(checkPoints.get(1)) && virtualEnvironment.isAllowedToMove(agvID, checkPoints.get(1).getResource())) {
+          // if the agv is allowed to move to the next edge
+          virtualEnvironment.setFirstOrderVisited(checkPoints.getFirst().getResource());
+          virtualEnvironment.setFirstOrderVisited(checkPoints.get(1).getResource());
+          // remove itself from the order list of the current node
+          virtualEnvironment.removeFirstAGV(checkPoints.getFirst().getResource());
+          // remove the current checkpoint
+          checkPoints.removeFirst();
+          swapToken = true;
         } else {
-          // time difference is larger than time left
+          // if it is not allowed to move
+          if (swapToken) {
+            swapToken = false;
+            virtualEnvironment.swapOrder(checkPoints, agvID, true);
+          }
           timeLapse.consumeAll();
         }
       } else {
-        // if the start time passed
-        if (isSafeToMove(false)) {
-          // if it is safe to move, mean that there is no delayed agv left
-          if (checkPoints.getFirst().getResourceType() == ResourceType.EDGE) {
-            // if the check point is an edge then move when next node is free
-            if (!roadModel.get().isOccupied(checkPoints.getFirst().getResource().get(1))) {
-              checkPoints.removeFirst();
-              currentPlan.removeFirstStep();
-            } else {
-              timeLapse.consumeAll();
-            }
-          } else {
-            // if the check point is a node then move when the capacity of the next edge is not full
-            final CheckPoint checkPoint = checkPoints.get(1);
-            if (getNumOfAGVsOnEdge(checkPoint.getResource().get(0), checkPoint.getResource().get(1)) < 2) {
-              checkPoints.removeFirst();
-              currentPlan.removeFirstStep();
-            } else {
-              timeLapse.consumeAll();
-            }
-          }
-          
+        // if the current checkpoint is on an edge
+        if (nextResourceIsFree(checkPoints.get(1)) && virtualEnvironment.isAllowedToMove(agvID, checkPoints.get(1).getResource())) {
+          // if the agv is allowed to move to the next node
+          // only remove the current checkpoint (since its order on the list of the current edge was removed)
+          virtualEnvironment.removeFirstAGV(checkPoints.getFirst().getResource());
+          checkPoints.removeFirst();
+          swapToken = true;
         } else {
-          // if it is not safe, then wait
+          // if it is not allowed to move
+          if (swapToken) {
+            swapToken = false;
+            virtualEnvironment.swapOrder(checkPoints, agvID, true);
+          }
           timeLapse.consumeAll();
         }
       }
@@ -267,18 +267,16 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
     }
   }
   
-  /**
-   * Checks if is safe to move to the next resource.
-   *
-   * @return true, if there is no delayed agv that hasn't entered the resource
-   */
-  public boolean isSafeToMove(boolean isFirstCheckPoint) {
-    if (isFirstCheckPoint) {
-      return virtualEnvironment.getListOfDelayedAGVs(agvID,
-          startTime, checkPoints.getFirst()).isEmpty();
+  public boolean nextResourceIsFree(CheckPoint nextCheckPoint) {
+    if (nextCheckPoint.getResourceType() == ResourceType.NODE) {
+      final Point nextNode = nextCheckPoint.getResource().get(0);
+      return !roadModel.get().isOccupied(nextNode);
     } else {
-      return virtualEnvironment.getListOfDelayedAGVs(agvID,
-          checkPoints.getFirst().getExpectedTime(), checkPoints.get(1)).isEmpty();
+      if (getNumOfAGVsOnEdge(nextCheckPoint.getResource().get(0), nextCheckPoint.getResource().get(1)) < 2) {
+        return true;
+      } else {
+        return false;
+      }
     }
   }
   
@@ -323,6 +321,24 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
         propagatedDelay = true;
       }
     }
+  }
+  
+  /**
+   * Gets the id.
+   *
+   * @return the id
+   */
+  public int getID() {
+    return agvID;
+  }
+  
+  /**
+   * Gets the check points.
+   *
+   * @return the check points
+   */
+  public List<CheckPoint> getCheckPoints() {
+    return checkPoints;
   }
 
 }
