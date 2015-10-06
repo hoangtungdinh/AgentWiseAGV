@@ -47,7 +47,7 @@ public class ExperimentSingleContextAware {
       bufferedReader.close();
 
       for (int numAGV = 1; numAGV <= 10; numAGV++) {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
               .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
@@ -69,7 +69,7 @@ public class ExperimentSingleContextAware {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsCA_makespan.txt"));
+          new File("ResultsCABaseline_makespan.txt"));
       printWriterMS.println("numAGVs\tmakespan");
       for (ListenableFuture<Result> result : futures) {
         try {
@@ -84,7 +84,7 @@ public class ExperimentSingleContextAware {
       printWriterMS.close();
 
       PrintWriter printWriterPC = new PrintWriter(
-          new File("ResultsCA_plancost.txt"));
+          new File("ResultsCABaseline_plancost.txt"));
       printWriterPC.println("numAGVs\tPlanCost");
       for (ListenableFuture<Result> result : futures) {
         try {
