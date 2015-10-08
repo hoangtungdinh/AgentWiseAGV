@@ -154,8 +154,8 @@ ggsave('dynamicplancostpercentage.pdf', width = 8, height = 4)
 
 ####################################
 
-caMakeSpan = read.table("ResultsMultiCA_makespan.txt", header=TRUE)
-caMakeSpan[,"approach"] = "ContextAwareBaseLine"
+caBaselineMakeSpan = read.table("ResultsMultiCA_makespan.txt", header=TRUE)
+caBaselineMakeSpan[,"approach"] = "ContextAwareBaseLine"
 
 caRepairMakeSpan = read.table("ResultsMultiCArepair_makespan.txt", header=TRUE)
 caRepairMakeSpan[,"approach"] = "ContextAwareRepair"
@@ -163,7 +163,7 @@ caRepairMakeSpan[,"approach"] = "ContextAwareRepair"
 dMasMakeSpan = read.table("ResultsMultiDMAS_makespan.txt", header=TRUE)
 dMasMakeSpan[,"approach"] = "DelegateMAS"
 
-makespan_dat = rbind(caMakeSpan, dMasMakeSpan, caRepairMakeSpan)
+makespan_dat = rbind(caBaselineMakeSpan, dMasMakeSpan, caRepairMakeSpan)
 
 makespan_datC = summarySE(makespan_dat, measurevar="makespan", groupvars=c("numAGVs", "approach"))
 
@@ -184,16 +184,16 @@ ggsave('dynamicmultimakespan.pdf', width = 8, height = 4)
 
 ####################################
 
-caPlanCost = read.table("ResultsMultiCA_plancost.txt", header=TRUE)
-caPlanCost[,"approach"] = "ContextAwareBaseLine"
+caBaselinePlanCost = read.table("ResultsMultiCA_plancost.txt", header=TRUE)
+caBaselinePlanCost[,"approach"] = "ContextAwareBaseLine"
 
-caRepairPlanCost = read.table("ResultsMultiCA_plancost.txt", header=TRUE)
+caRepairPlanCost = read.table("ResultsMultiCArepair_plancost.txt", header=TRUE)
 caRepairPlanCost[,"approach"] = "ContextAwareRepair"
 
 dMasPlanCost = read.table("ResultsMultiDMAS_plancost.txt", header=TRUE)
 dMasPlanCost[,"approach"] = "DelegateMAS"
 
-planCost_dat = rbind(caPlanCost, dMasPlanCost, caRepairPlanCost)
+planCost_dat = rbind(caBaselinePlanCost, dMasPlanCost, caRepairPlanCost)
 
 planCost_datC <- summarySE(planCost_dat, measurevar="PlanCost", groupvars=c("numAGVs", "approach"))
 
@@ -215,19 +215,34 @@ ggsave('dynamicmultiplancost.pdf', width = 8, height = 4)
 ####################################
 
 numAGVs = c()
-percentageOfMakeSpan = c()
+percentageOfMakeSpanCABaseline = c()
+percentageOfMakeSpanCARepair = c()
+percentageOfMakeSpanDMAS = c()
 
-for (i in 1:1000) {
-  numAGVs[i] = caMakeSpan[i,1]
-  percentageOfMakeSpan[i] = (dMasMakeSpan[i,2] / caMakeSpan[i,2])*100
+for (i in 1:100) {
+  numAGVs[i] = caBaselineMakeSpan[i,1]
+  percentageOfMakeSpanCABaseline[i] = 100
+  percentageOfMakeSpanCARepair[i] = (caRepairMakeSpan[i,2] / caBaselineMakeSpan[i,2])*100
+  percentageOfMakeSpanDMAS[i] = (dMasMakeSpan[i,2] / caBaselineMakeSpan[i,2])*100
 }
 
-percentageMS = data.frame(numAGVs, percentageOfMakeSpan)
+percentageMSCABaseline = data.frame(numAGVs, percentageOfMakeSpanCABaseline)
+colnames(percentageMSCABaseline)[2] = "percentage"
+percentageMSCARepair = data.frame(numAGVs, percentageOfMakeSpanCARepair)
+colnames(percentageMSCARepair)[2] = "percentage"
+percentageMSDMAS = data.frame(numAGVs, percentageOfMakeSpanDMAS)
+colnames(percentageMSDMAS)[2] = "percentage"
 
-percentageMSC <- summarySE(percentageMS, measurevar="percentageOfMakeSpan", groupvars=c("numAGVs"))
+percentageMSCABaseline[,"approach"] = "ContextAwareBaseline"
+percentageMSCARepair[,"approach"] = "ContextAwareRepair"
+percentageMSDMAS[,"approach"] = "DMAS"
 
-ggplot(percentageMSC, aes(x=numAGVs, y=percentageOfMakeSpan)) + 
-  geom_errorbar(aes(ymin=percentageOfMakeSpan-sd, ymax=percentageOfMakeSpan+sd), width=3, position=pd) +
+percentageMS = rbind(percentageMSCABaseline, percentageMSCARepair, percentageMSDMAS)
+
+percentageMSC <- summarySE(percentageMS, measurevar="percentage", groupvars=c("numAGVs", "approach"))
+
+ggplot(percentageMSC, aes(x=numAGVs, y=percentage, color=approach, group=approach)) + 
+  geom_errorbar(aes(ymin=percentage-sd, ymax=percentage+sd), width=3, position=pd) +
   geom_line(position=pd) +
   geom_point(size=3, position=pd) +
   theme_classic() + 
@@ -244,23 +259,38 @@ ggsave('dynamicmultimakespanpercentage.pdf', width = 8, height = 4)
 ####################################
 
 numAGVs = c()
-percentageOfPlanCost = c()
+percentageOfPlanCostCABaseline = c()
+percentageOfPlanCostCARepair = c()
+percentageOfPlanCostDMAS = c()
 
-for (i in 1:1000) {
-  numAGVs[i] = caMakeSpan[i,1]
-  percentageOfPlanCost[i] = (dMasPlanCost[i,2] / caPlanCost[i,2])*100
+for (i in 1:100) {
+  numAGVs[i] = caBaselinePlanCost[i,1]
+  percentageOfPlanCostCABaseline[i] = 100
+  percentageOfPlanCostCARepair[i] = (caRepairPlanCost[i,2] / caBaselinePlanCost[i,2])*100
+  percentageOfPlanCostDMAS[i] = (dMasPlanCost[i,2] / caBaselinePlanCost[i,2])*100
 }
 
-percentageMS = data.frame(numAGVs, percentageOfPlanCost)
+percentagePCCABaseline = data.frame(numAGVs, percentageOfPlanCostCABaseline)
+colnames(percentagePCCABaseline)[2] = "percentage"
+percentagePCCARepair = data.frame(numAGVs, percentageOfPlanCostCARepair)
+colnames(percentagePCCARepair)[2] = "percentage"
+percentagePCDMAS = data.frame(numAGVs, percentageOfPlanCostDMAS)
+colnames(percentagePCDMAS)[2] = "percentage"
 
-percentageMSC <- summarySE(percentageMS, measurevar="percentageOfPlanCost", groupvars=c("numAGVs"))
+percentagePCCABaseline[,"approach"] = "ContextAwareBaseline"
+percentagePCCARepair[,"approach"] = "ContextAwareRepair"
+percentagePCDMAS[,"approach"] = "DMAS"
 
-ggplot(percentageMSC, aes(x=numAGVs, y=percentageOfPlanCost)) + 
-  geom_errorbar(aes(ymin=percentageOfPlanCost-sd, ymax=percentageOfPlanCost+sd), width=3, position=pd) +
+percentagePC = rbind(percentagePCCABaseline, percentagePCCARepair, percentagePCDMAS)
+
+percentagePCC <- summarySE(percentagePC, measurevar="percentage", groupvars=c("numAGVs", "approach"))
+
+ggplot(percentagePCC, aes(x=numAGVs, y=percentage, color=approach, group=approach)) + 
+  geom_errorbar(aes(ymin=percentage-sd, ymax=percentage+sd), width=3, position=pd) +
   geom_line(position=pd) +
   geom_point(size=3, position=pd) +
   theme_classic() + 
-  scale_x_discrete(limits=percentageMSC[,1]) +
+  scale_x_discrete(limits=percentagePCC[,1]) +
   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) + 
   coord_cartesian(xlim = c(5, 105)) +
   xlab('Number of AGVs') +
