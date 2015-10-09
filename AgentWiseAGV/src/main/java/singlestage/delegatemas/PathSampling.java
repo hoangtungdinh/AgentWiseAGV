@@ -52,7 +52,7 @@ public class PathSampling {
     // runs we still cannot found enough number of paths then return
     int count = 0;
     
-    while (paths.size() < numOfPaths && count < 100) {
+    while (paths.size() < numOfPaths && count < 200) {
       count++;
       List<Point> candidatePath = new ArrayList<>();
 
