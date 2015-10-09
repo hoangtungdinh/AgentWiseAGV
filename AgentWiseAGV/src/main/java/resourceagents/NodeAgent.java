@@ -340,7 +340,7 @@ public class NodeAgent implements ResourceAgent {
     // sort the reservation list according to the start time
     Collections.sort(reservations);
     for (Reservation resv : reservations) {
-      final SingleStep singleStep = new SingleStep(resv.getAgvID(), resv.getInterval().lowerEndpoint());
+      final SingleStep singleStep = new SingleStep(resv.getAgvID(), resv.getInterval().lowerEndpoint(), node);
       orderedList.add(singleStep);
     }
    

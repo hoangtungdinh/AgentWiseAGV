@@ -12,10 +12,13 @@ caBaselineMakeSpan[,"approach"] = "ContextAwareBaseline"
 caRepairMakeSpan = read.table("ResultsCARepair_makespan.txt", header=TRUE)
 caRepairMakeSpan[,"approach"] = "ContextAwareRepair"
 
-dMasMakeSpan = read.table("ResultsDMAS_makespan.txt", header=TRUE)
-dMasMakeSpan[,"approach"] = "DelegateMAS"
+dMasMakeSpan30 = read.table("ResultsDMAS_makespan30paths.txt", header=TRUE)
+dMasMakeSpan30[,"approach"] = "DelegateMAS30paths"
 
-makespan_dat = rbind(caBaselineMakeSpan, caRepairMakeSpan, dMasMakeSpan)
+dMasMakeSpan10 = read.table("ResultsDMAS_makespan10paths.txt", header=TRUE)
+dMasMakeSpan10[,"approach"] = "DelegateMAS10paths"
+
+makespan_dat = rbind(caBaselineMakeSpan, caRepairMakeSpan, dMasMakeSpan30, dMasMakeSpan10)
 
 makespan_datC = summarySE(makespan_dat, measurevar="makespan", groupvars=c("numAGVs", "approach"))
 
@@ -42,10 +45,13 @@ caBaselinePlanCost[,"approach"] = "ContextAwareBaseline"
 caRepairPlanCost = read.table("ResultsCARepair_plancost.txt", header=TRUE)
 caRepairPlanCost[,"approach"] = "ContextAwareRepair"
 
-dMasPlanCost = read.table("ResultsDMAS_plancost.txt", header=TRUE)
-dMasPlanCost[,"approach"] = "DelegateMAS"
+dMasPlanCost30 = read.table("ResultsDMAS_plancost30paths.txt", header=TRUE)
+dMasPlanCost30[,"approach"] = "DelegateMAS30paths"
 
-planCost_dat = rbind(caBaselinePlanCost, caRepairPlanCost, dMasPlanCost)
+dMasPlanCost10 = read.table("ResultsDMAS_plancost10paths.txt", header=TRUE)
+dMasPlanCost10[,"approach"] = "DelegateMAS10paths"
+
+planCost_dat = rbind(caBaselinePlanCost, caRepairPlanCost, dMasPlanCost30, dMasPlanCost10)
 
 planCost_datC <- summarySE(planCost_dat, measurevar="PlanCost", groupvars=c("numAGVs", "approach"))
 
@@ -69,27 +75,32 @@ ggsave('dynamicplancost.pdf', width = 8, height = 4)
 numAGVs = c()
 percentageOfMakeSpanCABaseline = c()
 percentageOfMakeSpanCARepair = c()
-percentageOfMakeSpanDMAS = c()
+percentageOfMakeSpanDMAS30 = c()
+percentageOfMakeSpanDMAS10 = c()
 
 for (i in 1:100) {
   numAGVs[i] = caBaselineMakeSpan[i,1]
   percentageOfMakeSpanCABaseline[i] = 100
   percentageOfMakeSpanCARepair[i] = (caRepairMakeSpan[i,2] / caBaselineMakeSpan[i,2])*100
-  percentageOfMakeSpanDMAS[i] = (dMasMakeSpan[i,2] / caBaselineMakeSpan[i,2])*100
+  percentageOfMakeSpanDMAS30[i] = (dMasMakeSpan30[i,2] / caBaselineMakeSpan[i,2])*100
+  percentageOfMakeSpanDMAS10[i] = (dMasMakeSpan10[i,2] / caBaselineMakeSpan[i,2])*100
 }
 
 percentageMSCABaseline = data.frame(numAGVs, percentageOfMakeSpanCABaseline)
 colnames(percentageMSCABaseline)[2] = "percentage"
 percentageMSCARepair = data.frame(numAGVs, percentageOfMakeSpanCARepair)
 colnames(percentageMSCARepair)[2] = "percentage"
-percentageMSDMAS = data.frame(numAGVs, percentageOfMakeSpanDMAS)
-colnames(percentageMSDMAS)[2] = "percentage"
+percentageMSDMAS30 = data.frame(numAGVs, percentageOfMakeSpanDMAS30)
+colnames(percentageMSDMAS30)[2] = "percentage"
+percentageMSDMAS10 = data.frame(numAGVs, percentageOfMakeSpanDMAS10)
+colnames(percentageMSDMAS10)[2] = "percentage"
 
 percentageMSCABaseline[,"approach"] = "ContextAwareBaseline"
 percentageMSCARepair[,"approach"] = "ContextAwareRepair"
-percentageMSDMAS[,"approach"] = "DMAS"
+percentageMSDMAS30[,"approach"] = "DMAS30paths"
+percentageMSDMAS10[,"approach"] = "DMAS10paths"
 
-percentageMS = rbind(percentageMSCABaseline, percentageMSCARepair, percentageMSDMAS)
+percentageMS = rbind(percentageMSCABaseline, percentageMSCARepair, percentageMSDMAS30, percentageMSDMAS10)
 
 percentageMSC <- summarySE(percentageMS, measurevar="percentage", groupvars=c("numAGVs", "approach"))
 
@@ -113,27 +124,32 @@ ggsave('dynamicmakespanpercentage.pdf', width = 8, height = 4)
 numAGVs = c()
 percentageOfPlanCostCABaseline = c()
 percentageOfPlanCostCARepair = c()
-percentageOfPlanCostDMAS = c()
+percentageOfPlanCostDMAS30 = c()
+percentageOfPlanCostDMAS10 = c()
 
 for (i in 1:100) {
   numAGVs[i] = caBaselinePlanCost[i,1]
   percentageOfPlanCostCABaseline[i] = 100
   percentageOfPlanCostCARepair[i] = (caRepairPlanCost[i,2] / caBaselinePlanCost[i,2])*100
-  percentageOfPlanCostDMAS[i] = (dMasPlanCost[i,2] / caBaselinePlanCost[i,2])*100
+  percentageOfPlanCostDMAS30[i] = (dMasPlanCost30[i,2] / caBaselinePlanCost[i,2])*100
+  percentageOfPlanCostDMAS10[i] = (dMasPlanCost10[i,2] / caBaselinePlanCost[i,2])*100
 }
 
 percentagePCCABaseline = data.frame(numAGVs, percentageOfPlanCostCABaseline)
 colnames(percentagePCCABaseline)[2] = "percentage"
 percentagePCCARepair = data.frame(numAGVs, percentageOfPlanCostCARepair)
 colnames(percentagePCCARepair)[2] = "percentage"
-percentagePCDMAS = data.frame(numAGVs, percentageOfPlanCostDMAS)
-colnames(percentagePCDMAS)[2] = "percentage"
+percentagePCDMAS30 = data.frame(numAGVs, percentageOfPlanCostDMAS30)
+colnames(percentagePCDMAS30)[2] = "percentage"
+percentagePCDMAS10 = data.frame(numAGVs, percentageOfPlanCostDMAS10)
+colnames(percentagePCDMAS10)[2] = "percentage"
 
 percentagePCCABaseline[,"approach"] = "ContextAwareBaseline"
 percentagePCCARepair[,"approach"] = "ContextAwareRepair"
-percentagePCDMAS[,"approach"] = "DMAS"
+percentagePCDMAS30[,"approach"] = "DMAS30paths"
+percentagePCDMAS10[,"approach"] = "DMAS10paths"
 
-percentagePC = rbind(percentagePCCABaseline, percentagePCCARepair, percentagePCDMAS)
+percentagePC = rbind(percentagePCCABaseline, percentagePCCARepair, percentagePCDMAS30, percentagePCDMAS10)
 
 percentagePCC <- summarySE(percentagePC, measurevar="percentage", groupvars=c("numAGVs", "approach"))
 

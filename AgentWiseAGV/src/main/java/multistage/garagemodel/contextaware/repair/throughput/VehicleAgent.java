@@ -390,11 +390,15 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
    */
   @Override
   public void afterTick(TimeLapse timeLapse) {
+    final long currentTime = timeLapse.getEndTime();
+    
+    if (currentTime == setting.getEndTime()) {
+      result.updateResult(reachedDestinations);
+    }
+    
     if (state == State.IDLE) {
       return;
     }
-    
-    final long currentTime = timeLapse.getEndTime();
     
     final Point currentPos = roadModel.get().getPosition(this);
     final Point roundedPos = new Point(round(currentPos.x), round(currentPos.y));
@@ -403,10 +407,6 @@ public class VehicleAgent implements TickListener, MovingRoadUser {
       if (!propagatedDelay) {
         propagatedDelay = true;
       }
-    }
-    
-    if (currentTime == setting.getEndTime()) {
-      result.updateResult(reachedDestinations);
     }
   }
 

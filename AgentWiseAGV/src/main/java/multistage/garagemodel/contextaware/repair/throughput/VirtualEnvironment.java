@@ -633,7 +633,7 @@ public class VirtualEnvironment implements TickListener {
   }
 
   public SingleStep convertCheckPointToSingleStep(CheckPoint checkPoint, int agvID) {
-    final SingleStep singleStep = new SingleStep(agvID, checkPoint.getID());
+    final SingleStep singleStep = new SingleStep(agvID, checkPoint.getID(), checkPoint.getResource().get(0));
     return singleStep;
   }
 

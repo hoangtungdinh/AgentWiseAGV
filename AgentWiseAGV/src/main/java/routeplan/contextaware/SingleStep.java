@@ -1,5 +1,7 @@
 package routeplan.contextaware;
 
+import com.github.rinde.rinsim.geom.Point;
+
 import autovalue.shaded.com.google.common.common.base.Objects;
 
 /**
@@ -19,12 +21,17 @@ public class SingleStep {
   private boolean swappable;
   
   private boolean visited;
+  
+  // is the node if the resource is a node
+  // is the from node if the resource is an edge
+  private Point fromPoint;
 
-  public SingleStep(int agvID, long stepID) {
+  public SingleStep(int agvID, long stepID, Point fromPoint) {
     this.agvID = agvID;
     this.stepID = stepID;
     this.swappable = true;
     this.visited = false;
+    this.fromPoint = fromPoint;
   }
 
   public int getAgvID() {
@@ -50,6 +57,10 @@ public class SingleStep {
   public boolean isVisited() {
     return visited;
   }
+  
+  public Point getFromPoint() {
+    return fromPoint;
+  }
 
   @Override
   public int hashCode() {
@@ -72,7 +83,8 @@ public class SingleStep {
     final SingleStep singleStep = (SingleStep) other;
 
     return this.agvID == singleStep.getAgvID()
-        && this.stepID == singleStep.getStepID();
+        && this.stepID == singleStep.getStepID()
+        && this.fromPoint.equals(singleStep.fromPoint);
   }
 
   @Override

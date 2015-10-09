@@ -46,7 +46,7 @@ public class ExperimentMultiContextAwareRepairMSPC {
       
       bufferedReader.close();
 
-      for (int numAGV = 1; numAGV <= 10; numAGV++) {
+      for (int numAGV = 1; numAGV <= 7; numAGV++) {
         for (int i = 0; i < 10; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()

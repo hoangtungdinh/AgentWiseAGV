@@ -6,13 +6,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.github.rinde.rinsim.geom.Point;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import resourceagents.NodeAgent;
 import routeplan.contextaware.SingleStep;
-import setting.Setting;
 
 public class Dummy {
 

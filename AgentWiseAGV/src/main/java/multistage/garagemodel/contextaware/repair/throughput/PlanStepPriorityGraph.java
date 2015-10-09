@@ -48,6 +48,7 @@ public class PlanStepPriorityGraph {
     allNodes = new HashSet<>();
     createEdgesStep1();
     createEdgesStep2();
+    createEdgesStep3();
   }
   
   /**
@@ -71,8 +72,8 @@ public class PlanStepPriorityGraph {
             fromCheckPoint.getResourceType() != toCheckPoint.getResourceType(),
             "Two consecutive check points must have different types");
         
-        final SingleStep fromStep = new SingleStep(agv.getID(), fromCheckPoint.getID());
-        final SingleStep toStep = new SingleStep(agv.getID(), toCheckPoint.getID());
+        final SingleStep fromStep = new SingleStep(agv.getID(), fromCheckPoint.getID(), fromCheckPoint.getResource().get(0));
+        final SingleStep toStep = new SingleStep(agv.getID(), toCheckPoint.getID(), toCheckPoint.getResource().get(0));
         
         checkState(!graph.containsEntry(fromStep, toStep), "Some problem here");
         
@@ -136,6 +137,80 @@ public class PlanStepPriorityGraph {
       return plan.get(indexOfStep + 1);
     } else {
       return null;
+    }
+  }
+  
+  public void createEdgesStep3() {
+    // node agent with unit capacity
+    for (NodeAgent nodeAgent : nodeAgentList.getAllNodeAgents()) {
+      final List<SingleStep> orderedList = nodeAgent.getOrderedList();
+      createEnablingPlanStepEdgesForNodes(orderedList);
+    }
+    
+    for (EdgeAgent edgeAgent : edgeAgentList.getAllEdgeAgents()) {
+      final List<SingleStep> orderedList = edgeAgent.getOrderedList();
+      createEnablingPlanStepEdgesForEdges(orderedList);
+    }
+  }
+  
+  private void createEnablingPlanStepEdgesForEdges(
+      List<SingleStep> orderedList) {
+    // the fifo only store consecutive plan step from the same direction
+    final LinkedList<SingleStep> fifo = new LinkedList<>();
+    
+    // assume all edges have capacity 2, mean that the maximum size of the fifo is 3
+    final int FIFO_MAX_SIZE = 3;
+    for (int i = 0; i < orderedList.size(); i++) {
+      final SingleStep currentStep = orderedList.get(i);
+      if (fifo.size() < FIFO_MAX_SIZE) {
+        // if the fifo is not full
+        if (fifo.isEmpty()) {
+          fifo.addLast(currentStep);
+        } else {
+          final SingleStep lastStep = fifo.getLast();
+          if (lastStep.getFromPoint().equals(currentStep.getFromPoint())) {
+            // same direction then add
+            fifo.addLast(currentStep);
+          } else {
+            // if different direction, clear fifo and add
+            fifo.clear();
+            fifo.addLast(currentStep);
+          }
+        }
+      } else {
+        // if the fifo is currently full
+        final SingleStep lastStep = fifo.getLast();
+        if (lastStep.getFromPoint().equals(currentStep.getFromPoint())) {
+          fifo.removeFirst();
+          fifo.addLast(currentStep);
+        } else {
+          fifo.clear();
+          fifo.addLast(currentStep);
+        }
+      }
+      
+      checkState(fifo.size() <= FIFO_MAX_SIZE, "size of fifo should never exceeds max size");
+      
+      if (fifo.size() == FIFO_MAX_SIZE) {
+        final SingleStep fromStep = fifo.getFirst();
+        final SingleStep toStep = fifo.getLast();
+        final SingleStep enablingPlanStepOfToStep = getSuccessorStep(fromStep);
+        if (enablingPlanStepOfToStep != null) {
+          graph.put(enablingPlanStepOfToStep, toStep);
+        }
+      }
+    }
+  }
+
+  private void createEnablingPlanStepEdgesForNodes(
+      List<SingleStep> orderedList) {
+    for (int i = 0; i < orderedList.size() - 1; i++) {
+      final SingleStep fromStep = orderedList.get(i);
+      final SingleStep toStep = orderedList.get(i + 1);
+      final SingleStep enablingPlanStepOfToStep = getSuccessorStep(fromStep);
+      if (enablingPlanStepOfToStep != null) {
+        graph.put(enablingPlanStepOfToStep, toStep);
+      }
     }
   }
   

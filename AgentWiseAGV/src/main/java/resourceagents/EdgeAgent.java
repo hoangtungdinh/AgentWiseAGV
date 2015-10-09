@@ -637,7 +637,15 @@ public class EdgeAgent implements ResourceAgent {
     
     orderedList = new LinkedList<>();
     for (Reservation resv : resvList) {
-      final SingleStep singleStep = new SingleStep(resv.getAgvID(), resv.getInterval().lowerEndpoint());
+      final SingleStep singleStep;
+      if (reservationMap.get(node1).contains(resv)) {
+        singleStep = new SingleStep(resv.getAgvID(), resv.getInterval().lowerEndpoint(), node1);
+      } else if (reservationMap.get(node2).contains(resv)) {
+        singleStep = new SingleStep(resv.getAgvID(), resv.getInterval().lowerEndpoint(), node2);
+      } else {
+        singleStep = null;
+      }
+      checkNotNull(singleStep);
       orderedList.add(singleStep);
     }
   }

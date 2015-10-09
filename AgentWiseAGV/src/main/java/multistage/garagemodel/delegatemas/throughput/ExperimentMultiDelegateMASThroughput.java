@@ -19,7 +19,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import result.throughput.Result;
 import setting.Setting;
 
-public class ExperimentMultiDelegateMAS {
+public class ExperimentMultiDelegateMASThroughput {
 
   public static void main(String[] args) {
     ListeningExecutorService executor = MoreExecutors
@@ -31,7 +31,7 @@ public class ExperimentMultiDelegateMAS {
     try {
       LinkedList<Long> seeds = new LinkedList<>();
       
-      InputStream inputStream = ExperimentMultiDelegateMAS.class
+      InputStream inputStream = ExperimentMultiDelegateMASThroughput.class
           .getResourceAsStream("seeds.txt");
       BufferedReader bufferedReader = new BufferedReader(
           new InputStreamReader(inputStream));
@@ -46,11 +46,11 @@ public class ExperimentMultiDelegateMAS {
       
       bufferedReader.close();
 
-      for (int numAGV = 1; numAGV <= 10; numAGV++) {
+      for (int numAGV = 7; numAGV <= 7; numAGV++) {
         for (int i = 0; i < 10; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
-              .setNumOfAGVs(numAGV * 10).setSeed(seed).build();
+              .setNumOfAGVs(numAGV * 10).setSeed(seed).setEndTime(2000000).build();
           futures.add(executor.submit(new ExperimentRunner(setting)));
         }
       }

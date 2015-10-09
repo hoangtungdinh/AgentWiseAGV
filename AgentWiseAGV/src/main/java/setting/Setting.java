@@ -111,11 +111,11 @@ public class Setting {
     private long seed = 0;
     
     private int numOfDestinations = 1000;
-    private long evaporationDuration = 10000;
+    private long evaporationDuration = 8100;
     private long refreshDuration = 8000;
     private long explorationDuration = 8000;
     private long switchingThreshold = 8000;
-    private int numOfAlterRoutes = 10;
+    private int numOfAlterRoutes = 30;
     private int numOfDestsForEachAGV = 3;
     private long expectedFreezingDuration = 100000L;
     
