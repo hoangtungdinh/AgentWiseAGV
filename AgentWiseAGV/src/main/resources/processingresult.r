@@ -15,8 +15,8 @@ caRepairMakeSpan[,"approach"] = "ContextAwareRepair"
 dMasMakeSpan30 = read.table("ResultsDMAS_makespan30paths.txt", header=TRUE)
 dMasMakeSpan30[,"approach"] = "DelegateMAS30paths"
 
-dMasMakeSpan10 = read.table("ResultsDMAS_makespan10paths.txt", header=TRUE)
-dMasMakeSpan10[,"approach"] = "DelegateMAS10paths"
+dMasMakeSpan10 = read.table("ResultsDMAS_makespan100paths.txt", header=TRUE)
+dMasMakeSpan10[,"approach"] = "DelegateMAS100paths"
 
 makespan_dat = rbind(caBaselineMakeSpan, caRepairMakeSpan, dMasMakeSpan30, dMasMakeSpan10)
 
@@ -48,8 +48,8 @@ caRepairPlanCost[,"approach"] = "ContextAwareRepair"
 dMasPlanCost30 = read.table("ResultsDMAS_plancost30paths.txt", header=TRUE)
 dMasPlanCost30[,"approach"] = "DelegateMAS30paths"
 
-dMasPlanCost10 = read.table("ResultsDMAS_plancost10paths.txt", header=TRUE)
-dMasPlanCost10[,"approach"] = "DelegateMAS10paths"
+dMasPlanCost10 = read.table("ResultsDMAS_plancost100paths.txt", header=TRUE)
+dMasPlanCost10[,"approach"] = "DelegateMAS100paths"
 
 planCost_dat = rbind(caBaselinePlanCost, caRepairPlanCost, dMasPlanCost30, dMasPlanCost10)
 
@@ -98,7 +98,7 @@ colnames(percentageMSDMAS10)[2] = "percentage"
 percentageMSCABaseline[,"approach"] = "ContextAwareBaseline"
 percentageMSCARepair[,"approach"] = "ContextAwareRepair"
 percentageMSDMAS30[,"approach"] = "DMAS30paths"
-percentageMSDMAS10[,"approach"] = "DMAS10paths"
+percentageMSDMAS10[,"approach"] = "DMAS100paths"
 
 percentageMS = rbind(percentageMSCABaseline, percentageMSCARepair, percentageMSDMAS30, percentageMSDMAS10)
 
@@ -147,7 +147,7 @@ colnames(percentagePCDMAS10)[2] = "percentage"
 percentagePCCABaseline[,"approach"] = "ContextAwareBaseline"
 percentagePCCARepair[,"approach"] = "ContextAwareRepair"
 percentagePCDMAS30[,"approach"] = "DMAS30paths"
-percentagePCDMAS10[,"approach"] = "DMAS10paths"
+percentagePCDMAS10[,"approach"] = "DMAS100paths"
 
 percentagePC = rbind(percentagePCCABaseline, percentagePCCARepair, percentagePCDMAS30, percentagePCDMAS10)
 

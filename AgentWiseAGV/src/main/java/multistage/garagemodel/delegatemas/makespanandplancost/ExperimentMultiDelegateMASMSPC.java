@@ -69,7 +69,7 @@ public class ExperimentMultiDelegateMASMSPC {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsMultiDMAS_makespan.txt"));
+          new File("ResultsMultiDMAS_makespan30paths.txt"));
       printWriterMS.println("numAGVs\tmakespan");
       for (ListenableFuture<Result> result : futures) {
         try {
@@ -84,7 +84,7 @@ public class ExperimentMultiDelegateMASMSPC {
       printWriterMS.close();
 
       PrintWriter printWriterPC = new PrintWriter(
-          new File("ResultsMultiDMAS_plancost.txt"));
+          new File("ResultsMultiDMAS_plancost30paths.txt"));
       printWriterPC.println("numAGVs\tPlanCost");
       for (ListenableFuture<Result> result : futures) {
         try {

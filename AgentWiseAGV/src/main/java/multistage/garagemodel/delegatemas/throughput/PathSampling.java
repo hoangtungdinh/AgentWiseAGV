@@ -73,8 +73,7 @@ public class PathSampling {
     
     int count = 0;
     
-    while (paths.size() < numOfPaths && count < 100) {
-      count++;
+    while (paths.size() < numOfPaths && count < 3) {
       List<Point> candidatePath = new ArrayList<>();
 
       for (int dest = 0; dest < destinations.size(); dest++) {
@@ -94,23 +93,27 @@ public class PathSampling {
       final Path newPath = new Path(candidatePath);
 
       if (!paths.contains(newPath)) {
+        count = 0;
         paths.add(newPath);
+      } else {
+        count++;
       }
       
-      final double deltaW = 1000;
+      final double deltaW = 100;
       
-      for (int pathIndex = 0; pathIndex < candidatePath.size()
-          - 1; pathIndex++) {
+      for (int pathIndex = 0; pathIndex < candidatePath.size(); pathIndex++) {
         if (randomGenerator.nextDouble() < threshold) {
-          final double currentLength = graph
-              .getConnection(candidatePath.get(pathIndex),
-                  candidatePath.get(pathIndex + 1))
-              .getLength();
-          ((Graph<LengthData>) graph).setConnectionData(
-              candidatePath.get(pathIndex), candidatePath.get(pathIndex + 1),
-              LengthData.create(currentLength + deltaW));
+          final List<Point> neighboringPoints = new ArrayList<>(
+              graph.getIncomingConnections(candidatePath.get(pathIndex)));
+
+          for (Point neighboringPoint : neighboringPoints) {
+            ((Graph<LengthData>) graph).setConnectionData(
+                candidatePath.get(pathIndex), neighboringPoint,
+                LengthData.create(deltaW));
+          }
         }
       }
+      
     }
     
     return paths;

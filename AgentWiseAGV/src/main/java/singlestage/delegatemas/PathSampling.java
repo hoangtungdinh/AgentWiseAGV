@@ -50,10 +50,11 @@ public class PathSampling {
     
     // sometimes, we cannot find enough number of different path. If after 1000
     // runs we still cannot found enough number of paths then return
+    // if after 3 times get the same paths then return
     int count = 0;
     
-    while (paths.size() < numOfPaths && count < 200) {
-      count++;
+    while (paths.size() < numOfPaths && count < 3) {
+//      count++;
       List<Point> candidatePath = new ArrayList<>();
 
       for (int dest = 0; dest < destinations.size(); dest++) {
@@ -73,7 +74,10 @@ public class PathSampling {
       final Path newPath = new Path(candidatePath);
       
       if (!paths.contains(newPath)) {
+        count = 0;
         paths.add(newPath);
+      } else {
+        count++;
       }
       
       final double deltaW = 100;
