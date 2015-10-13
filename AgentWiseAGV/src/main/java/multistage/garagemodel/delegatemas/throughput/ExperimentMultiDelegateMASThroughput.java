@@ -46,7 +46,7 @@ public class ExperimentMultiDelegateMASThroughput {
       
       bufferedReader.close();
 
-      for (int numAGV = 7; numAGV <= 7; numAGV++) {
+      for (int numAGV = 1; numAGV <= 10; numAGV++) {
         for (int i = 0; i < 10; i++) {
           final long seed = seeds.removeFirst();
           final Setting setting = new Setting.SettingBuilder()
@@ -69,7 +69,7 @@ public class ExperimentMultiDelegateMASThroughput {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsMultiDMAS.txt"));
+          new File("ResultsMultiDMASThroughput30paths.txt"));
       printWriterMS.println("numAGVs\tFinishedTask");
       for (ListenableFuture<Result> result : futures) {
         try {
