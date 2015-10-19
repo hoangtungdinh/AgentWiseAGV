@@ -194,6 +194,7 @@ public class EdgeAgent implements ResourceAgent {
     // cannot increase because no vehicle can enter the edge while the current
     // AGV is occupying the start node.
     if (overlappingReservations.size() > capacity) {
+      // TODO remove this line
       throw new IllegalStateException("More AGVs than capacity");
     }
     
