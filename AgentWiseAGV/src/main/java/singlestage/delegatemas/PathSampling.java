@@ -30,6 +30,11 @@ public class PathSampling {
       int numOfPaths) {
     
     final double threshold = randomGenerator.nextDouble();
+//    if (randomGenerator.nextDouble() < 0.5) {
+//      threshold = 0.2;
+//    } else {
+//      threshold = 0.8;
+//    }
     
     final List<Path> paths = new ArrayList<>();
     
@@ -43,10 +48,13 @@ public class PathSampling {
     // a clone graph
     final ListenableGraph<?> graph = (new GraphCreator(setting)).createGraph();
     
+    // sometimes, we cannot find enough number of different path. If after 1000
+    // runs we still cannot found enough number of paths then return
+    // if after 3 times get the same paths then return
     int count = 0;
     
-    while (paths.size() < numOfPaths && count < 1000) {
-      count++;
+    while (paths.size() < numOfPaths && count < 3) {
+//      count++;
       List<Point> candidatePath = new ArrayList<>();
 
       for (int dest = 0; dest < destinations.size(); dest++) {
@@ -66,24 +74,45 @@ public class PathSampling {
       final Path newPath = new Path(candidatePath);
       
       if (!paths.contains(newPath)) {
+        count = 0;
         paths.add(newPath);
+      } else {
+        count++;
       }
       
-      final double deltaW = 1000;
+      final double deltaW = 100;
       
-      for (int pathIndex = 0; pathIndex < candidatePath.size()
-          - 1; pathIndex++) {
+      //////////////
+//      for (int pathIndex = 0; pathIndex < candidatePath.size()
+//          - 1; pathIndex++) {
+//        if (randomGenerator.nextDouble() < threshold) {
+//          final double currentLength = graph
+//              .getConnection(candidatePath.get(pathIndex),
+//                  candidatePath.get(pathIndex + 1))
+//              .getLength();
+//          ((Graph<LengthData>) graph).setConnectionData(
+//              candidatePath.get(pathIndex), candidatePath.get(pathIndex + 1),
+//              LengthData.create(currentLength + deltaW));
+//        }
+//      }
+      ////////////////
+      
+      for (int pathIndex = 0; pathIndex < candidatePath.size(); pathIndex++) {
         if (randomGenerator.nextDouble() < threshold) {
-          final double currentLength = graph
-              .getConnection(candidatePath.get(pathIndex),
-                  candidatePath.get(pathIndex + 1))
-              .getLength();
-          ((Graph<LengthData>) graph).setConnectionData(
-              candidatePath.get(pathIndex), candidatePath.get(pathIndex + 1),
-              LengthData.create(currentLength + deltaW));
+          final List<Point> neighboringPoints = new ArrayList<>(
+              graph.getIncomingConnections(candidatePath.get(pathIndex)));
+
+          for (Point neighboringPoint : neighboringPoints) {
+            ((Graph<LengthData>) graph).setConnectionData(
+                candidatePath.get(pathIndex), neighboringPoint,
+                LengthData.create(deltaW));
+          }
         }
       }
+      
     }
+    
+//    System.out.println(paths.size());
     
     return paths;
   }

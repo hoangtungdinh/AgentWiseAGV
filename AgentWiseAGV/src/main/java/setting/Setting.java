@@ -92,16 +92,16 @@ public class Setting {
     private double vehicleLength = 2d;
     private double vehicleSpeed = 1d;
     private int numOfAGVs = 100;
-    private long endTime = 1000 * 1000L;
+    private long endTime = 10000 * 1000L;
     private int speedUp = 2;
     private long seed = 0;
     
     private int numOfDestinations = 1000;
-    private long evaporationDuration = 10000;
+    private long evaporationDuration = 8100;
     private long refreshDuration = 8000;
     private long explorationDuration = 8000;
     private long switchingThreshold = 8000;
-    private int numOfAlterRoutes = 10;
+    private int numOfAlterRoutes = 100;
     private int numOfDestsForEachAGV = 3;
     
     public SettingBuilder() {
