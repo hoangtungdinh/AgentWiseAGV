@@ -69,7 +69,7 @@ public class ExperimentSingleDelegateMAS {
   public static void print(List<ListenableFuture<Result>> futures) {
     try {
       PrintWriter printWriterMS = new PrintWriter(
-          new File("ResultsDMAS_makespan.txt"));
+          new File("StaticResultsDMAS100paths_makespan.txt"));
       printWriterMS.println("numAGVs\tmakespan");
       for (ListenableFuture<Result> result : futures) {
         try {
@@ -84,7 +84,7 @@ public class ExperimentSingleDelegateMAS {
       printWriterMS.close();
 
       PrintWriter printWriterPC = new PrintWriter(
-          new File("ResultsDMAS_plancost.txt"));
+          new File("StaticResultsDMAS100paths_plancost.txt"));
       printWriterPC.println("numAGVs\tPlanCost");
       for (ListenableFuture<Result> result : futures) {
         try {

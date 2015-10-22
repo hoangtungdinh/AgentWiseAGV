@@ -195,7 +195,8 @@ public class EdgeAgent implements ResourceAgent {
     // AGV is occupying the start node.
     if (overlappingReservations.size() > capacity) {
       // TODO remove this line
-      throw new IllegalStateException("More AGVs than capacity");
+//      throw new IllegalStateException("More AGVs than capacity");
+      return null;
     }
     
     if (overlappingReservations.size() == capacity) {
